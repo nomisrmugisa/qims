@@ -13,6 +13,8 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
+// import rgba from "../functions/rgba";
+
 /**
  * The base colors for the Soft UI Dashboard PRO Material.
  * You can add new color using this file.
@@ -136,6 +138,18 @@ export default {
       main: "#42424a",
       state: "#191919",
     },
+  },
+
+  homeGradient: {
+    /*
+    .bg-gradient-primary-to-secondary {
+  background-color: #0061f2;
+  background-image: linear-gradient(135deg, #0061f2 0%, rgba(105, 0, 199, 0.8) 100%);
+}
+     */
+    backgroundColor: "#0061f2",
+    backgroundImage: `linear-gradient(135deg, #0061f2 0%, rgba(105, 0, 199, 0.8), 100%
+    )}) !important`,
   },
 
   socialMediaColors: {

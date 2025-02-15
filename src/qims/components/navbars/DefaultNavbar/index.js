@@ -37,19 +37,31 @@ import DefaultNavbarMobile from "examples/Navbars/DefaultNavbar/DefaultNavbarMob
 // Otis Admin PRO React base styles
 import breakpoints from "assets/theme/base/breakpoints";
 
+// import colors from "assets/theme/base/colors";
+
 // DefaultNavbar dropdown menus
 import PagesMenu from "examples/Navbars/DefaultNavbar/Menus/PagesMenu";
 import AuthenticationMenu from "examples/Navbars/DefaultNavbar/Menus/AuthenticationMenu";
 import EcommerceMenu from "examples/Navbars/DefaultNavbar/Menus/EcommerceMenu";
 import ApplicationsMenu from "examples/Navbars/DefaultNavbar/Menus/ApplicationsMenu";
 import DocsMenu from "examples/Navbars/DefaultNavbar/Menus/DocsMenu";
+// import { Image } from "@mui/icons-material";
+// import logo from "assets/images/logo";
+import mohlogo from "assets/qims/images/logos/moh-logo.png";
+// import Grid from "@mui/material/Grid";
 
 // Otis Admin PRO React context
-import { useMaterialUIController } from "context";
+// import { useMaterialUIController } from "context";
 
-function DefaultNavbar({ routes, transparent = false, light = false, action = false }) {
-  const [controller] = useMaterialUIController();
-  const { darkMode } = controller;
+function DefaultNavbar({
+  routes,
+  transparent = false,
+  light = false,
+  action = false,
+  register = false,
+}) {
+  // const [controller] = useMaterialUIController();
+  // const { darkMode } = controller;
 
   const [pagesMenu, setPagesMenu] = useState(false);
   const [authenticationMenu, setAuthenticationMenu] = useState(false);
@@ -114,15 +126,13 @@ function DefaultNavbar({ routes, transparent = false, light = false, action = fa
         position="absolute"
         left={0}
         zIndex={3}
-        sx={({
-          palette: { transparent: transparentColor, white, background },
-          functions: { rgba },
-        }) => ({
-          backgroundColor: transparent
-            ? transparentColor.main
-            : rgba(darkMode ? background.sidenav : white.main, 0.8),
-          backdropFilter: transparent ? "none" : `saturate(200%) blur(30px)`,
-        })}
+        // bgColor={colors.homeGradient}
+        // sx={({
+        //   palette: { transparent: transparentColor, white, background },
+        //   functions: { rgba },
+        // }) => ({
+        //   backgroundColor: colors.homeGradient
+        // })}
       >
         <MDBox
           component={Link}
@@ -131,9 +141,29 @@ function DefaultNavbar({ routes, transparent = false, light = false, action = fa
           lineHeight={1}
           pl={{ xs: 0, lg: 1 }}
         >
-          <MDTypography variant="button" fontWeight="bold" color={light ? "white" : "dark"}>
-            Otis Admin PRO
-          </MDTypography>
+          <MDBox display="flex" alignItems="center" justifyContent="center">
+            <MDBox
+              component="img"
+              src={mohlogo}
+              alt="vodafone"
+              width={{ xs: "30%", xl: "30%" }}
+              opacity={0.9}
+              mb={3}
+            />
+            <MDBox display="flex" flexDirection="column">
+              <MDTypography
+                variant="button"
+                fontWeight="bold"
+                fontSize={24}
+                color={light ? "white" : "dark"}
+              >
+                Ministry of Health
+              </MDTypography>
+              <MDTypography variant="button" fontWeight="bold" color={light ? "white" : "dark"}>
+                Republic of Botswana
+              </MDTypography>
+            </MDBox>
+          </MDBox>
         </MDBox>
         <MDBox color="inherit" display={{ xs: "none", lg: "flex" }} m={0} p={0}>
           <DefaultNavbarLink
@@ -168,35 +198,66 @@ function DefaultNavbar({ routes, transparent = false, light = false, action = fa
             light={light}
           />
         </MDBox>
-        {action &&
-          (action.type === "internal" ? (
-            <MDBox display={{ xs: "none", lg: "inline-block" }}>
-              <MDButton
-                component={Link}
-                to={action.route}
-                variant="gradient"
-                color={action.color ? action.color : "info"}
-                size="small"
-              >
-                {action.label}
-              </MDButton>
-            </MDBox>
-          ) : (
-            <MDBox display={{ xs: "none", lg: "inline-block" }}>
-              <MDButton
-                component="a"
-                href={action.route}
-                target="_blank"
-                rel="noreferrer"
-                variant="gradient"
-                color={action.color ? action.color : "info"}
-                size="small"
-                sx={{ mt: -0.3 }}
-              >
-                {action.label}
-              </MDButton>
-            </MDBox>
-          ))}
+        <MDBox display="flex" gap={2} alignItems="center">
+          {register &&
+            (register.type === "internal" ? (
+              <MDBox display={{ xs: "none", lg: "inline-block" }}>
+                <MDButton
+                  component={Link}
+                  to={register.route}
+                  variant="gradient"
+                  color={register.color ? register.color : "info"}
+                  size="small"
+                >
+                  {register.label}
+                </MDButton>
+              </MDBox>
+            ) : (
+              <MDBox display={{ xs: "none", lg: "inline-block" }}>
+                <MDButton
+                  component="a"
+                  href={register.route}
+                  target="_blank"
+                  rel="noreferrer"
+                  variant="gradient"
+                  color={register.color ? register.color : "info"}
+                  size="small"
+                  sx={{ mt: -0.3 }}
+                >
+                  {register.label}
+                </MDButton>
+              </MDBox>
+            ))}
+          {action &&
+            (action.type === "internal" ? (
+              <MDBox display={{ xs: "none", lg: "inline-block" }}>
+                <MDButton
+                  component={Link}
+                  to={action.route}
+                  variant="gradient"
+                  color={action.color ? action.color : "info"}
+                  size="small"
+                >
+                  {action.label}
+                </MDButton>
+              </MDBox>
+            ) : (
+              <MDBox display={{ xs: "none", lg: "inline-block" }}>
+                <MDButton
+                  component="a"
+                  href={action.route}
+                  target="_blank"
+                  rel="noreferrer"
+                  variant="gradient"
+                  color={action.color ? action.color : "info"}
+                  size="small"
+                  sx={{ mt: -0.3 }}
+                >
+                  {action.label}
+                </MDButton>
+              </MDBox>
+            ))}
+        </MDBox>
         <MDBox
           display={{ xs: "inline-block", lg: "none" }}
           lineHeight={0}
@@ -231,6 +292,24 @@ DefaultNavbar.propTypes = {
   transparent: PropTypes.bool,
   light: PropTypes.bool,
   action: PropTypes.oneOfType([
+    PropTypes.bool,
+    PropTypes.shape({
+      type: PropTypes.oneOf(["external", "internal"]).isRequired,
+      route: PropTypes.string.isRequired,
+      color: PropTypes.oneOf([
+        "primary",
+        "secondary",
+        "info",
+        "success",
+        "warning",
+        "error",
+        "dark",
+        "light",
+      ]),
+      label: PropTypes.string.isRequired,
+    }),
+  ]),
+  register: PropTypes.oneOfType([
     PropTypes.bool,
     PropTypes.shape({
       type: PropTypes.oneOf(["external", "internal"]).isRequired,

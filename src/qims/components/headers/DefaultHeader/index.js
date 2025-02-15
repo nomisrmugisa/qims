@@ -34,7 +34,8 @@ import DefaultNavbar from "qims/components/navbars/DefaultNavbar";
 import pageRoutes from "page.routes";
 
 // Images
-import bgImage from "assets/images/bg-pricing.jpg";
+// import bgImage from "assets/images/bg-pricing.jpg";
+import colors from "assets/theme/base/colors";
 
 function DefaultHeader({ tabValue, tabHandler, children }) {
   return (
@@ -42,9 +43,15 @@ function DefaultHeader({ tabValue, tabHandler, children }) {
       <DefaultNavbar
         routes={pageRoutes}
         action={{
-          type: "external",
+          type: "internal",
           route: "https://creative-tim.com/product/soft-ui-dashboard-pro-react",
-          label: "buy now",
+          label: "Register",
+          color: "light",
+        }}
+        register={{
+          type: "internal",
+          route: "/qims/login",
+          label: "Login",
           color: "light",
         }}
         transparent
@@ -58,10 +65,11 @@ function DefaultHeader({ tabValue, tabHandler, children }) {
         m={2}
         pt={2}
         sx={{
-          backgroundImage: ({ functions: { linearGradient, rgba }, palette: { black } }) =>
-            `${linearGradient(rgba(black.main, 0.25), rgba(black.main, 0.25))}, url(${bgImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          backgroundColor: colors.homeGradient,
+          // backgroundImage: ({ functions: { linearGradient, rgba }, palette: { black } }) =>
+          //   `${linearGradient(rgba(black.main, 0.25), rgba(black.main, 0.25))}, url(${bgImage})`,
+          // backgroundSize: "cover",
+          // backgroundPosition: "center",
         }}
       >
         <Grid
