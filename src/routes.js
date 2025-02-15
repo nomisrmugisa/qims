@@ -66,6 +66,8 @@ import SignUpCover from "layouts/authentication/sign-up/cover";
 import ResetCover from "layouts/authentication/reset-password/cover";
 
 import QimsHomePage from "qims/pages/qims-home";
+import QimsLoginPage from "qims/pages/qims-login";
+import TestHomePage from "testing/pages/home";
 
 // Otis Admin PRO React components
 import MDAvatar from "components/MDAvatar";
@@ -79,9 +81,21 @@ import profilePicture from "assets/images/team-3.jpg";
 const routes = [
   {
     name: "Qims Home",
-    key: "qims-home",
+    key: "qims-components",
     route: "/qims/home",
     component: <QimsHomePage />,
+  },
+  {
+    name: "Qims Login",
+    key: "qims-login",
+    route: "qims/login",
+    component: <QimsLoginPage />,
+  },
+  {
+    name: "Test Home",
+    key: "test-home",
+    route: "test/home",
+    component: <TestHomePage />,
   },
 
   {
@@ -180,8 +194,8 @@ const routes = [
           },
           {
             name: "Billing",
-            key: "billing",
-            route: "/pages/account/billing",
+            key: "home",
+            route: "/pages/account/home",
             component: <Billing />,
           },
           {

@@ -112,8 +112,8 @@ const pageRoutes = [
       },
       {
         name: "Billing",
-        key: "billing",
-        route: "/pages/account/billing",
+        key: "home",
+        route: "/pages/account/home",
       },
       {
         name: "Invoice",
