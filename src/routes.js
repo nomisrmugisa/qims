@@ -67,7 +67,6 @@ import ResetCover from "layouts/authentication/reset-password/cover";
 
 import QimsHomePage from "qims/pages/qims-home";
 import QimsLoginPage from "qims/pages/qims-login";
-import TestHomePage from "testing/pages/home";
 
 // Otis Admin PRO React components
 import MDAvatar from "components/MDAvatar";
@@ -91,13 +90,6 @@ const routes = [
     route: "qims/login",
     component: <QimsLoginPage />,
   },
-  {
-    name: "Test Home",
-    key: "test-home",
-    route: "test/home",
-    component: <TestHomePage />,
-  },
-
   {
     type: "collapse",
     name: "Brooklyn Alice",

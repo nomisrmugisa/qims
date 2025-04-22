@@ -61,9 +61,11 @@ function DefaultNavbarLink({
         >
           {name}
         </MDTypography>
-        <MDTypography variant="body2" color={light ? "white" : "dark"}>
-          <Icon sx={{ fontWeight: "bold", verticalAlign: "middle" }}>keyboard_arrow_down</Icon>
-        </MDTypography>
+        {openHandler && (
+          <MDTypography variant="body2" color={light ? "white" : "dark"}>
+            <Icon sx={{ fontWeight: "bold", verticalAlign: "middle" }}>keyboard_arrow_down</Icon>
+          </MDTypography>
+        )}
       </MDBox>
       {children && (
         <Collapse in={Boolean(collapseStatus)} timeout="auto" unmountOnExit>

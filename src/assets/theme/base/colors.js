@@ -141,15 +141,8 @@ export default {
   },
 
   homeGradient: {
-    /*
-    .bg-gradient-primary-to-secondary {
-  background-color: #0061f2;
-  background-image: linear-gradient(135deg, #0061f2 0%, rgba(105, 0, 199, 0.8) 100%);
-}
-     */
-    backgroundColor: "#0061f2",
-    backgroundImage: `linear-gradient(135deg, #0061f2 0%, rgba(105, 0, 199, 0.8), 100%
-    )}) !important`,
+    "background-color": "#0000FF",
+    "background-image": "linear-gradient(180deg, #0000FF 0%, rgba(245, 245, 245, 1) 100%)",
   },
 
   socialMediaColors: {

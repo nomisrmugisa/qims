@@ -57,13 +57,30 @@ function DefaultNavbarLink({
           fontWeight="regular"
           textTransform="capitalize"
           color={darkMode ? "white" : "inherit"}
-          sx={{ fontWeight: "100%" }}
+          sx={{
+            fontWeight: 700,
+            fontSize: "14px",
+            color: "#000080",
+            transition: "color 0.3s ease",
+            "&:hover": {
+              color: "#D3D3D3", // Slightly darker green for hover (optional)
+              textDecoration: "underline !important",
+              textUnderlineOffset: "10px",
+            },
+            "&:active": {
+              color: "#D3D3D3", // Slightly darker green for hover (optional)
+              textDecoration: "underline !important",
+              textUnderlineOffset: "10px",
+            },
+          }}
         >
           {name}
         </MDTypography>
-        <MDTypography variant="body2" color={light ? "white" : "dark"}>
-          <Icon sx={{ fontWeight: "bold", verticalAlign: "middle" }}>keyboard_arrow_down</Icon>
-        </MDTypography>
+        {openHandler && (
+          <MDTypography variant="body2" color={light ? "white" : "dark"}>
+            <Icon sx={{ fontWeight: "bold", verticalAlign: "middle" }}>keyboard_arrow_down</Icon>
+          </MDTypography>
+        )}
       </MDBox>
       {children && (
         <Collapse in={Boolean(collapseStatus)} timeout="auto" unmountOnExit>

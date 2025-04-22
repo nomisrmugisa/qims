@@ -31,8 +31,8 @@ import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 
 // Otis Admin PRO React example components
-import DefaultNavbarLink from "examples/Navbars/DefaultNavbar/DefaultNavbarLink";
-import DefaultNavbarMobile from "examples/Navbars/DefaultNavbar/DefaultNavbarMobile";
+import DefaultNavbarLink from "qims/components/navbars/DefaultNavbar/DefaultNavbarLink";
+import DefaultNavbarMobile from "qims/components/navbars/DefaultNavbar/DefaultNavbarMobile";
 
 // Otis Admin PRO React base styles
 import breakpoints from "assets/theme/base/breakpoints";
@@ -40,11 +40,11 @@ import breakpoints from "assets/theme/base/breakpoints";
 // import colors from "assets/theme/base/colors";
 
 // DefaultNavbar dropdown menus
-import PagesMenu from "examples/Navbars/DefaultNavbar/Menus/PagesMenu";
-import AuthenticationMenu from "examples/Navbars/DefaultNavbar/Menus/AuthenticationMenu";
-import EcommerceMenu from "examples/Navbars/DefaultNavbar/Menus/EcommerceMenu";
-import ApplicationsMenu from "examples/Navbars/DefaultNavbar/Menus/ApplicationsMenu";
-import DocsMenu from "examples/Navbars/DefaultNavbar/Menus/DocsMenu";
+import PagesMenu from "qims/components/navbars/DefaultNavbar/Menus/PagesMenu";
+import AuthenticationMenu from "qims/components/navbars/DefaultNavbar/Menus/AuthenticationMenu";
+import EcommerceMenu from "qims/components/navbars/DefaultNavbar/Menus/EcommerceMenu";
+import ApplicationsMenu from "qims/components/navbars/DefaultNavbar/Menus/ApplicationsMenu";
+import DocsMenu from "qims/components/navbars/DefaultNavbar/Menus/DocsMenu";
 // import { Image } from "@mui/icons-material";
 // import logo from "assets/images/logo";
 import mohlogo from "assets/qims/images/logos/moh-logo.png";
@@ -71,13 +71,13 @@ function DefaultNavbar({
   const [mobileNavbar, setMobileNavbar] = useState(false);
   const [mobileView, setMobileView] = useState(false);
 
-  const openPagesMenu = ({ currentTarget }) => setPagesMenu(currentTarget);
+  // const openPagesMenu = ({ currentTarget }) => setPagesMenu(currentTarget);
   const closePagesMenu = () => setPagesMenu(false);
-  const openAuthenticationMenu = ({ currentTarget }) => setAuthenticationMenu(currentTarget);
+  // const openAuthenticationMenu = ({ currentTarget }) => setAuthenticationMenu(currentTarget);
   const closeAuthenticationMenu = () => setAuthenticationMenu(false);
-  const openEcommerceMenu = ({ currentTarget }) => setEcommerceMenu(currentTarget);
+  // const openEcommerceMenu = ({ currentTarget }) => setEcommerceMenu(currentTarget);
   const closeEcommerceMenu = () => setEcommerceMenu(false);
-  const openApplicationsMenu = ({ currentTarget }) => setApplicationsMenu(currentTarget);
+  // const openApplicationsMenu = ({ currentTarget }) => setApplicationsMenu(currentTarget);
   const closeApplicationsMenu = () => setApplicationsMenu(false);
   const openDocsMenu = ({ currentTarget }) => setDocsMenu(currentTarget);
   const closeDocsMenu = () => setDocsMenu(false);
@@ -126,13 +126,6 @@ function DefaultNavbar({
         position="absolute"
         left={0}
         zIndex={3}
-        // bgColor={colors.homeGradient}
-        // sx={({
-        //   palette: { transparent: transparentColor, white, background },
-        //   functions: { rgba },
-        // }) => ({
-        //   backgroundColor: colors.homeGradient
-        // })}
       >
         <MDBox
           component={Link}
@@ -141,92 +134,107 @@ function DefaultNavbar({
           lineHeight={1}
           pl={{ xs: 0, lg: 1 }}
         >
-          <MDBox display="flex" alignItems="center" justifyContent="center">
+          <MDBox display="flex" justifyContent="center" alignItems="flex-start">
             <MDBox
               component="img"
               src={mohlogo}
-              alt="vodafone"
+              alt="Ministry of Health Logo"
               width={{ xs: "30%", xl: "30%" }}
               opacity={0.9}
               mb={3}
             />
-            <MDBox display="flex" flexDirection="column">
+            <MDBox display="flex" flexDirection="column" justifyContent="flex-end" height="100%">
               <MDTypography
                 variant="button"
                 fontWeight="bold"
-                fontSize={24}
+                fontSize={22}
                 color={light ? "white" : "dark"}
               >
                 Ministry of Health
               </MDTypography>
-              <MDTypography variant="button" fontWeight="bold" color={light ? "white" : "dark"}>
+              <MDTypography
+                variant="button"
+                fontWeight="bold"
+                fontSize={18}
+                color={light ? "white" : "dark"}
+              >
                 Republic of Botswana
               </MDTypography>
             </MDBox>
           </MDBox>
         </MDBox>
-        <MDBox color="inherit" display={{ xs: "none", lg: "flex" }} m={0} p={0}>
+        <MDBox
+          color="inherit"
+          display={{ xs: "none", lg: "flex" }}
+          m={0}
+          p={0}
+          sx={{
+            ml: "auto",
+            mr: "1.3rem", // Adds a small gap on the right
+          }}
+        >
           <DefaultNavbarLink
-            name="pages"
-            openHandler={openPagesMenu}
+            name={<span style={{ whiteSpace: "nowrap" }}>About us</span>}
+            openHandler={null}
             closeHandler={closePagesMenu}
             light={light}
           />
           <DefaultNavbarLink
-            name="authentication"
-            openHandler={openAuthenticationMenu}
+            name={<span style={{ whiteSpace: "nowrap" }}>Check License</span>}
+            openHandler={null}
             closeHandler={closeAuthenticationMenu}
             light={light}
           />
-
           <DefaultNavbarLink
-            name="application"
-            openHandler={openApplicationsMenu}
-            closeHandler={closeApplicationsMenu}
-            light={light}
-          />
-          <DefaultNavbarLink
-            name="ecommerce"
-            openHandler={openEcommerceMenu}
+            name={<span style={{ whiteSpace: "nowrap" }}>Report Incident</span>}
+            openHandler={null}
             closeHandler={closeEcommerceMenu}
             light={light}
           />
           <DefaultNavbarLink
-            name="docs"
+            name={<span style={{ whiteSpace: "nowrap" }}>Docs Repo</span>}
             openHandler={openDocsMenu}
             closeHandler={closeDocsMenu}
+            light={light}
+          />
+          <DefaultNavbarLink
+            name={<span style={{ whiteSpace: "nowrap" }}>Register</span>}
+            openHandler={null}
+            closeHandler={closeApplicationsMenu}
+            light={light}
+          />
+          <DefaultNavbarLink
+            name={<span style={{ whiteSpace: "nowrap" }}>Login</span>}
+            openHandler={null}
+            closeHandler={closeApplicationsMenu}
             light={light}
           />
         </MDBox>
         <MDBox display="flex" gap={2} alignItems="center">
           {register &&
             (register.type === "internal" ? (
-              <MDBox display={{ xs: "none", lg: "inline-block" }}>
-                <MDButton
-                  component={Link}
-                  to={register.route}
-                  variant="gradient"
-                  color={register.color ? register.color : "info"}
-                  size="small"
-                >
-                  {register.label}
-                </MDButton>
-              </MDBox>
+              <MDButton
+                component={Link}
+                to={register.route}
+                variant="gradient"
+                color={register.color ? register.color : "info"}
+                size="small"
+              >
+                {register.label}
+              </MDButton>
             ) : (
-              <MDBox display={{ xs: "none", lg: "inline-block" }}>
-                <MDButton
-                  component="a"
-                  href={register.route}
-                  target="_blank"
-                  rel="noreferrer"
-                  variant="gradient"
-                  color={register.color ? register.color : "info"}
-                  size="small"
-                  sx={{ mt: -0.3 }}
-                >
-                  {register.label}
-                </MDButton>
-              </MDBox>
+              <MDButton
+                component="a"
+                href={register.route}
+                target="_blank"
+                rel="noreferrer"
+                variant="gradient"
+                color={register.color ? register.color : "info"}
+                size="small"
+                sx={{ mt: -0.3 }}
+              >
+                {register.label}
+              </MDButton>
             ))}
           {action &&
             (action.type === "internal" ? (

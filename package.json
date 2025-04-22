@@ -31,6 +31,7 @@
     "@testing-library/react": "13.2.0",
     "@testing-library/user-event": "14.5.2",
     "ajv": "^8.17.1",
+    "bootstrap": "^5.3.3",
     "buffer": "6.0.3",
     "chart.js": "3.4.1",
     "chroma-js": "2.4.2",
