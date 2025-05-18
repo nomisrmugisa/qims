@@ -22,9 +22,9 @@ jobs:
           cd target-repo
 
           git checkout -B update-production
-          rm -rf ./*
-          cp -r ../* .
+          rsync -av --exclude='target-repo' ../ . --delete
 
           git add .
           git commit -m "Sync from qims repo [CI]" || echo "Nothing to commit"
           git push origin update-production --force
+
