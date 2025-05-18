@@ -21,8 +21,8 @@ jobs:
           # Clone the destination repo (moh_client_frontend)
           git clone https://x-access-token:${{ secrets.TARGET_REPO_PAT }}@github.com/qimssystem/moh_client_frontend.git target-repo
 
-          # Copy qims contents into target-repo (excluding .git and target-repo)
-          rsync -av --exclude='.git' --exclude='target-repo' ./ target-repo/ --delete
+          # Copy qims contents into target-repo (excluding .git and target-repo)          
+          rsync -av --exclude='.git' --exclude='target-repo' --exclude='.github/workflows' ./ target-repo/ --delete
 
           cd target-repo
           git checkout -B update-production
