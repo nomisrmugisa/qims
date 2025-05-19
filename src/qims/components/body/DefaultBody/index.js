@@ -19,6 +19,7 @@ import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import { useTheme, styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
+import { useNavigate } from "react-router-dom";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialogContent-root": {
@@ -56,6 +57,11 @@ const cards = [
 ];
 
 function DefaultBody() {
+  const navigate = useNavigate();
+
+  const handleLogin = () => {
+    navigate("/qims/login");
+  };
   const [open, setOpen] = React.useState(false);
 
   const handleClickOpen = () => {
@@ -171,7 +177,7 @@ function DefaultBody() {
                             Register
                           </Button>
                           <Button
-                            onClick={handleClickOpen}
+                            onClick={handleLogin}
                             sx={{
                               mt: 2,
                               backgroundColor: "#e0e0e0",
@@ -307,51 +313,155 @@ function DefaultBody() {
         </Grid>
       </Grid>
 
-      <BootstrapDialog onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>
-        <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">
-          Registration Form
-        </DialogTitle>
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-            color: theme.palette.grey[500],
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-        <DialogContent dividers>
-          <Typography gutterBottom>
-            <TextField fullWidth label="email" id="email" />
-          </Typography>
-          <Typography gutterBottom>
-            <TextField id="outlined-basic" label="username" variant="outlined" />
-            <TextField id="outlined-basic" label="password" variant="outlined" />
-          </Typography>
-          <br />
-          <Typography gutterBottom>
-            <TextField id="outlined-basic" label="FirstName" variant="outlined" />
-            <TextField id="outlined-basic" label="Surname" variant="outlined" />
-          </Typography>
-          <Typography gutterBottom>
-            <TextField id="outlined-basic" label="Cellnumber" variant="outlined" />
-          </Typography>
-          <Typography gutterBottom>
-            <TextField id="outlined-basic" label="Type of professional" variant="outlined" />
-          </Typography>
-          <Typography gutterBottom>
-            <TextField id="outlined-basic" label="Registration number" variant="outlined" />
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button autoFocus onClick={handleClose}>
-            Save
-          </Button>
-        </DialogActions>
-      </BootstrapDialog>
+      {/*<BootstrapDialog onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>*/}
+      {/*  <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">*/}
+      {/*    Registration Form*/}
+      {/*  </DialogTitle>*/}
+      {/*  <IconButton*/}
+      {/*    aria-label="close"*/}
+      {/*    onClick={handleClose}*/}
+      {/*    sx={{*/}
+      {/*      position: "absolute",*/}
+      {/*      right: 8,*/}
+      {/*      top: 8,*/}
+      {/*      color: theme.palette.grey[500],*/}
+      {/*    }}*/}
+      {/*  >*/}
+      {/*    <CloseIcon />*/}
+      {/*  </IconButton>*/}
+      {/*  <DialogContent dividers>*/}
+      {/*    <Typography gutterBottom>*/}
+      {/*      <TextField fullWidth label="email" id="email" />*/}
+      {/*    </Typography>*/}
+      {/*    <Typography gutterBottom>*/}
+      {/*      <TextField id="outlined-basic" label="username" variant="outlined" />*/}
+      {/*      <TextField id="outlined-basic" label="password" variant="outlined" />*/}
+      {/*    </Typography>*/}
+      {/*    <br />*/}
+      {/*    <Typography gutterBottom>*/}
+      {/*      <TextField id="outlined-basic" label="FirstName" variant="outlined" />*/}
+      {/*      <TextField id="outlined-basic" label="Surname" variant="outlined" />*/}
+      {/*    </Typography>*/}
+      {/*    <Typography gutterBottom>*/}
+      {/*      <TextField id="outlined-basic" label="Cellnumber" variant="outlined" />*/}
+      {/*    </Typography>*/}
+      {/*    <Typography gutterBottom>*/}
+      {/*      <TextField id="outlined-basic" label="Type of professional" variant="outlined" />*/}
+      {/*    </Typography>*/}
+      {/*    <Typography gutterBottom>*/}
+      {/*      <TextField id="outlined-basic" label="Registration number" variant="outlined" />*/}
+      {/*    </Typography>*/}
+      {/*  </DialogContent>*/}
+      {/*  <DialogActions>*/}
+      {/*    <Button autoFocus onClick={handleClose}>*/}
+      {/*      Save*/}
+      {/*    </Button>*/}
+      {/*  </DialogActions>*/}
+      {/*</BootstrapDialog>*/}
+        <BootstrapDialog onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>
+            <DialogTitle
+                sx={{ m: 0, p: 2, fontWeight: 'bold', textAlign: 'left' }}
+                id="customized-dialog-title"
+            >
+                Registration Form
+            </DialogTitle>
+
+            <IconButton
+                aria-label="close"
+                onClick={handleClose}
+                sx={{
+                    position: "absolute",
+                    right: 8,
+                    top: 8,
+                    color: (theme) => theme.palette.grey[500],
+                }}
+            >
+                <CloseIcon />
+            </IconButton>
+
+            <DialogContent dividers sx={{ px: 4 }}>
+                <TextField
+                    fullWidth
+                    label="Email"
+                    variant="outlined"
+                    margin="dense"
+                />
+
+                <TextField
+                    fullWidth
+                    label="Username"
+                    variant="outlined"
+                    margin="dense"
+                    sx={{ backgroundColor: "#fff9c4" }} // light yellow
+                />
+
+                <TextField
+                    fullWidth
+                    label="Password"
+                    type="password"
+                    variant="outlined"
+                    margin="dense"
+                    sx={{ backgroundColor: "#fff9c4" }} // light yellow
+                />
+
+                <Box display="flex" gap={2} mt={1}>
+                    <TextField
+                        fullWidth
+                        label="First Name"
+                        variant="outlined"
+                        margin="dense"
+                    />
+                    <TextField
+                        fullWidth
+                        label="Surname"
+                        variant="outlined"
+                        margin="dense"
+                    />
+                </Box>
+
+                <TextField
+                    fullWidth
+                    label="Cell Number"
+                    variant="outlined"
+                    margin="dense"
+                />
+
+                <TextField
+                    fullWidth
+                    label="Type of Professional"
+                    variant="outlined"
+                    margin="dense"
+                />
+
+                <TextField
+                    fullWidth
+                    label="Registration Number"
+                    variant="outlined"
+                    margin="dense"
+                />
+            </DialogContent>
+
+            <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
+                <Button onClick={handleClose} color="inherit">
+                    Cancel
+                </Button>
+                <Button
+                    variant="contained"
+                    sx={{
+                        backgroundColor: "#3f51b5",
+                        color: "#fff",
+                        borderRadius: 2,
+                        px: 4,
+                        "&:hover": {
+                            backgroundColor: "#303f9f",
+                        },
+                    }}
+                >
+                    Register
+                </Button>
+            </DialogActions>
+        </BootstrapDialog>
+
     </>
   );
 }
