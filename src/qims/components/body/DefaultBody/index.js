@@ -20,6 +20,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useTheme, styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import Snackbar from "@mui/material/Snackbar";
+import { Backdrop, CircularProgress } from "@mui/material";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialogContent-root": {
@@ -58,7 +61,7 @@ const cards = [
 
 function DefaultBody() {
   const navigate = useNavigate();
-
+  const [loading, setLoading] = useState(false);
   const handleLogin = () => {
     navigate("/qims/login");
   };
@@ -69,6 +72,183 @@ function DefaultBody() {
   };
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const [formData, setFormData] = useState({
+    email: "",
+    username: "selfRegistrationTest11",
+    password: "selfRegistration@123$",
+    firstName: "",
+    surname: "",
+    cellNumber: "",
+    professionalType: "",
+    registrationNumber: "",
+    locationInBotswana: "",
+  });
+
+  const [successOpen, setSuccessOpen] = useState(false);
+  const username = process.env.REACT_APP_API_USERNAME;
+  const password = process.env.REACT_APP_API_PASSWORD;
+
+  const credentials = btoa(`${username}:${password}`);
+
+  // create user profile
+  const createUserProfile = async () => {
+    const profilePayload = {
+      username: formData.username,
+      disabled: true,
+      password: "selfRegistration@123$",
+      accountExpiry: "2025-04-25",
+      userRoles: [{ id: "aOxLneGCVvO" }],
+      catDimensionConstraints: [],
+      cogsDimensionConstraints: [],
+      email: formData.email,
+      firstName: formData.firstName,
+      surname: formData.surname,
+      phoneNumber: formData.cellNumber,
+      whatsApp: "+2670777108323",
+      twitter: "bhcpNumbet",
+      organisationUnits: [{ id: "OVpBNoteQ2Y" }],
+      dataViewOrganisationUnits: [],
+      teiSearchOrganisationUnits: [],
+      dataViewMaxOrganisationUnitLevel: null,
+      userGroups: [],
+      attributeValues: [],
+    };
+
+    const response = await fetch("https://qimsdev.5am.co.bw/qims/api/40/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${credentials}`,
+      },
+      body: JSON.stringify(profilePayload),
+    });
+
+    const result = await response.json();
+
+    if (response.status === 201) {
+      console.log("User profile created!");
+      return result.response?.uid; // <-- return the created user UID
+    }
+    console.error("Failed to create user profile");
+    return null;
+  };
+
+  const sendLoginEmail = async (userId) => {
+    const messagePayload = {
+      subject: "Welcome to the System",
+      text: `Hello ${formData.firstName},\n\nYour account has been created.\n\nUsername: ${formData.username}\nPassword: ${formData.password}\n\nPlease log in and change your password.`,
+      users: [{ id: userId }],
+      email: true,
+    };
+
+    const response = await fetch("https://qimsdev.5am.co.bw/qims/api/messageConversations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${credentials}`,
+      },
+      body: JSON.stringify(messagePayload),
+    });
+
+    if (response.ok) {
+      console.log("Email sent successfully");
+      return true;
+    }
+    console.error("Failed to send email");
+    return false;
+  };
+
+  const changePassword = async () => {
+    const passwordPayload = {
+      oldPassword: "selfRegistration@123$",
+      newPassword: "Nomisr123$",
+    };
+
+    const response = await fetch("https://qimsdev.5am.co.bw/qims/api/40/me/changePassword", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${credentials}`,
+      },
+      body: JSON.stringify(passwordPayload),
+    });
+
+    if (response.status === 202) {
+      console.log("Password changed successfully");
+      alert("Your password was changed. You can now log in.");
+    } else {
+      console.error("Failed to change password");
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // registration
+  const handleSubmit = async () => {
+    setLoading(true); // Show loader
+
+    const payload = {
+      events: [
+        {
+          occurredAt: "2025-05-01",
+          notes: [],
+          program: "Y4W5qIKlOsh",
+          programStage: "YzqtE5Uv8Qd",
+          orgUnit: "OVpBNoteQ2Y",
+          dataValues: [
+            { dataElement: "ykwhsQQPVH0", value: formData.surname },
+            { dataElement: "HMk4LZ9ESOq", value: formData.firstName },
+            { dataElement: "VJzk8OdFJKA", value: formData.locationInBotswana },
+            { dataElement: "D707dj4Rpjz", value: "Facility Name" },
+            { dataElement: "dRkX5jmHEIM", value: "Physical Address" },
+            { dataElement: "p7y0vqpP0W2", value: "Address (Town/Village)" },
+            { dataElement: "SReqZgQk0RY", value: formData.cellNumber },
+            { dataElement: "NVlLoMZbXIW", value: formData.email },
+            { dataElement: "SVzSsDiZMN5", value: formData.registrationNumber },
+            { dataElement: "aMFg2iq9VIg", value: formData.professionalType },
+          ],
+        },
+      ],
+    };
+
+    try {
+      const response = await fetch("https://qimsdev.5am.co.bw/qims/api/40/tracker?async=false", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${credentials}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error("Failed to submit registration");
+
+      const userId = await createUserProfile();
+      if (userId) {
+        const emailSent = await sendLoginEmail(userId);
+
+        if (emailSent) {
+          setSuccessOpen(true);
+          handleClose();
+        } else {
+          alert("User created but failed to send email.");
+        }
+      } else {
+        alert("Form saved but user profile creation failed.");
+      }
+    } catch (err) {
+      console.error("Submission error:", err);
+      alert("There was an error submitting your request.");
+    } finally {
+      setLoading(false); // Hide loader
+    }
   };
 
   const [selectedCard, setSelectedCard] = React.useState(0);
@@ -313,155 +493,197 @@ function DefaultBody() {
         </Grid>
       </Grid>
 
-      {/*<BootstrapDialog onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>*/}
-      {/*  <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">*/}
-      {/*    Registration Form*/}
-      {/*  </DialogTitle>*/}
-      {/*  <IconButton*/}
-      {/*    aria-label="close"*/}
-      {/*    onClick={handleClose}*/}
-      {/*    sx={{*/}
-      {/*      position: "absolute",*/}
-      {/*      right: 8,*/}
-      {/*      top: 8,*/}
-      {/*      color: theme.palette.grey[500],*/}
-      {/*    }}*/}
-      {/*  >*/}
-      {/*    <CloseIcon />*/}
-      {/*  </IconButton>*/}
-      {/*  <DialogContent dividers>*/}
-      {/*    <Typography gutterBottom>*/}
-      {/*      <TextField fullWidth label="email" id="email" />*/}
-      {/*    </Typography>*/}
-      {/*    <Typography gutterBottom>*/}
-      {/*      <TextField id="outlined-basic" label="username" variant="outlined" />*/}
-      {/*      <TextField id="outlined-basic" label="password" variant="outlined" />*/}
-      {/*    </Typography>*/}
-      {/*    <br />*/}
-      {/*    <Typography gutterBottom>*/}
-      {/*      <TextField id="outlined-basic" label="FirstName" variant="outlined" />*/}
-      {/*      <TextField id="outlined-basic" label="Surname" variant="outlined" />*/}
-      {/*    </Typography>*/}
-      {/*    <Typography gutterBottom>*/}
-      {/*      <TextField id="outlined-basic" label="Cellnumber" variant="outlined" />*/}
-      {/*    </Typography>*/}
-      {/*    <Typography gutterBottom>*/}
-      {/*      <TextField id="outlined-basic" label="Type of professional" variant="outlined" />*/}
-      {/*    </Typography>*/}
-      {/*    <Typography gutterBottom>*/}
-      {/*      <TextField id="outlined-basic" label="Registration number" variant="outlined" />*/}
-      {/*    </Typography>*/}
-      {/*  </DialogContent>*/}
-      {/*  <DialogActions>*/}
-      {/*    <Button autoFocus onClick={handleClose}>*/}
-      {/*      Save*/}
-      {/*    </Button>*/}
-      {/*  </DialogActions>*/}
-      {/*</BootstrapDialog>*/}
-        <BootstrapDialog onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>
-            <DialogTitle
-                sx={{ m: 0, p: 2, fontWeight: 'bold', textAlign: 'left' }}
-                id="customized-dialog-title"
-            >
-                Registration Form
-            </DialogTitle>
+      {/* <BootstrapDialog onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}> */}
+      {/*  <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title"> */}
+      {/*    Registration Form */}
+      {/*  </DialogTitle> */}
+      {/*  <IconButton */}
+      {/*    aria-label="close" */}
+      {/*    onClick={handleClose} */}
+      {/*    sx={{ */}
+      {/*      position: "absolute", */}
+      {/*      right: 8, */}
+      {/*      top: 8, */}
+      {/*      color: theme.palette.grey[500], */}
+      {/*    }} */}
+      {/*  > */}
+      {/*    <CloseIcon /> */}
+      {/*  </IconButton> */}
+      {/*  <DialogContent dividers> */}
+      {/*    <Typography gutterBottom> */}
+      {/*      <TextField fullWidth label="email" id="email" /> */}
+      {/*    </Typography> */}
+      {/*    <Typography gutterBottom> */}
+      {/*      <TextField id="outlined-basic" label="username" variant="outlined" /> */}
+      {/*      <TextField id="outlined-basic" label="password" variant="outlined" /> */}
+      {/*    </Typography> */}
+      {/*    <br /> */}
+      {/*    <Typography gutterBottom> */}
+      {/*      <TextField id="outlined-basic" label="FirstName" variant="outlined" /> */}
+      {/*      <TextField id="outlined-basic" label="Surname" variant="outlined" /> */}
+      {/*    </Typography> */}
+      {/*    <Typography gutterBottom> */}
+      {/*      <TextField id="outlined-basic" label="Cellnumber" variant="outlined" /> */}
+      {/*    </Typography> */}
+      {/*    <Typography gutterBottom> */}
+      {/*      <TextField id="outlined-basic" label="Type of professional" variant="outlined" /> */}
+      {/*    </Typography> */}
+      {/*    <Typography gutterBottom> */}
+      {/*      <TextField id="outlined-basic" label="Registration number" variant="outlined" /> */}
+      {/*    </Typography> */}
+      {/*  </DialogContent> */}
+      {/*  <DialogActions> */}
+      {/*    <Button autoFocus onClick={handleClose}> */}
+      {/*      Save */}
+      {/*    </Button> */}
+      {/*  </DialogActions> */}
+      {/* </BootstrapDialog> */}
+      <BootstrapDialog onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>
+        <DialogTitle
+          sx={{ m: 0, p: 2, fontWeight: "bold", textAlign: "left" }}
+          id="customized-dialog-title"
+        >
+          Registration Form
+        </DialogTitle>
 
-            <IconButton
-                aria-label="close"
-                onClick={handleClose}
-                sx={{
-                    position: "absolute",
-                    right: 8,
-                    top: 8,
-                    color: (theme) => theme.palette.grey[500],
-                }}
-            >
-                <CloseIcon />
-            </IconButton>
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
 
-            <DialogContent dividers sx={{ px: 4 }}>
-                <TextField
-                    fullWidth
-                    label="Email"
-                    variant="outlined"
-                    margin="dense"
-                />
+        <DialogContent dividers sx={{ px: 4 }}>
+          <TextField
+            fullWidth
+            label="Email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            variant="outlined"
+            margin="dense"
+          />
+          {/*<TextField*/}
+          {/*  fullWidth*/}
+          {/*  label="Username"*/}
+          {/*  name="username"*/}
+          {/*  value={formData.username}*/}
+          {/*  onChange={handleChange}*/}
+          {/*  variant="outlined"*/}
+          {/*  margin="dense"*/}
+          {/*  sx={{ backgroundColor: "#fff9c4" }}*/}
+          {/*/>*/}
 
-                <TextField
-                    fullWidth
-                    label="Username"
-                    variant="outlined"
-                    margin="dense"
-                    sx={{ backgroundColor: "#fff9c4" }} // light yellow
-                />
+          {/*<TextField*/}
+          {/*  fullWidth*/}
+          {/*  label="Password"*/}
+          {/*  type="password"*/}
+          {/*  name="password"*/}
+          {/*  value={formData.password}*/}
+          {/*  onChange={handleChange}*/}
+          {/*  variant="outlined"*/}
+          {/*  margin="dense"*/}
+          {/*  sx={{ backgroundColor: "#fff9c4" }}*/}
+          {/*/>*/}
 
-                <TextField
-                    fullWidth
-                    label="Password"
-                    type="password"
-                    variant="outlined"
-                    margin="dense"
-                    sx={{ backgroundColor: "#fff9c4" }} // light yellow
-                />
+          <Box display="flex" gap={2} mt={1}>
+            <TextField
+              fullWidth
+              label="First Name"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              variant="outlined"
+              margin="dense"
+            />
+            <TextField
+              fullWidth
+              label="Surname"
+              name="surname"
+              value={formData.surname}
+              onChange={handleChange}
+              variant="outlined"
+              margin="dense"
+            />
+          </Box>
 
-                <Box display="flex" gap={2} mt={1}>
-                    <TextField
-                        fullWidth
-                        label="First Name"
-                        variant="outlined"
-                        margin="dense"
-                    />
-                    <TextField
-                        fullWidth
-                        label="Surname"
-                        variant="outlined"
-                        margin="dense"
-                    />
-                </Box>
+          <TextField
+            fullWidth
+            label="Cell Number"
+            name="cellNumber"
+            value={formData.cellNumber}
+            onChange={handleChange}
+            variant="outlined"
+            margin="dense"
+          />
 
-                <TextField
-                    fullWidth
-                    label="Cell Number"
-                    variant="outlined"
-                    margin="dense"
-                />
+          <TextField
+            fullWidth
+            label="Type of Professional"
+            name="professionalType"
+            value={formData.professionalType}
+            onChange={handleChange}
+            variant="outlined"
+            margin="dense"
+          />
 
-                <TextField
-                    fullWidth
-                    label="Type of Professional"
-                    variant="outlined"
-                    margin="dense"
-                />
+          <TextField
+            fullWidth
+            label="Registration Number"
+            name="registrationNumber"
+            value={formData.registrationNumber}
+            onChange={handleChange}
+            variant="outlined"
+            margin="dense"
+          />
 
-                <TextField
-                    fullWidth
-                    label="Registration Number"
-                    variant="outlined"
-                    margin="dense"
-                />
-            </DialogContent>
+          <TextField
+              fullWidth
+              label="Location in Botswana"
+              name="locationInBotswana"
+              value={formData.locationInBotswana}
+              onChange={handleChange}
+              variant="outlined"
+              margin="dense"
+          />
+        </DialogContent>
 
-            <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
-                <Button onClick={handleClose} color="inherit">
-                    Cancel
-                </Button>
-                <Button
-                    variant="contained"
-                    sx={{
-                        backgroundColor: "#3f51b5",
-                        color: "#fff",
-                        borderRadius: 2,
-                        px: 4,
-                        "&:hover": {
-                            backgroundColor: "#303f9f",
-                        },
-                    }}
-                >
-                    Register
-                </Button>
-            </DialogActions>
-        </BootstrapDialog>
-
+        <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
+          <Button onClick={handleClose} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            sx={{
+              backgroundColor: "#3f51b5",
+              color: "#fff",
+              borderRadius: 2,
+              px: 4,
+              "&:hover": {
+                backgroundColor: "#303f9f",
+              },
+            }}
+          >
+            Register
+          </Button>
+        </DialogActions>
+      </BootstrapDialog>
+      <Snackbar
+        open={successOpen}
+        autoHideDuration={8000}
+        onClose={() => setSuccessOpen(false)}
+        message="Request has been saved successfully. We will get back to you as soon as your request is processed. An email has been sent with a reference code."
+      />
+      <Backdrop open={loading} sx={{ zIndex: 9999, color: "#fff" }}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </>
   );
 }
