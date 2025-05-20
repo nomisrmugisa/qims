@@ -63,7 +63,7 @@ function DefaultBody() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const handleLogin = () => {
-    navigate("/qims/login");
+    navigate("/authentication/sign-in/basic"); //navigate to login page
   };
   const [open, setOpen] = React.useState(false);
 
@@ -76,7 +76,7 @@ function DefaultBody() {
 
   const [formData, setFormData] = useState({
     email: "",
-    username: "selfRegistrationTest11",
+    username: "selfRegistrationTest12",
     password: "selfRegistration@123$",
     firstName: "",
     surname: "",
@@ -236,8 +236,11 @@ function DefaultBody() {
 
         if (emailSent) {
           setSuccessOpen(true);
-          handleClose();
-        } else {
+          setTimeout(() => {
+            navigate("/authentication/sign-in/basic"); // redirect to login after short delay
+          }, 4000); // optional delay to allow user to read Snackbar
+        }
+        else {
           alert("User created but failed to send email.");
         }
       } else {
@@ -676,10 +679,10 @@ function DefaultBody() {
         </DialogActions>
       </BootstrapDialog>
       <Snackbar
-        open={successOpen}
-        autoHideDuration={8000}
-        onClose={() => setSuccessOpen(false)}
-        message="Request has been saved successfully. We will get back to you as soon as your request is processed. An email has been sent with a reference code."
+          open={successOpen}
+          autoHideDuration={8000}
+          onClose={() => setSuccessOpen(false)}
+          message="Registration successful. Please check your email for login details. Redirecting to login..."
       />
       <Backdrop open={loading} sx={{ zIndex: 9999, color: "#fff" }}>
         <CircularProgress color="inherit" />

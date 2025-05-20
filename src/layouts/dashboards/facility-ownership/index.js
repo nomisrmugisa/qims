@@ -44,7 +44,7 @@ import booking2 from "assets/images/products/product-2-min.jpg";
 import booking3 from "assets/images/products/product-3-min.jpg";
 
 // dashboard page on login
-function Analytics() {
+function FacilityOwnership() {
   const { sales, tasks } = reportsLineChartData;
 
   // Action buttons for the BookingCard
@@ -225,4 +225,4 @@ function Analytics() {
   );
 }
 
-export default Analytics;
+export default FacilityOwnership;
