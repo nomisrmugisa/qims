@@ -24,6 +24,10 @@ import { useState } from "react";
 import Snackbar from "@mui/material/Snackbar";
 import { Backdrop, CircularProgress } from "@mui/material";
 
+import RequestsTable from "./RequestsTable";
+import RequestDetails from "./RequestDetails";
+import EditRequestForm from "./EditRequestForm";
+
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialogContent-root": {
     padding: theme.spacing(2),
@@ -85,6 +89,29 @@ function DefaultBody() {
     registrationNumber: "",
     locationInBotswana: "",
   });
+
+  const [activeTab, setActiveTab] = useState('home');
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [editingRequest, setEditingRequest] = useState(null);
+  const [requests, setRequests] = useState([
+    {
+      date: '2025-05-20',
+      status: 'Active',
+      facilityName: 'evolewur',
+      firstName: 'ssk',
+      physicalAddress: '1jj3j4o',
+      correspondenceAddress: 'Correspondence Address (Town/Village)',
+      phoneNumber: '0777108323',
+      email: 'nomisrmugisa@gmail.com',
+      bhpcNumber: '7836498',
+      privatePracticeNumber: '8327498759',
+      location: 'Central Serowe',
+      surname: 'SSKUG'
+    },
+    { date: '2025-05-19', status: 'Active' },
+    { date: '2025-05-01', status: 'Active' },
+    // Add more requests as needed
+  ]);
 
   const [successOpen, setSuccessOpen] = useState(false);
   const username = process.env.REACT_APP_API_USERNAME;
@@ -311,78 +338,177 @@ function DefaultBody() {
                         fontSize: "24px",
                       }}
                     >
-                      PRIVATE FACILITY INSPECTION & LICENSING
+                      {/* PRIVATE FACILITY INSPECTION & LICENSING */}
+                      ADMIN PANEL
                     </h5>
                   </div>
                 </div>
+
                 <div className="card mb-3" style={{ maxWidth: "1440px" }}>
+
+
                   <div className="row g-0">
-                    {/* Text Section */}
-                    <div className="col-md-7 d-flex align-items-center">
-                      <div className="card-body">
-                        <p
-                          className="card-text text-justify"
-                          style={{
-                            color: "#000000",
-                            textAlign: "left",
-                            fontSize: "18px",
+                    {/* Tabs Section */}
+                    <div className="col-12">
+                      <div className="d-flex">
+                        <Button
+                          onClick={() => {
+                            setActiveTab('home');
+                            setSelectedRequest(null);
+                            setEditingRequest(null);
+                          }}
+                          sx={{
+                            backgroundColor: activeTab === 'home' ? '#e0e0e0' : 'transparent',
+                            color: "#000",
+                            borderRadius: 0,
+                            paddingX: 3,
+                            paddingY: 1,
+                            boxShadow: "none",
+                            borderBottom: activeTab === 'home' ? '2px solid #000' : 'none',
+                            "&:hover": {
+                              backgroundColor: "#f0f0f0",
+                              boxShadow: "none",
+                            },
                           }}
                         >
-                          The Health Facility Licensing Platform is an innovative system that
-                          revolutionizes the licensing process for health facilities. It offers a
-                          user-friendly solution, enhancing accessibility, transparency, and
-                          efficiency. This platform reduces processing time, minimizes required
-                          documentation, and eliminates physical visits to regulatory offices. With
-                          real-time application tracking and seamless integrations, it sets a new
-                          standard for transparency and accountability, improving healthcare service
-                          delivery and ensuring regulatory compliance.
-                          <br />
-                          <Button
-                            onClick={handleClickOpen}
-                            sx={{
-                              mr: 4,
-                              mt: 2,
-                              backgroundColor: "#e0e0e0",
-                              color: "#000",
-                              borderRadius: 2,
-                              paddingX: 3,
-                              paddingY: 1,
+                          Home
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setActiveTab('requests');
+                            setSelectedRequest(null);
+                            setEditingRequest(null);
+                          }}
+                          sx={{
+                            backgroundColor: activeTab === 'requests' ? '#e0e0e0' : 'transparent',
+                            color: "#000",
+                            borderRadius: 0,
+                            paddingX: 3,
+                            paddingY: 1,
+                            boxShadow: "none",
+                            borderBottom: activeTab === 'requests' ? '2px solid #000' : 'none',
+                            "&:hover": {
+                              backgroundColor: "#f0f0f0",
                               boxShadow: "none",
-                              "&:hover": {
-                                backgroundColor: "#d5d5d5",
-                                boxShadow: "none",
-                              },
-                            }}
-                          >
-                            Register
-                          </Button>
-                          <Button
-                            onClick={handleLogin}
-                            sx={{
-                              mt: 2,
-                              backgroundColor: "#e0e0e0",
-                              color: "#000",
-                              borderRadius: 2,
-                              paddingX: 3,
-                              paddingY: 1,
-                              boxShadow: "none",
-                              "&:hover": {
-                                backgroundColor: "#d5d5d5",
-                                boxShadow: "none",
-                              },
-                            }}
-                          >
-                            Login
-                          </Button>
-                        </p>
+                            },
+                          }}
+                        >
+                          Requests
+                        </Button>
                       </div>
                     </div>
 
-                    {/* Image Section */}
-                    <div className="col-md-5" style={{ overflow: "hidden" }}>
-                      <img src={woman} alt="Apple Icon" className="img-fluid" />
-                    </div>
+                    {/* Home Tab Content */}
+                    {activeTab === 'home' && (
+                      <>
+                        <div className="col-md-7 d-flex align-items-center">
+                          <div className="card-body">
+                            <p
+                              className="card-text text-justify"
+                              style={{
+                                color: "#000000",
+                                textAlign: "left",
+                                fontSize: "18px",
+                              }}
+                            >
+                              The Health Facility Licensing Platform is an innovative system that
+                              revolutionizes the licensing process for health facilities. It offers a
+                              user-friendly solution, enhancing accessibility, transparency, and
+                              efficiency. This platform reduces processing time, minimizes required
+                              documentation, and eliminates physical visits to regulatory offices. With
+                              real-time application tracking and seamless integrations, it sets a new
+                              standard for transparency and accountability, improving healthcare service
+                              delivery and ensuring regulatory compliance.
+                              <br />
+                              <Button
+                                onClick={handleClickOpen}
+                                sx={{
+                                  mr: 4,
+                                  mt: 2,
+                                  backgroundColor: "#e0e0e0",
+                                  color: "#000",
+                                  borderRadius: 2,
+                                  paddingX: 3,
+                                  paddingY: 1,
+                                  boxShadow: "none",
+                                  "&:hover": {
+                                    backgroundColor: "#d5d5d5",
+                                    boxShadow: "none",
+                                  },
+                                }}
+                              >
+                                Register
+                              </Button>
+                              <Button
+                                onClick={handleLogin}
+                                sx={{
+                                  mt: 2,
+                                  backgroundColor: "#e0e0e0",
+                                  color: "#000",
+                                  borderRadius: 2,
+                                  paddingX: 3,
+                                  paddingY: 1,
+                                  boxShadow: "none",
+                                  "&:hover": {
+                                    backgroundColor: "#d5d5d5",
+                                    boxShadow: "none",
+                                  },
+                                }}
+                              >
+                                Login
+                              </Button>
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="col-md-5" style={{ overflow: "hidden" }}>
+                          <img src={woman} alt="Apple Icon" className="img-fluid" />
+                        </div>
+                      </>
+                    )}
+
+                    {/* Requests Tab Content */}
+                    {activeTab === 'requests' && (
+                      <div className="col-12">
+                        {!selectedRequest && !editingRequest && (
+                          <RequestsTable
+                            onRowClick={setSelectedRequest}
+                            onEditClick={setEditingRequest}
+                          />
+                        )}
+
+                        {selectedRequest && !editingRequest && (
+                          <RequestDetails
+                            request={selectedRequest}
+                            onBack={() => setSelectedRequest(null)}
+                            onEdit={setEditingRequest}
+                          />
+                        )}
+
+                        {editingRequest && (
+                          <EditRequestForm
+                            request={editingRequest}
+                            onSave={(updatedData) => {
+                              // Handle save logic
+                              console.log('Saved:', updatedData);
+                              setEditingRequest(null);
+                              setSelectedRequest(null);
+                            }}
+                            onCancel={() => {
+                              if (selectedRequest) {
+                                setEditingRequest(null);
+                              } else {
+                                setEditingRequest(null);
+                                setSelectedRequest(null);
+                              }
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
+
+
                 </div>
               </div>
 
@@ -644,13 +770,13 @@ function DefaultBody() {
           />
 
           <TextField
-              fullWidth
-              label="Location in Botswana"
-              name="locationInBotswana"
-              value={formData.locationInBotswana}
-              onChange={handleChange}
-              variant="outlined"
-              margin="dense"
+            fullWidth
+            label="Location in Botswana"
+            name="locationInBotswana"
+            value={formData.locationInBotswana}
+            onChange={handleChange}
+            variant="outlined"
+            margin="dense"
           />
         </DialogContent>
 
