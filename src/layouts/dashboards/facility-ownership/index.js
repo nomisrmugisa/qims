@@ -13,10 +13,17 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// @mui material components
-import Grid from "@mui/material/Grid";
-import Tooltip from "@mui/material/Tooltip";
-import Icon from "@mui/material/Icon";
+import React, { useEffect, useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Grid,
+} from "@mui/material";
 
 // Otis Admin PRO React components
 import MDBox from "components/MDBox";
@@ -26,199 +33,128 @@ import MDTypography from "components/MDTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
-import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
-import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
-import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
-import BookingCard from "examples/Cards/BookingCard";
 
-// Anaytics dashboard components
-import SalesByCountry from "layouts/dashboards/analytics/components/SalesByCountry";
-
-// Data
-import reportsBarChartData from "layouts/dashboards/analytics/data/reportsBarChartData";
-import reportsLineChartData from "layouts/dashboards/analytics/data/reportsLineChartData";
-
-// Images
-import booking1 from "assets/images/products/product-1-min.jpg";
-import booking2 from "assets/images/products/product-2-min.jpg";
-import booking3 from "assets/images/products/product-3-min.jpg";
-
-// dashboard page on login
 function FacilityOwnership() {
-  const { sales, tasks } = reportsLineChartData;
+  const [events, setEvents] = useState([]);
+  const [dataValues, setDataValues] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const username = process.env.REACT_APP_API_USERNAME;
+  const password = process.env.REACT_APP_API_PASSWORD;
+  const credentials = btoa(`${username}:${password}`);
 
-  // Action buttons for the BookingCard
-  const actionButtons = (
-    <>
-      <Tooltip title="Refresh" placement="bottom">
-        <MDTypography
-          variant="body1"
-          color="primary"
-          lineHeight={1}
-          sx={{ cursor: "pointer", mx: 3 }}
-        >
-          <Icon color="inherit">refresh</Icon>
-        </MDTypography>
-      </Tooltip>
-      <Tooltip title="Edit" placement="bottom">
-        <MDTypography variant="body1" color="info" lineHeight={1} sx={{ cursor: "pointer", mx: 3 }}>
-          <Icon color="inherit">edit</Icon>
-        </MDTypography>
-      </Tooltip>
-    </>
-  );
+  const trackedEntityInstanceId = "ASfKU6xlu8F";
+  const programId = "EE8yeLVo6cN";
+  const url = `https://qimsdev.5am.co.bw/qims/api/trackedEntityInstances/${trackedEntityInstanceId}.json?program=${programId}&fields=*`;
+
+  useEffect(() => {
+    fetch(url, {
+      headers: {
+        Authorization: `Basic ${credentials}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        const fetchedEvents = data.enrollments?.[0]?.events || [];
+        setEvents(fetchedEvents);
+        const allDataValues = fetchedEvents.flatMap((event) => event.dataValues || []);
+        setDataValues(allDataValues);
+        setIsLoading(false);
+        console.log("data", data);
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+        setIsLoading(false);
+      });
+  }, [url, credentials]);
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox py={3}>
-        <Grid container>
-          <SalesByCountry />
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <MDTypography variant="h4" gutterBottom>
+              Facility Ownership
+            </MDTypography>
+          </Grid>
+
+          {/* Events Table */}
+          <Grid item xs={12}>
+            <MDTypography variant="h5" gutterBottom>
+              Events
+            </MDTypography>
+            <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
+              <Table sx={{ minWidth: 650 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center">Event ID</TableCell>
+                    <TableCell align="center">Program</TableCell>
+                    <TableCell align="center">Org Unit</TableCell>
+                    <TableCell align="center">Status</TableCell>
+                    <TableCell align="center">Report Date</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {events.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">
+                        {isLoading ? "Loading..." : "No events found"}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    events.map((event) => (
+                      <TableRow key={event.event}>
+                        <TableCell align="center">{event.event}</TableCell>
+                        <TableCell align="center">{event.program}</TableCell>
+                        <TableCell align="center">{event.orgUnitName}</TableCell>
+                        <TableCell align="center">{event.status}</TableCell>
+                        <TableCell align="center">{event.dueDate}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
+
+          {/* DataValues Table */}
+          <Grid item xs={12}>
+            <MDTypography variant="h5" gutterBottom>
+              Data Values
+            </MDTypography>
+            <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
+              <Table sx={{ minWidth: 650 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center">Data Element</TableCell>
+                    <TableCell align="center">Value</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {dataValues.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={2} align="center">
+                        {isLoading ? "Loading..." : "No data values found"}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    dataValues.map((dataValue) => (
+                      <TableRow key={`${dataValue.dataElement}-${dataValue.value}`}>
+                        <TableCell align="center">{dataValue.dataElement}</TableCell>
+                        <TableCell align="center">{dataValue.value}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
         </Grid>
-        <MDBox mt={6}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={4}>
-              <MDBox mb={3}>
-                <ReportsBarChart
-                  color="info"
-                  title="website views"
-                  description="Last Campaign Performance"
-                  date="campaign sent 2 days ago"
-                  chart={reportsBarChartData}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <MDBox mb={3}>
-                <ReportsLineChart
-                  color="success"
-                  title="daily sales"
-                  description={
-                    <>
-                      (<strong>+15%</strong>) increase in today sales.
-                    </>
-                  }
-                  date="updated 4 min ago"
-                  chart={sales}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <MDBox mb={3}>
-                <ReportsLineChart
-                  color="dark"
-                  title="completed tasks"
-                  description="Last Campaign Performance"
-                  date="just updated"
-                  chart={tasks}
-                />
-              </MDBox>
-            </Grid>
-          </Grid>
-        </MDBox>
-        <MDBox mt={1.5}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={3}>
-              <MDBox mb={1.5}>
-                <ComplexStatisticsCard
-                  color="dark"
-                  icon="weekend"
-                  title="Bookings"
-                  count={281}
-                  percentage={{
-                    color: "success",
-                    amount: "+55%",
-                    label: "than lask week",
-                  }}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} md={6} lg={3}>
-              <MDBox mb={1.5}>
-                <ComplexStatisticsCard
-                  icon="leaderboard"
-                  title="Today's Users"
-                  count="2,300"
-                  percentage={{
-                    color: "success",
-                    amount: "+3%",
-                    label: "than last month",
-                  }}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} md={6} lg={3}>
-              <MDBox mb={1.5}>
-                <ComplexStatisticsCard
-                  color="success"
-                  icon="store"
-                  title="Revenue"
-                  count="34k"
-                  percentage={{
-                    color: "success",
-                    amount: "+1%",
-                    label: "than yesterday",
-                  }}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} md={6} lg={3}>
-              <MDBox mb={1.5}>
-                <ComplexStatisticsCard
-                  color="primary"
-                  icon="person_add"
-                  title="Followers"
-                  count="+91"
-                  percentage={{
-                    color: "success",
-                    amount: "",
-                    label: "Just updated",
-                  }}
-                />
-              </MDBox>
-            </Grid>
-          </Grid>
-        </MDBox>
-        <MDBox mt={2}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={4}>
-              <MDBox mt={3}>
-                <BookingCard
-                  image={booking1}
-                  title="Cozy 5 Stars Apartment"
-                  description='The place is close to Barceloneta Beach and bus stop just 2 min by walk and near to "Naviglio" where you can enjoy the main night life in Barcelona.'
-                  price="$899/night"
-                  location="Barcelona, Spain"
-                  action={actionButtons}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <MDBox mt={3}>
-                <BookingCard
-                  image={booking2}
-                  title="Office Studio"
-                  description='The place is close to Metro Station and bus stop just 2 min by walk and near to "Naviglio" where you can enjoy the night life in London, UK.'
-                  price="$1.119/night"
-                  location="London, UK"
-                  action={actionButtons}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <MDBox mt={3}>
-                <BookingCard
-                  image={booking3}
-                  title="Beautiful Castle"
-                  description='The place is close to Metro Station and bus stop just 2 min by walk and near to "Naviglio" where you can enjoy the main night life in Milan.'
-                  price="$459/night"
-                  location="Milan, Italy"
-                  action={actionButtons}
-                />
-              </MDBox>
-            </Grid>
-          </Grid>
-        </MDBox>
       </MDBox>
       <Footer />
     </DashboardLayout>

@@ -106,7 +106,7 @@ function Basic() {
             </MDBox>
             <MDBox mt={4} mb={1}>
               <MDButton variant="gradient" color="info" fullWidth
-                        onClick={() => navigate("/dashboards/analytics")}>
+                        onClick={() => navigate("/dashboards/facility-ownership")}>
                 sign in
               </MDButton>
             </MDBox>
