@@ -63,7 +63,7 @@ function DefaultBody() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const handleLogin = () => {
-    navigate("/authentication/sign-in/basic"); //navigate to login page
+    navigate("/authentication/sign-in/basic"); // navigate to login page
   };
   const [open, setOpen] = React.useState(false);
 
@@ -75,14 +75,18 @@ function DefaultBody() {
   };
 
   const [formData, setFormData] = useState({
+    facility: "",
+    physicalAddress: "",
+    correspondenceAddress: "",
+    BHPCRegistrationNumber: "",
+    privatePracticeNumber: "",
+    attachments: null,
     email: "",
-    username: "selfRegistrationTest12",
+    username: "selfRegistrationTest15",
     password: "selfRegistration@123$",
     firstName: "",
     surname: "",
     cellNumber: "",
-    professionalType: "",
-    registrationNumber: "",
     locationInBotswana: "",
   });
 
@@ -160,28 +164,28 @@ function DefaultBody() {
     return false;
   };
 
-  const changePassword = async () => {
-    const passwordPayload = {
-      oldPassword: "selfRegistration@123$",
-      newPassword: "Nomisr123$",
-    };
-
-    const response = await fetch("https://qimsdev.5am.co.bw/qims/api/40/me/changePassword", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${credentials}`,
-      },
-      body: JSON.stringify(passwordPayload),
-    });
-
-    if (response.status === 202) {
-      console.log("Password changed successfully");
-      alert("Your password was changed. You can now log in.");
-    } else {
-      console.error("Failed to change password");
-    }
-  };
+  // const changePassword = async () => {
+  //   const passwordPayload = {
+  //     oldPassword: "selfRegistration@123$",
+  //     newPassword: "Nomisr123$",
+  //   };
+  //
+  //   const response = await fetch("https://qimsdev.5am.co.bw/qims/api/40/me/changePassword", {
+  //     method: "PUT",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Basic ${credentials}`,
+  //     },
+  //     body: JSON.stringify(passwordPayload),
+  //   });
+  //
+  //   if (response.status === 202) {
+  //     console.log("Password changed successfully");
+  //     alert("Your password was changed. You can now log in.");
+  //   } else {
+  //     console.error("Failed to change password");
+  //   }
+  // };
 
   const handleChange = (e) => {
     setFormData({
@@ -204,15 +208,15 @@ function DefaultBody() {
           orgUnit: "OVpBNoteQ2Y",
           dataValues: [
             { dataElement: "ykwhsQQPVH0", value: formData.surname },
+            { dataElement: "p7y0vqpP0W2", value: formData.correspondenceAddress },
             { dataElement: "HMk4LZ9ESOq", value: formData.firstName },
             { dataElement: "VJzk8OdFJKA", value: formData.locationInBotswana },
-            { dataElement: "D707dj4Rpjz", value: "Facility Name" },
-            { dataElement: "dRkX5jmHEIM", value: "Physical Address" },
-            { dataElement: "p7y0vqpP0W2", value: "Address (Town/Village)" },
+            { dataElement: "D707dj4Rpjz", value: formData.facility },
+            { dataElement: "dRkX5jmHEIM", value: formData.physicalAddress },
             { dataElement: "SReqZgQk0RY", value: formData.cellNumber },
             { dataElement: "NVlLoMZbXIW", value: formData.email },
-            { dataElement: "SVzSsDiZMN5", value: formData.registrationNumber },
-            { dataElement: "aMFg2iq9VIg", value: formData.professionalType },
+            { dataElement: "SVzSsDiZMN5", value: formData.BHPCRegistrationNumber },
+            { dataElement: "aMFg2iq9VIg", value: formData.privatePracticeNumber },
           ],
         },
       ],
@@ -239,8 +243,7 @@ function DefaultBody() {
           setTimeout(() => {
             navigate("/authentication/sign-in/basic"); // redirect to login after short delay
           }, 4000); // optional delay to allow user to read Snackbar
-        }
-        else {
+        } else {
           alert("User created but failed to send email.");
         }
       } else {
@@ -556,6 +559,7 @@ function DefaultBody() {
             position: "absolute",
             right: 8,
             top: 8,
+            // eslint-disable-next-line no-shadow
             color: (theme) => theme.palette.grey[500],
           }}
         >
@@ -565,36 +569,13 @@ function DefaultBody() {
         <DialogContent dividers sx={{ px: 4 }}>
           <TextField
             fullWidth
-            label="Email"
-            name="email"
-            value={formData.email}
+            label="Facility"
+            name="facility"
+            value={formData.facility}
             onChange={handleChange}
             variant="outlined"
             margin="dense"
           />
-          {/*<TextField*/}
-          {/*  fullWidth*/}
-          {/*  label="Username"*/}
-          {/*  name="username"*/}
-          {/*  value={formData.username}*/}
-          {/*  onChange={handleChange}*/}
-          {/*  variant="outlined"*/}
-          {/*  margin="dense"*/}
-          {/*  sx={{ backgroundColor: "#fff9c4" }}*/}
-          {/*/>*/}
-
-          {/*<TextField*/}
-          {/*  fullWidth*/}
-          {/*  label="Password"*/}
-          {/*  type="password"*/}
-          {/*  name="password"*/}
-          {/*  value={formData.password}*/}
-          {/*  onChange={handleChange}*/}
-          {/*  variant="outlined"*/}
-          {/*  margin="dense"*/}
-          {/*  sx={{ backgroundColor: "#fff9c4" }}*/}
-          {/*/>*/}
-
           <Box display="flex" gap={2} mt={1}>
             <TextField
               fullWidth
@@ -615,45 +596,100 @@ function DefaultBody() {
               margin="dense"
             />
           </Box>
+          <TextField
+            fullWidth
+            label="Physical Address"
+            name="physicalAddress"
+            value={formData.physicalAddress}
+            onChange={handleChange}
+            variant="outlined"
+            margin="dense"
+          />
+          <TextField
+            fullWidth
+            label="Correspondence Address (Town/Village)"
+            name="correspondenceAddress"
+            value={formData.correspondenceAddress}
+            onChange={handleChange}
+            variant="outlined"
+            margin="dense"
+          />
+          <TextField
+            fullWidth
+            label="Email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            variant="outlined"
+            margin="dense"
+          />
+          {/* <TextField */}
+          {/*  fullWidth */}
+          {/*  label="Username" */}
+          {/*  name="username" */}
+          {/*  value={formData.username} */}
+          {/*  onChange={handleChange} */}
+          {/*  variant="outlined" */}
+          {/*  margin="dense" */}
+          {/*  sx={{ backgroundColor: "#fff9c4" }} */}
+          {/* /> */}
+
+          {/* <TextField */}
+          {/*  fullWidth */}
+          {/*  label="Password" */}
+          {/*  type="password" */}
+          {/*  name="password" */}
+          {/*  value={formData.password} */}
+          {/*  onChange={handleChange} */}
+          {/*  variant="outlined" */}
+          {/*  margin="dense" */}
+          {/*  sx={{ backgroundColor: "#fff9c4" }} */}
+          {/* /> */}
 
           <TextField
             fullWidth
-            label="Cell Number"
+            label="Phone Number"
             name="cellNumber"
             value={formData.cellNumber}
             onChange={handleChange}
             variant="outlined"
             margin="dense"
           />
-
           <TextField
             fullWidth
-            label="Type of Professional"
-            name="professionalType"
-            value={formData.professionalType}
+            label="B H.P.C Registration Number"
+            name="BHPCRegistrationNumber"
+            value={formData.BHPCRegistrationNumber}
             onChange={handleChange}
             variant="outlined"
             margin="dense"
           />
-
           <TextField
             fullWidth
-            label="Registration Number"
-            name="registrationNumber"
-            value={formData.registrationNumber}
+            label="private Practice Number"
+            name="privatePracticeNumber"
+            value={formData.privatePracticeNumber}
             onChange={handleChange}
             variant="outlined"
             margin="dense"
           />
-
           <TextField
-              fullWidth
-              label="Location in Botswana"
-              name="locationInBotswana"
-              value={formData.locationInBotswana}
-              onChange={handleChange}
-              variant="outlined"
-              margin="dense"
+            fullWidth
+            label="attachements"
+            name="attachements"
+            value={formData.attachments}
+            onChange={handleChange}
+            variant="outlined"
+            margin="dense"
+          />
+          <TextField
+            fullWidth
+            label="Location in Botswana"
+            name="locationInBotswana"
+            value={formData.locationInBotswana}
+            onChange={handleChange}
+            variant="outlined"
+            margin="dense"
           />
         </DialogContent>
 
@@ -679,10 +715,10 @@ function DefaultBody() {
         </DialogActions>
       </BootstrapDialog>
       <Snackbar
-          open={successOpen}
-          autoHideDuration={8000}
-          onClose={() => setSuccessOpen(false)}
-          message="Registration successful. Please check your email for login details. Redirecting to login..."
+        open={successOpen}
+        autoHideDuration={8000}
+        onClose={() => setSuccessOpen(false)}
+        message="Registration successful. Please check your email for login details. Redirecting to login..."
       />
       <Backdrop open={loading} sx={{ zIndex: 9999, color: "#fff" }}>
         <CircularProgress color="inherit" />
