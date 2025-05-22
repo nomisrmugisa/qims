@@ -58,7 +58,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
         <Paper elevation={3} sx={{ p: 2, borderRadius: 2 }}>
             <TableContainer sx={{ maxHeight: 'calc(100vh - 200px)', overflow: 'auto' }}>
                 <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
-                    <TableHead sx={{ width: '1410px', marginLeft: '-2px' }}>
+                    <TableHead sx={{ width: '1200px', marginLeft: '-20px' }}>
                         <TableRow>
                             <TableCell sx={{
                                 width: 177,
@@ -72,7 +72,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                             <TableCell sx={{
                                 width: 177,
                                 fontWeight: 'bold',
-                                marginLeft: '-10px',
+                                marginLeft: '-13px',
                                 paddingLeft: '16px',
                                 borderRight: 'none'
                             }}>
@@ -81,7 +81,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                             <TableCell sx={{
                                 width: 177,
                                 fontWeight: 'bold',
-                                marginLeft: '-10px',
+                                marginLeft: '-13px',
                                 paddingLeft: '16px',
                                 borderRight: 'none'
                             }}>
@@ -90,7 +90,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                             <TableCell sx={{
                                 width: 177,
                                 fontWeight: 'bold',
-                                marginLeft: '-10px',
+                                marginLeft: '-14px',
                                 paddingLeft: '16px',
                                 borderRight: 'none'
                             }}>
@@ -99,8 +99,8 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                             <TableCell sx={{
                                 width: 177,
                                 fontWeight: 'bold',
-                                marginLeft: '-10px',
-                                paddingLeft: '16px',
+                                marginRight: '40px',
+                                // paddingLeft: '16px',
                                 borderRight: 'none'
                             }}>
                                 Email Address
@@ -108,7 +108,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                             <TableCell sx={{
                                 width: 177,
                                 fontWeight: 'bold',
-                                marginLeft: '-10px',
+                                marginLeft: '-16px',
                                 paddingLeft: '16px',
                                 borderRight: 'none'
                             }}>
@@ -117,8 +117,8 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                             <TableCell sx={{
                                 width: 177,
                                 fontWeight: 'bold',
-                                marginLeft: '-10px',
-                                paddingLeft: '16px',
+                                // marginLeft: '-20px',
+                                paddingRight: '46px',
                                 borderRight: 'none'
                             }}>
                                 Accepted
