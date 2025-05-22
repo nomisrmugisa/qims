@@ -13,11 +13,13 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
         correspondenceAddress: request.dataValues.find(dv => dv.dataElement === 'p7y0vqpP0W2')?.value || '',
         bhpcNumber: request.dataValues.find(dv => dv.dataElement === 'SVzSsDiZMN5')?.value || '',
         privatePracticeNumber: request.dataValues.find(dv => dv.dataElement === 'aMFg2iq9VIg')?.value || '',
-        location: request.dataValues.find(dv => dv.dataElement === 'VJzk8OdFJKA')?.value || ''
+        location: request.dataValues.find(dv => dv.dataElement === 'VJzk8OdFJKA')?.value || '',
+        tei: request.dataValues.find(dv => dv.dataElement === 'PdtizqOqE6Q')?.value || '',
+
     });
 
     const [checklist, setChecklist] = useState({
-        accepted: request.dataValues.find(dv => dv.dataElement === 'jV5Y8XOfkgb')!== undefined,
+        accepted: request.dataValues.find(dv => dv.dataElement === 'jV5Y8XOfkgb') !== undefined,
         applicationLetterValid: request.dataValues.find(dv => dv.dataElement === 'Bz0oYRvSypS')?.value === 'true' || false,
         postBasicQualification: request.dataValues.find(dv => dv.dataElement === 'fD7DQkmT1im')?.value === 'true' || false,
         practiceValid: request.dataValues.find(dv => dv.dataElement === 'XcWt8b12E85')?.value === 'true' || false,
@@ -33,6 +35,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
 
     const [allCheckboxesChecked, setAllCheckboxesChecked] = useState(false);
     const [showChecklist, setShowChecklist] = useState(checklist.accepted);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
         setShowChecklist(checklist.accepted);
@@ -79,14 +82,199 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
         return result;
     };
 
+    const createOrgUnit = async (orgUnitId) => {
+        try {
+            const shortName = formData.facilityName.length > 40
+                ? formData.facilityName.substring(0, 40)
+                : formData.facilityName;
+
+            const orgUnitPayload = {
+                name: formData.facilityName,
+                id: orgUnitId,
+                shortName: shortName,
+                openingDate: new Date().toISOString(),
+                parent: {
+                    id: formData.location
+                }
+            };
+
+            // First API call to create schema
+            const schemaResponse = await fetch(`${process.env.REACT_APP_DHIS2_URL}/api/29/schemas/organisationUnit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                },
+                body: JSON.stringify(orgUnitPayload)
+            });
+
+            if (!schemaResponse.ok) {
+                throw new Error('Failed to create organization unit schema');
+            }
+
+            // Second API call to create org unit
+            const orgUnitResponse = await fetch(`${process.env.REACT_APP_DHIS2_URL}/api/29/organisationUnits`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                },
+                body: JSON.stringify(orgUnitPayload)
+            });
+
+            if (!orgUnitResponse.ok) {
+                throw new Error('Failed to create organization unit');
+            }
+
+            return orgUnitId;
+        } catch (error) {
+            console.error('Error creating org unit:', error);
+            throw error;
+        }
+    };
+
+    const addOrgUnitToProgram = async (orgUnitId) => {
+        try {
+            const programs = [
+                'EE8yeLVo6cN', 'Xje2ga2tJcA', 'QSQWCmnsQtG',
+                'adbaKjLFtYH', 'fWc9nCmUjez', 'Y4W5qIKlOsh',
+                'wlWC4vYeTzt', 'cghjivP9xA2'
+            ];
+    
+            // Process all programs in parallel
+            const results = await Promise.all(programs.map(async (programId) => {
+                const response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/api/programs/${programId}/organisationUnits`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                    },
+                    body: JSON.stringify({
+                        additions: [{ id: orgUnitId }]
+                    })
+                });
+    
+                if (!response.ok) {
+                    console.error(`Failed to add org unit to program ${programId}`);
+                    return false;
+                }
+                return true;
+            }));
+    
+            // Check if all operations were successful
+            const allSuccess = results.every(result => result === true);
+            if (!allSuccess) {
+                throw new Error('Failed to add org unit to one or more programs');
+            }
+    
+            return true;
+        } catch (error) {
+            console.error('Error adding org unit to programs:', error);
+            throw error;
+        }
+    };
+
+    // Add this new function to handle TEI creation/update
+    const createOrUpdateTEI = async (orgUnitId) => {
+        try {
+            const teiPayload = {
+                trackedEntityType: "uTTDt3fuXZK",
+                orgUnit: orgUnitId,
+                attributes: [
+                    { attribute: "Ue8XNxxVKZs", value: formData.physicalAddress },
+                    { attribute: "YRTNX6YvPlu", value: formData.email },
+                    { attribute: "YiCio8ZTWNj", value: formData.facilityName },
+                    { attribute: "ixWjABeTjHn", value: formData.phoneNumber },
+                    { attribute: "vRUtkpMwzDW", value: orgUnitId }
+                ]
+            };
+
+            let response;
+            let newTei = formData.tei;
+
+            if (!formData.tei) {
+                // Create new TEI if it doesn't exist
+                response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/api/trackedEntityInstances`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                    },
+                    body: JSON.stringify(teiPayload)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create tracked entity instance');
+                }
+
+                const result = await response.json();
+                newTei = result.response.importSummaries[0].reference;
+
+                // Update formData with the new TEI
+                setFormData(prev => ({ ...prev, tei: newTei }));
+            } else {
+                // Update existing TEI
+                response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/api/trackedEntityInstances/${formData.tei}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                    },
+                    body: JSON.stringify(teiPayload)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update tracked entity instance');
+                }
+            }
+
+            return newTei;
+        } catch (error) {
+            console.error('Error in createOrUpdateTEI:', error);
+            throw error;
+        }
+    };
+
+    const createEnrollment = async (orgUnitId, programId, teiCalled) => {
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/api/enrollments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                },
+                body: JSON.stringify({
+                    trackedEntityInstance: teiCalled,
+                    program: programId,
+                    status: "ACTIVE",
+                    orgUnit: orgUnitId,
+                    enrollmentDate: today,
+                    incidentDate: today
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to create enrollment for program ${programId}`);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error creating enrollment:', error);
+            throw error;
+        }
+    };
+
     const handleSubmit = async () => {
         try {
+            // Generate a new ID for org unit if complete is checked
+            const orgUnitId = checklist.complete ? generateTEIID() : null;
+
             // Prepare the payload
             const payload = {
                 events: [{
-                    trackedEntityInstance: "Kljh56Desq1",
                     event: request.event, // Make sure this matches the event ID
-                    status: "ACTIVE",
+                    status: checklist.complete ? "COMPLETED" : "ACTIVE",
                     program: request.program,
                     programStage: request.programStage,
                     enrollment: request.enrollment,
@@ -124,7 +312,8 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                         { dataElement: 'SVzSsDiZMN5', value: formData.bhpcNumber },
                         { dataElement: 'aMFg2iq9VIg', value: formData.privatePracticeNumber },
                         { dataElement: 'VJzk8OdFJKA', value: formData.location },
-                        { dataElement: "jV5Y8XOfkgb", value: checklist.accepted?  "true" : null },
+                        { dataElement: "PdtizqOqE6Q", value: formData.tei },
+                        { dataElement: "jV5Y8XOfkgb", value: checklist.accepted ? "true" : null },
                         // (checklist.accepted ? [{ dataElement: 'jV5Y8XOfkgb', value: "true" }] : []),
                         { dataElement: 'Bz0oYRvSypS', value: checklist.applicationLetterValid ? "true" : null },
                         { dataElement: 'fD7DQkmT1im', value: checklist.postBasicQualification ? "true" : null },
@@ -140,8 +329,39 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
 
             console.log('DHIS2 URL:', process.env.REACT_APP_DHIS2_URL);
             console.log('API URL:', `${process.env.REACT_APP_DHIS2_URL}/api/40/tracker?async=false&importStrategy=UPDATE`)
+
+            // If complete is checked, perform the additional steps
+            if (checklist.complete && orgUnitId) {
+                // Step 2a: Create org unit
+                await createOrgUnit(orgUnitId);
+
+                // Step 2b: Add org unit to program
+                await addOrgUnitToProgram(orgUnitId);
+
+                // New Step: Create or Update TEI
+                const updatedTei = await createOrUpdateTEI(orgUnitId);
+
+                // Update the payload with the new TEI if it was created
+                if (!formData.tei && updatedTei) {
+                    payload.events[0].dataValues = payload.events[0].dataValues.map(dv =>
+                        dv.dataElement === "PdtizqOqE6Q" ? { ...dv, value: updatedTei } : dv
+                    );
+                }
+
+                // Step 2c: Create enrollments for all programs
+                const programs = [
+                    'EE8yeLVo6cN', 'Xje2ga2tJcA', 'QSQWCmnsQtG',
+                    'adbaKjLFtYH', 'fWc9nCmUjez', 'Y4W5qIKlOsh',
+                    'wlWC4vYeTzt', 'cghjivP9xA2'
+                ];
+
+                for (const programId of programs) {
+                    await createEnrollment(orgUnitId, programId , updatedTei);
+                }
+            }
+
             // Send the request
-            const API_URL = 'https://qimsdev.5am.co.bw/qims/api/40/tracker?async=false&importStrategy=UPDATE';
+            const API_URL = `${process.env.REACT_APP_DHIS2_URL}/40/tracker?async=false&importStrategy=UPDATE`;
             const USERNAME = 'admin';
             const PASSWORD = '5Am53808053@';
 
@@ -149,7 +369,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Basic ' + btoa(`${USERNAME}:${PASSWORD}`)
+                    // 'Authorization': 'Basic ' + btoa(`${USERNAME}:${PASSWORD}`)
                 },
                 body: JSON.stringify(payload)
             });
@@ -171,6 +391,8 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
         } catch (error) {
             console.error('Error updating request:', error);
             // You might want to show an error message to the user here
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -222,9 +444,9 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                             }}
                         />
                         <TextField
-                            label="Correspondence Address"
-                            name="correspondenceAddress"
-                            value={formData.correspondenceAddress}
+                            label="Tracked Entity Instance"
+                            name="tei"
+                            value={formData.tei}
                             fullWidth
                             margin="normal"
                             InputProps={{

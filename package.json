@@ -5,6 +5,7 @@
   "author": "Creative Tim",
   "license": "See license in https://www.creative-tim.com/license",
   "description": "Otis Admin PRO by Creative Tim",
+  "proxy": "http://localhost:5002",
   "bugs": {
     "url": "https://github.com/creativetimofficial/ct-otis-admin-pro/issues"
   },

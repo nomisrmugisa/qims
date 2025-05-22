@@ -143,11 +143,11 @@ function DefaultBody() {
       attributeValues: [],
     };
 
-    const response = await fetch("https://qimsdev.5am.co.bw/qims/api/40/users", {
+    const response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/40/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${credentials}`,
+        // Authorization: `Basic ${credentials}`,
       },
       body: JSON.stringify(profilePayload),
     });
@@ -170,11 +170,11 @@ function DefaultBody() {
       email: true,
     };
 
-    const response = await fetch("https://qimsdev.5am.co.bw/qims/api/messageConversations", {
+    const response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/messageConversations`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${credentials}`,
+        // Authorization: `Basic ${credentials}`,
       },
       body: JSON.stringify(messagePayload),
     });
@@ -193,11 +193,11 @@ function DefaultBody() {
       newPassword: "Nomisr123$",
     };
 
-    const response = await fetch("https://qimsdev.5am.co.bw/qims/api/40/me/changePassword", {
+    const response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/40/me/changePassword`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${credentials}`,
+        // Authorization: `Basic ${credentials}`,
       },
       body: JSON.stringify(passwordPayload),
     });
@@ -246,11 +246,11 @@ function DefaultBody() {
     };
 
     try {
-      const response = await fetch("https://qimsdev.5am.co.bw/qims/api/40/tracker?async=false", {
+      const response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/40/tracker?async=false`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Basic ${credentials}`,
+          // Authorization: `Basic ${credentials}`,
         },
         body: JSON.stringify(payload),
       });
@@ -351,7 +351,7 @@ function DefaultBody() {
                     {/* Tabs Section */}
                     <div className="col-12">
                       <div className="d-flex">
-                        <Button
+                        {/* <Button
                           onClick={() => {
                             setActiveTab('home');
                             setSelectedRequest(null);
@@ -372,7 +372,7 @@ function DefaultBody() {
                           }}
                         >
                           Home
-                        </Button>
+                        </Button> */}
                         <Button
                           onClick={() => {
                             setActiveTab('requests');
@@ -399,7 +399,7 @@ function DefaultBody() {
                     </div>
 
                     {/* Home Tab Content */}
-                    {activeTab === 'home' && (
+                    {/* {activeTab === 'home' && (
                       <>
                         <div className="col-md-7 d-flex align-items-center">
                           <div className="card-body">
@@ -465,7 +465,7 @@ function DefaultBody() {
                           <img src={woman} alt="Apple Icon" className="img-fluid" />
                         </div>
                       </>
-                    )}
+                    )} */}
 
                     {/* Requests Tab Content */}
                     {activeTab === 'requests' && (
