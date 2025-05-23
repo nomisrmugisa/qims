@@ -1,18 +1,3 @@
-/**
-=========================================================
-* Otis Admin PRO - v2.0.2
-=========================================================
-
-* Product Page: https://material-ui.com/store/items/otis-admin-pro-material-dashboard-react/
-* Copyright 2024 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -33,11 +18,12 @@ import MDTypography from "components/MDTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
+import TabsNavBar from "components/TabsNavBar";
 
 function FacilityOwnership() {
   const [events, setEvents] = useState([]);
-  const [dataValues, setDataValues] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
   const username = process.env.REACT_APP_API_USERNAME;
   const password = process.env.REACT_APP_API_PASSWORD;
   const credentials = btoa(`${username}:${password}`);
@@ -61,8 +47,6 @@ function FacilityOwnership() {
       .then((data) => {
         const fetchedEvents = data.enrollments?.[0]?.events || [];
         setEvents(fetchedEvents);
-        const allDataValues = fetchedEvents.flatMap((event) => event.dataValues || []);
-        setDataValues(allDataValues);
         setIsLoading(false);
         console.log("data", data);
       })
@@ -75,6 +59,7 @@ function FacilityOwnership() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
+      <TabsNavBar />
       <MDBox py={3}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
@@ -82,7 +67,6 @@ function FacilityOwnership() {
               Facility Ownership
             </MDTypography>
           </Grid>
-
           {/* Events Table */}
           <Grid item xs={12}>
             <MDTypography variant="h5" gutterBottom>
@@ -92,11 +76,11 @@ function FacilityOwnership() {
               <Table sx={{ minWidth: 650 }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell align="center">Event ID</TableCell>
-                    <TableCell align="center">Program</TableCell>
-                    <TableCell align="center">Org Unit</TableCell>
-                    <TableCell align="center">Status</TableCell>
                     <TableCell align="center">Report Date</TableCell>
+                    <TableCell align="center">Org Unit</TableCell>
+                    <TableCell align="center">First Name</TableCell>
+                    <TableCell align="center">Surname</TableCell>
+                    <TableCell align="center">Citizenship</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -109,44 +93,11 @@ function FacilityOwnership() {
                   ) : (
                     events.map((event) => (
                       <TableRow key={event.event}>
-                        <TableCell align="center">{event.event}</TableCell>
-                        <TableCell align="center">{event.program}</TableCell>
+                        <TableCell align="center">{event.eventDate}</TableCell>
                         <TableCell align="center">{event.orgUnitName}</TableCell>
-                        <TableCell align="center">{event.status}</TableCell>
-                        <TableCell align="center">{event.dueDate}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Grid>
-
-          {/* DataValues Table */}
-          <Grid item xs={12}>
-            <MDTypography variant="h5" gutterBottom>
-              Data Values
-            </MDTypography>
-            <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
-              <Table sx={{ minWidth: 650 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell align="center">Data Element</TableCell>
-                    <TableCell align="center">Value</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {dataValues.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={2} align="center">
-                        {isLoading ? "Loading..." : "No data values found"}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    dataValues.map((dataValue) => (
-                      <TableRow key={`${dataValue.dataElement}-${dataValue.value}`}>
-                        <TableCell align="center">{dataValue.dataElement}</TableCell>
-                        <TableCell align="center">{dataValue.value}</TableCell>
+                        <TableCell align="center">{event.storedBy}</TableCell>
+                        <TableCell align="center">{event.event}</TableCell>
+                        <TableCell align="center">{event.enrollmentStatus}</TableCell>
                       </TableRow>
                     ))
                   )}
