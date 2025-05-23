@@ -58,7 +58,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
         <Paper elevation={3} sx={{ p: 2, borderRadius: 2 }}>
             <TableContainer sx={{ maxHeight: 'calc(100vh - 200px)', overflow: 'auto' }}>
                 <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
-                    <TableHead sx={{ width: '1200px', marginLeft: '-20px' }}>
+                    <TableHead sx={{ width: '1400px', marginLeft: '-20px' }}>
                         <TableRow>
                             <TableCell sx={{
                                 width: 177,
@@ -138,7 +138,8 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                             <TableRow
                                 key={request.event}
                                 hover
-                                onClick={() => onRowClick(request)}
+                                // onClick={() => onRowClick(request)}
+                                onClick={() => onEditClick(request)} 
                                 sx={{
                                     cursor: 'pointer',
                                     '&:hover': { backgroundColor: 'action.hover' },

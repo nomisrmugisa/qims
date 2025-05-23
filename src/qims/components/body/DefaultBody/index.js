@@ -468,7 +468,7 @@ function DefaultBody() {
                     )} */}
 
                     {/* Requests Tab Content */}
-                    {activeTab === 'requests' && (
+                    {/* {activeTab === 'requests' && (
                       <div className="col-12">
                         {!selectedRequest && !editingRequest && (
                           <RequestsTable
@@ -501,6 +501,29 @@ function DefaultBody() {
                                 setEditingRequest(null);
                                 setSelectedRequest(null);
                               }
+                            }}
+                          />
+                        )}
+                      </div>
+                    )} */}
+                    {activeTab === 'requests' && (
+                      <div className="col-12">
+                        {!editingRequest && (
+                          <RequestsTable
+                            onRowClick={setSelectedRequest} // Keep this if needed for other cases
+                            onEditClick={setEditingRequest} // This will be called directly now
+                          />
+                        )}
+
+                        {editingRequest && (
+                          <EditRequestForm
+                            request={editingRequest}
+                            onSave={(updatedData) => {
+                              console.log('Saved:', updatedData);
+                              setEditingRequest(null);
+                            }}
+                            onCancel={() => {
+                              setEditingRequest(null);
                             }}
                           />
                         )}

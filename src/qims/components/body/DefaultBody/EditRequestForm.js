@@ -36,6 +36,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
     const [allCheckboxesChecked, setAllCheckboxesChecked] = useState(false);
     const [showChecklist, setShowChecklist] = useState(checklist.accepted);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [locationName, setLocationName] = useState('');
 
     useEffect(() => {
         setShowChecklist(checklist.accepted);
@@ -60,6 +61,37 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
 
         setAllCheckboxesChecked(allChecked);
     }, [checklist]);
+
+    useEffect(() => {
+        const loadLocationName = async () => {
+            const name = await fetchLocationName(formData.location);
+            setLocationName(name);
+        };
+
+        loadLocationName();
+    }, [formData.location]);
+
+    const fetchLocationName = async (orgUnitId) => {
+        if (!orgUnitId) return;
+
+        try {
+            const response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/api/organisationUnits/${orgUnitId}`, {
+                headers: {
+                    'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch location data');
+            }
+
+            const data = await response.json();
+            return data.name.trim(); // Trim to remove any whitespace
+        } catch (error) {
+            console.error('Error fetching location:', error);
+            return orgUnitId; // Return the ID as fallback
+        }
+    };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -140,7 +172,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                 'adbaKjLFtYH', 'fWc9nCmUjez', 'Y4W5qIKlOsh',
                 'wlWC4vYeTzt', 'cghjivP9xA2'
             ];
-    
+
             // Process all programs in parallel
             const results = await Promise.all(programs.map(async (programId) => {
                 const response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/api/programs/${programId}/organisationUnits`, {
@@ -153,20 +185,20 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                         additions: [{ id: orgUnitId }]
                     })
                 });
-    
+
                 if (!response.ok) {
                     console.error(`Failed to add org unit to program ${programId}`);
                     return false;
                 }
                 return true;
             }));
-    
+
             // Check if all operations were successful
             const allSuccess = results.every(result => result === true);
             if (!allSuccess) {
                 throw new Error('Failed to add org unit to one or more programs');
             }
-    
+
             return true;
         } catch (error) {
             console.error('Error adding org unit to programs:', error);
@@ -356,7 +388,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                 ];
 
                 for (const programId of programs) {
-                    await createEnrollment(orgUnitId, programId , updatedTei);
+                    await createEnrollment(orgUnitId, programId, updatedTei);
                 }
             }
 
@@ -437,6 +469,16 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                             label="Physical Address"
                             name="physicalAddress"
                             value={formData.physicalAddress}
+                            fullWidth
+                            margin="normal"
+                            InputProps={{
+                                readOnly: true,
+                            }}
+                        />
+                        <TextField
+                            label="Location in Botswana"
+                            name="location"
+                            value={locationName || formData.location} // Show name if available, otherwise show ID
                             fullWidth
                             margin="normal"
                             InputProps={{
