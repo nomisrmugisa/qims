@@ -65,7 +65,7 @@ function Basic() {
       if (response.ok) {
         // Fetch organization units after successful authentication
         const orgUnitsResponse = await fetch(
-          "https://qimsdev.5am.co.bw/qims/api/me?fields=organisationUnits[id]",
+          "https://qimsdev.5am.co.bw/qims/api/me?fields=organisationUnits[id,displayName]",
           {
             headers: {
               Authorization: `Basic ${credentials}`,
@@ -75,21 +75,63 @@ function Basic() {
 
         if (orgUnitsResponse.ok) {
           const orgUnitsData = await orgUnitsResponse.json();
-          // Store the first organization unit ID in localStorage
+          // Store the first organization unit ID and name in localStorage
           if (orgUnitsData.organisationUnits && orgUnitsData.organisationUnits.length > 0) {
-            localStorage.setItem('userOrgUnitId', orgUnitsData.organisationUnits[0].id);
-            localStorage.setItem('userCredentials', credentials);
+            localStorage.setItem("userOrgUnitId", orgUnitsData.organisationUnits[0].id);
+            localStorage.setItem("userOrgUnitName", orgUnitsData.organisationUnits[0].displayName);
+            localStorage.setItem("userCredentials", credentials);
+            navigate("/dashboards/facility-ownership");
+          } else {
+            setError("No organization units assigned to your account. Please contact your administrator.");
           }
-          navigate("/dashboards/facility-ownership");
         } else {
-          setError("Failed to fetch organization units");
+          switch (orgUnitsResponse.status) {
+            case 401:
+              setError("Your session has expired. Please log in again.");
+              break;
+            case 403:
+              setError("You don't have permission to access organization units. Please contact your administrator.");
+              break;
+            case 404:
+              setError("Organization unit information not found. Please contact support.");
+              break;
+            case 500:
+              setError("Server error while fetching organization units. Please try again later.");
+              break;
+            default:
+              setError("Failed to fetch organization units. Please try again or contact support.");
+          }
         }
       } else {
-        setError("Invalid username or password");
+        switch (response.status) {
+          case 401:
+            setError("Invalid username or password. Please try again.");
+            break;
+          case 403:
+            setError("Account is locked. Please contact your administrator.");
+            break;
+          case 410:
+            setError("Account has expired. Please contact your administrator.");
+            break;
+          case 429:
+            setError("Too many login attempts. Please try again later.");
+            break;
+          case 500:
+            setError("Server error. Please try again later.");
+            break;
+          default:
+            setError("Login failed. Please check your credentials and try again.");
+        }
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError("An error occurred during login");
+      if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+        setError("Network connection error. Please check your internet connection and try again.");
+      } else if (error.name === 'SyntaxError') {
+        setError("Invalid response from server. Please try again or contact support.");
+      } else {
+        setError("An unexpected error occurred. Please try again or contact support.");
+      }
     }
   };
 

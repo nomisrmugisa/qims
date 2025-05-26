@@ -42,7 +42,7 @@ const generateEventId = () => {
   // DHIS2 uses a specific format for IDs: 11 characters
   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let id = "";
-  for (let i = 0; i < 11; i++) {
+  for (let i = 0; i < 11; i += 1) {
     id += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return id;
@@ -54,8 +54,8 @@ function FacilityOwnership() {
   const [trackedEntityInstanceId, setTrackedEntityInstanceId] = useState(null);
 
   // Get credentials and org unit ID from localStorage
-  const credentials = localStorage.getItem('userCredentials');
-  const orgUnitId = localStorage.getItem('userOrgUnitId') || 'tpoMlXpihim'; // Fallback to default if not set
+  const credentials = localStorage.getItem("userCredentials");
+  const orgUnitId = localStorage.getItem("userOrgUnitId"); // Fallback to default if not set
   const url = `https://qimsdev.5am.co.bw/qims/api/trackedEntityInstances?ou=${orgUnitId}&ouMode=SELECTED&program=EE8yeLVo6cN&fields=*&paging=false`;
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -97,9 +97,11 @@ function FacilityOwnership() {
   useEffect(() => {
     if (!credentials) {
       // Redirect to login if no credentials found
-      window.location.href = '/authentication/sign-in/basic';
+      window.location.href = "/authentication/sign-in/basic";
       return;
     }
+
+    console.log("Fetching data from URL:", url); // Log the GET request URL
 
     fetch(url, {
       headers: {
@@ -113,6 +115,7 @@ function FacilityOwnership() {
         return res.json();
       })
       .then((data) => {
+        console.log("Response data:", data); // Log the full response data
         // data.trackedEntityInstances is an array
         // Each instance may have enrollments, each with events
         let fetchedEvents = [];
@@ -121,6 +124,8 @@ function FacilityOwnership() {
             // Store the first tracked entity instance ID we find
             if (!trackedEntityInstanceId && instance.trackedEntityInstance) {
               setTrackedEntityInstanceId(instance.trackedEntityInstance);
+              console.log("Tracked Entity Instance ID found:", instance.trackedEntityInstance);
+              console.log("Obtained from GET request URL:", url);
             }
             if (Array.isArray(instance.enrollments)) {
               instance.enrollments.forEach((enrollment) => {
@@ -149,25 +154,42 @@ function FacilityOwnership() {
     setEditFormData({
       eventDate: event.eventDate || "",
       orgUnitName: event.orgUnitName || "",
-      firstName: event.dataValues?.find((dv) => dv.dataElement === "HMk4LZ9ESOq")?.value ||
+      firstName:
+        event.dataValues?.find((dv) => dv.dataElement === "HMk4LZ9ESOq")?.value ||
         event.createdByUserInfo?.firstName ||
         "",
-      surname: event.dataValues?.find((dv) => dv.dataElement === "ykwhsQQPVH0")?.value ||
+      surname:
+        event.dataValues?.find((dv) => dv.dataElement === "ykwhsQQPVH0")?.value ||
         event.createdByUserInfo?.surname ||
         "",
-      citizen: event.dataValues?.find((dv) => dv.dataElement === "zVmmto7HwOc")?.value || event.citizen || "",
-      ownershipType: event.dataValues?.find((dv) => dv.dataElement === "vAHHXaW0Pna")?.value ||
+      citizen:
+        event.dataValues?.find((dv) => dv.dataElement === "zVmmto7HwOc")?.value ||
+        event.citizen ||
+        "",
+      ownershipType:
+        event.dataValues?.find((dv) => dv.dataElement === "vAHHXaW0Pna")?.value ||
         event.ownershipType ||
         "",
-      idType: event.dataValues?.find((dv) => dv.dataElement === "FLcrCfTNcQi")?.value || event.idType || "",
-      id: event.dataValues?.find((dv) => dv.dataElement === "aUGSyyfbUVI")?.value || event.id || "",
-      copyOfIdPassport: event.dataValues?.find((dv) => dv.dataElement === "KRj1TOR5cVM")?.value || null,
-      professionalReference1: event.dataValues?.find((dv) => dv.dataElement === "yP49GKSQxPl")?.value || null,
-      professionalReference2: event.dataValues?.find((dv) => dv.dataElement === "lC217zTgC6C")?.value || null,
-      qualificationCertificates: event.dataValues?.find((dv) => dv.dataElement === "pelCBFPIFY1")?.value || null,
-      validRecentPermit: event.dataValues?.find((dv) => dv.dataElement === "cUObXSGtCuD")?.value || null,
-      workPermitWaiver: event.dataValues?.find((dv) => dv.dataElement === "g9jXH9LJyxU")?.value || null,
-      companyRegistrationDocuments: event.dataValues?.find((dv) => dv.dataElement === "fSGzyNOvsn3")?.value || null,
+      idType:
+        event.dataValues?.find((dv) => dv.dataElement === "FLcrCfTNcQi")?.value ||
+        event.idType ||
+        "",
+      id:
+        event.dataValues?.find((dv) => dv.dataElement === "aUGSyyfbUVI")?.value || event.id || "",
+      copyOfIdPassport:
+        event.dataValues?.find((dv) => dv.dataElement === "KRj1TOR5cVM")?.value || null,
+      professionalReference1:
+        event.dataValues?.find((dv) => dv.dataElement === "yP49GKSQxPl")?.value || null,
+      professionalReference2:
+        event.dataValues?.find((dv) => dv.dataElement === "lC217zTgC6C")?.value || null,
+      qualificationCertificates:
+        event.dataValues?.find((dv) => dv.dataElement === "pelCBFPIFY1")?.value || null,
+      validRecentPermit:
+        event.dataValues?.find((dv) => dv.dataElement === "cUObXSGtCuD")?.value || null,
+      workPermitWaiver:
+        event.dataValues?.find((dv) => dv.dataElement === "g9jXH9LJyxU")?.value || null,
+      companyRegistrationDocuments:
+        event.dataValues?.find((dv) => dv.dataElement === "fSGzyNOvsn3")?.value || null,
     });
     setOpenDialog(true);
   };
@@ -213,7 +235,7 @@ function FacilityOwnership() {
         qualificationCertificatesId,
         validRecentPermitId,
         workPermitWaiverId,
-        companyRegistrationDocumentsId
+        companyRegistrationDocumentsId,
       ] = await Promise.all([
         uploadFileAndGetId(editFormData.copyOfIdPassport),
         uploadFileAndGetId(editFormData.professionalReference1),
@@ -233,13 +255,20 @@ function FacilityOwnership() {
         { dataElement: "FLcrCfTNcQi", value: editFormData.idType }, // ID Type
         { dataElement: "vAHHXaW0Pna", value: editFormData.ownershipType }, // Type of ownership
       ];
-      if (copyOfIdPassportId) dataValues.push({ dataElement: "KRj1TOR5cVM", value: copyOfIdPassportId });
-      if (professionalReference1Id) dataValues.push({ dataElement: "yP49GKSQxPl", value: professionalReference1Id });
-      if (professionalReference2Id) dataValues.push({ dataElement: "lC217zTgC6C", value: professionalReference2Id });
-      if (qualificationCertificatesId) dataValues.push({ dataElement: "pelCBFPIFY1", value: qualificationCertificatesId });
-      if (validRecentPermitId) dataValues.push({ dataElement: "cUObXSGtCuD", value: validRecentPermitId });
-      if (workPermitWaiverId) dataValues.push({ dataElement: "g9jXH9LJyxU", value: workPermitWaiverId });
-      if (companyRegistrationDocumentsId) dataValues.push({ dataElement: "fSGzyNOvsn3", value: companyRegistrationDocumentsId });
+      if (copyOfIdPassportId)
+        dataValues.push({ dataElement: "KRj1TOR5cVM", value: copyOfIdPassportId });
+      if (professionalReference1Id)
+        dataValues.push({ dataElement: "yP49GKSQxPl", value: professionalReference1Id });
+      if (professionalReference2Id)
+        dataValues.push({ dataElement: "lC217zTgC6C", value: professionalReference2Id });
+      if (qualificationCertificatesId)
+        dataValues.push({ dataElement: "pelCBFPIFY1", value: qualificationCertificatesId });
+      if (validRecentPermitId)
+        dataValues.push({ dataElement: "cUObXSGtCuD", value: validRecentPermitId });
+      if (workPermitWaiverId)
+        dataValues.push({ dataElement: "g9jXH9LJyxU", value: workPermitWaiverId });
+      if (companyRegistrationDocumentsId)
+        dataValues.push({ dataElement: "fSGzyNOvsn3", value: companyRegistrationDocumentsId });
 
       // 3. Build event update payload
       const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
@@ -381,13 +410,20 @@ function FacilityOwnership() {
         { dataElement: "vAHHXaW0Pna", value: newFormData.ownershipType },
       ];
 
-      if (copyOfIdPassportId) dataValues.push({ dataElement: "KRj1TOR5cVM", value: copyOfIdPassportId });
-      if (professionalReference1Id) dataValues.push({ dataElement: "yP49GKSQxPl", value: professionalReference1Id });
-      if (professionalReference2Id) dataValues.push({ dataElement: "lC217zTgC6C", value: professionalReference2Id });
-      if (qualificationCertificatesId) dataValues.push({ dataElement: "pelCBFPIFY1", value: qualificationCertificatesId });
-      if (validRecentPermitId) dataValues.push({ dataElement: "cUObXSGtCuD", value: validRecentPermitId });
-      if (workPermitWaiverId) dataValues.push({ dataElement: "g9jXH9LJyxU", value: workPermitWaiverId });
-      if (companyRegistrationDocumentsId) dataValues.push({ dataElement: "fSGzyNOvsn3", value: companyRegistrationDocumentsId });
+      if (copyOfIdPassportId)
+        dataValues.push({ dataElement: "KRj1TOR5cVM", value: copyOfIdPassportId });
+      if (professionalReference1Id)
+        dataValues.push({ dataElement: "yP49GKSQxPl", value: professionalReference1Id });
+      if (professionalReference2Id)
+        dataValues.push({ dataElement: "lC217zTgC6C", value: professionalReference2Id });
+      if (qualificationCertificatesId)
+        dataValues.push({ dataElement: "pelCBFPIFY1", value: qualificationCertificatesId });
+      if (validRecentPermitId)
+        dataValues.push({ dataElement: "cUObXSGtCuD", value: validRecentPermitId });
+      if (workPermitWaiverId)
+        dataValues.push({ dataElement: "g9jXH9LJyxU", value: workPermitWaiverId });
+      if (companyRegistrationDocumentsId)
+        dataValues.push({ dataElement: "fSGzyNOvsn3", value: companyRegistrationDocumentsId });
 
       // Build event payload with the generated event ID and tracked entity instance ID
       const today = new Date().toISOString().split("T")[0];
@@ -436,9 +472,7 @@ function FacilityOwnership() {
                 Facility Ownership
               </MDTypography>
               <IconButton
-                color="primary"
-                onClick={handleAddNew}
-                sx={{ ml: 2 }}
+                color="primary" onClick={handleAddNew} sx={{ ml: 2 }}
               >
                 <AddIcon />
               </IconButton>
@@ -584,27 +618,21 @@ function FacilityOwnership() {
               Professional Reference 1
             </MDTypography>
             <Button variant="outlined" component="label" fullWidth>
-              {editFormData.professionalReference1
-                ? editFormData.professionalReference1.name
-                : "Upload file"}
+              {editFormData.professionalReference1 ? editFormData.professionalReference1.name : "Upload file"}
               <input type="file" name="professionalReference1" hidden onChange={handleFileUpload} />
             </Button>
             <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
               Professional Reference 2
             </MDTypography>
             <Button variant="outlined" component="label" fullWidth>
-              {editFormData.professionalReference2
-                ? editFormData.professionalReference2.name
-                : "Upload file"}
+              {editFormData.professionalReference2 ? editFormData.professionalReference2.name : "Upload file"}
               <input type="file" name="professionalReference2" hidden onChange={handleFileUpload} />
             </Button>
             <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
               Qualification Certificates
             </MDTypography>
             <Button variant="outlined" component="label" fullWidth>
-              {editFormData.qualificationCertificates
-                ? editFormData.qualificationCertificates.name
-                : "Upload file"}
+              {editFormData.qualificationCertificates ? editFormData.qualificationCertificates.name : "Upload file"}
               <input type="file" name="qualificationCertificates" hidden onChange={handleFileUpload} />
             </Button>
             <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
@@ -625,9 +653,7 @@ function FacilityOwnership() {
               Company Registration Documents
             </MDTypography>
             <Button variant="outlined" component="label" fullWidth>
-              {editFormData.companyRegistrationDocuments
-                ? editFormData.companyRegistrationDocuments.name
-                : "Upload file"}
+              {editFormData.companyRegistrationDocuments ? editFormData.companyRegistrationDocuments.name : "Upload file"}
               <input type="file" name="companyRegistrationDocuments" hidden onChange={handleFileUpload} />
             </Button>
           </MDBox>

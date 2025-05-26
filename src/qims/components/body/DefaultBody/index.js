@@ -24,6 +24,7 @@ import { useState, useEffect } from "react";
 import Snackbar from "@mui/material/Snackbar";
 import { Backdrop, CircularProgress } from "@mui/material";
 import Autocomplete from "@mui/material/Autocomplete";
+import MDTypography from "components/MDTypography";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialogContent-root": {
@@ -129,11 +130,16 @@ function DefaultBody() {
 
   // create user profile
   const createUserProfile = async () => {
+    // Calculate account expiry date one year from now
+    const today = new Date();
+    const expiryDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+    const formattedExpiryDate = expiryDate.toISOString().split("T")[0];
+
     const profilePayload = {
       username: formData.userName,
       disabled: true,
       password: "selfRegistration@123$",
-      accountExpiry: "2025-04-25",
+      accountExpiry: formattedExpiryDate,
       userRoles: [{ id: "aOxLneGCVvO" }],
       catDimensionConstraints: [],
       cogsDimensionConstraints: [],
@@ -554,9 +560,13 @@ function DefaultBody() {
         </IconButton>
 
         <DialogContent dividers sx={{ px: 4 }}>
+          {/* Facility Profile Section */}
+          <MDTypography variant="h6" fontWeight="medium" mt={2} mb={1}>
+            Facility Profile
+          </MDTypography>
           <TextField
             fullWidth
-            label="Facility"
+            label="Facility Name"
             name="facility"
             value={formData.facility}
             onChange={handleChange}
@@ -571,9 +581,49 @@ function DefaultBody() {
               },
             }}
           />
+          <Autocomplete
+            fullWidth
+            options={organisationalUnits}
+            getOptionLabel={(option) => option.displayName}
+            value={organisationalUnits.find((ou) => ou.id === formData.locationInBotswana) || null}
+            onChange={(event, newValue) => {
+              setFormData((prev) => ({ ...prev, locationInBotswana: newValue ? newValue.id : "" }));
+            }}
+            loading={isLoadingOrgUnits}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Location in Botswana (Ward)"
+                variant="outlined"
+                margin="dense"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {isLoadingOrgUnits ? <CircularProgress color="inherit" size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+                required
+                InputLabelProps={{
+                  sx: {
+                    "& .MuiFormLabel-asterisk": {
+                      color: "red",
+                    },
+                  },
+                }}
+              />
+            )}
+          />
+
+          {/* User Profile Section */}
+          <MDTypography variant="h6" fontWeight="medium" mt={3} mb={1}>
+            User Profile
+          </MDTypography>
           <TextField
             fullWidth
-            label="User Name"
+            label="Preferred User Name"
             name="userName"
             value={formData.userName}
             onChange={handleChange}
@@ -734,41 +784,6 @@ function DefaultBody() {
             onChange={handleChange}
             variant="outlined"
             margin="dense"
-          />
-          <Autocomplete
-            fullWidth
-            options={organisationalUnits}
-            getOptionLabel={(option) => option.displayName}
-            value={organisationalUnits.find((ou) => ou.id === formData.locationInBotswana) || null}
-            onChange={(event, newValue) => {
-              setFormData((prev) => ({ ...prev, locationInBotswana: newValue ? newValue.id : "" }));
-            }}
-            loading={isLoadingOrgUnits}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Location in Botswana"
-                variant="outlined"
-                margin="dense"
-                InputProps={{
-                  ...params.InputProps,
-                  endAdornment: (
-                    <>
-                      {isLoadingOrgUnits ? <CircularProgress color="inherit" size={20} /> : null}
-                      {params.InputProps.endAdornment}
-                    </>
-                  ),
-                }}
-                required
-                InputLabelProps={{
-                  sx: {
-                    "& .MuiFormLabel-asterisk": {
-                      color: "red",
-                    },
-                  },
-                }}
-              />
-            )}
           />
         </DialogContent>
 
