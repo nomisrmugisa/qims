@@ -354,7 +354,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                     body: JSON.stringify([
                         {
                             "op": "replace",
-                            "path": "/userCredentials/disabled",
+                            "path": "/userCredentials/enabled",
                             "value": false
                         }
                     ])
