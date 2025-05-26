@@ -46,8 +46,52 @@ function Basic() {
   const navigate = useNavigate();
 
   const [rememberMe, setRememberMe] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
+
+  const handleSignIn = async () => {
+    setError("");
+    try {
+      const credentials = btoa(`${username}:${password}`);
+      const response = await fetch("https://qimsdev.5am.co.bw/qims/api/me", {
+        headers: {
+          Authorization: `Basic ${credentials}`,
+        },
+      });
+
+      if (response.ok) {
+        // Fetch organization units after successful authentication
+        const orgUnitsResponse = await fetch(
+          "https://qimsdev.5am.co.bw/qims/api/me?fields=organisationUnits[id]",
+          {
+            headers: {
+              Authorization: `Basic ${credentials}`,
+            },
+          }
+        );
+
+        if (orgUnitsResponse.ok) {
+          const orgUnitsData = await orgUnitsResponse.json();
+          // Store the first organization unit ID in localStorage
+          if (orgUnitsData.organisationUnits && orgUnitsData.organisationUnits.length > 0) {
+            localStorage.setItem('userOrgUnitId', orgUnitsData.organisationUnits[0].id);
+            localStorage.setItem('userCredentials', credentials);
+          }
+          navigate("/dashboards/facility-ownership");
+        } else {
+          setError("Failed to fetch organization units");
+        }
+      } else {
+        setError("Invalid username or password");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("An error occurred during login");
+    }
+  };
 
   return (
     <BasicLayout image={bgImage}>
@@ -87,11 +131,28 @@ function Basic() {
         <MDBox pt={4} pb={3} px={3}>
           <MDBox component="form" role="form">
             <MDBox mb={2}>
-              <MDInput type="email" label="Email" fullWidth />
+              <MDInput
+                type="text"
+                label="Username"
+                fullWidth
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
             </MDBox>
             <MDBox mb={2}>
-              <MDInput type="password" label="Password" fullWidth />
+              <MDInput
+                type="password"
+                label="Password"
+                fullWidth
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </MDBox>
+            {error && (
+              <MDTypography variant="body2" color="error" textAlign="center" mb={2}>
+                {error}
+              </MDTypography>
+            )}
             <MDBox display="flex" alignItems="center" ml={-1}>
               <Switch checked={rememberMe} onChange={handleSetRememberMe} />
               <MDTypography
@@ -105,8 +166,7 @@ function Basic() {
               </MDTypography>
             </MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth
-                        onClick={() => navigate("/dashboards/facility-ownership")}>
+              <MDButton variant="gradient" color="info" fullWidth onClick={handleSignIn}>
                 sign in
               </MDButton>
             </MDBox>

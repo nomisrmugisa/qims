@@ -15,6 +15,7 @@ import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import AddIcon from "@mui/icons-material/Add";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   backgroundColor: theme.palette.primary.main,
@@ -36,15 +37,29 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
+// Function to generate a DHIS2 event ID
+const generateEventId = () => {
+  // DHIS2 uses a specific format for IDs: 11 characters
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let id = "";
+  for (let i = 0; i < 11; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return id;
+};
+
 function FacilityOwnership() {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [trackedEntityInstanceId, setTrackedEntityInstanceId] = useState(null);
 
-  const username = process.env.REACT_APP_API_USERNAME;
-  const password = process.env.REACT_APP_API_PASSWORD;
-  const credentials = btoa(`${username}:${password}`);
+  // Get credentials and org unit ID from localStorage
+  const credentials = localStorage.getItem('userCredentials');
+  const orgUnitId = localStorage.getItem('userOrgUnitId') || 'tpoMlXpihim'; // Fallback to default if not set
+  const url = `https://qimsdev.5am.co.bw/qims/api/trackedEntityInstances?ou=${orgUnitId}&ouMode=SELECTED&program=EE8yeLVo6cN&fields=*&paging=false`;
 
   const [openDialog, setOpenDialog] = useState(false);
+  const [openAddDialog, setOpenAddDialog] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [editFormData, setEditFormData] = useState({
     eventDate: "",
@@ -63,12 +78,29 @@ function FacilityOwnership() {
     workPermitWaiver: null,
     companyRegistrationDocuments: null,
   });
-
-  // For dev purposes, use this org unit ID
-  const orgUnitId = "tpoMlXpihim";
-  const url = `https://qimsdev.5am.co.bw/qims/api/trackedEntityInstances?ou=${orgUnitId}&ouMode=SELECTED&program=EE8yeLVo6cN&fields=*&paging=false`;
+  const [newFormData, setNewFormData] = useState({
+    firstName: "",
+    surname: "",
+    citizen: "",
+    ownershipType: "",
+    idType: "",
+    id: "",
+    copyOfIdPassport: null,
+    professionalReference1: null,
+    professionalReference2: null,
+    qualificationCertificates: null,
+    validRecentPermit: null,
+    workPermitWaiver: null,
+    companyRegistrationDocuments: null,
+  });
 
   useEffect(() => {
+    if (!credentials) {
+      // Redirect to login if no credentials found
+      window.location.href = '/authentication/sign-in/basic';
+      return;
+    }
+
     fetch(url, {
       headers: {
         Authorization: `Basic ${credentials}`,
@@ -86,6 +118,10 @@ function FacilityOwnership() {
         let fetchedEvents = [];
         if (Array.isArray(data.trackedEntityInstances)) {
           data.trackedEntityInstances.forEach((instance) => {
+            // Store the first tracked entity instance ID we find
+            if (!trackedEntityInstanceId && instance.trackedEntityInstance) {
+              setTrackedEntityInstanceId(instance.trackedEntityInstance);
+            }
             if (Array.isArray(instance.enrollments)) {
               instance.enrollments.forEach((enrollment) => {
                 if (Array.isArray(enrollment.events)) {
@@ -106,17 +142,23 @@ function FacilityOwnership() {
         console.error("Error fetching data:", error);
         setIsLoading(false);
       });
-  }, [url, credentials]);
+  }, [url, credentials, trackedEntityInstanceId]);
 
   const handleRowClick = (event) => {
     setSelectedEvent(event);
     setEditFormData({
       eventDate: event.eventDate || "",
       orgUnitName: event.orgUnitName || "",
-      firstName: event.dataValues?.find((dv) => dv.dataElement === "HMk4LZ9ESOq")?.value || event.createdByUserInfo?.firstName || "",
-      surname: event.dataValues?.find((dv) => dv.dataElement === "ykwhsQQPVH0")?.value || event.createdByUserInfo?.surname || "",
+      firstName: event.dataValues?.find((dv) => dv.dataElement === "HMk4LZ9ESOq")?.value ||
+        event.createdByUserInfo?.firstName ||
+        "",
+      surname: event.dataValues?.find((dv) => dv.dataElement === "ykwhsQQPVH0")?.value ||
+        event.createdByUserInfo?.surname ||
+        "",
       citizen: event.dataValues?.find((dv) => dv.dataElement === "zVmmto7HwOc")?.value || event.citizen || "",
-      ownershipType: event.dataValues?.find((dv) => dv.dataElement === "vAHHXaW0Pna")?.value || event.ownershipType || "",
+      ownershipType: event.dataValues?.find((dv) => dv.dataElement === "vAHHXaW0Pna")?.value ||
+        event.ownershipType ||
+        "",
       idType: event.dataValues?.find((dv) => dv.dataElement === "FLcrCfTNcQi")?.value || event.idType || "",
       id: event.dataValues?.find((dv) => dv.dataElement === "aUGSyyfbUVI")?.value || event.id || "",
       copyOfIdPassport: event.dataValues?.find((dv) => dv.dataElement === "KRj1TOR5cVM")?.value || null,
@@ -200,7 +242,7 @@ function FacilityOwnership() {
       if (companyRegistrationDocumentsId) dataValues.push({ dataElement: "fSGzyNOvsn3", value: companyRegistrationDocumentsId });
 
       // 3. Build event update payload
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
       const eventUpdatePayload = {
         event: selectedEvent.event,
         eventDate: today,
@@ -253,6 +295,135 @@ function FacilityOwnership() {
     }
   };
 
+  const handleAddNew = () => {
+    setOpenAddDialog(true);
+  };
+
+  const handleCloseAddDialog = () => {
+    setOpenAddDialog(false);
+    setNewFormData({
+      firstName: "",
+      surname: "",
+      citizen: "",
+      ownershipType: "",
+      idType: "",
+      id: "",
+      copyOfIdPassport: null,
+      professionalReference1: null,
+      professionalReference2: null,
+      qualificationCertificates: null,
+      validRecentPermit: null,
+      workPermitWaiver: null,
+      companyRegistrationDocuments: null,
+    });
+  };
+
+  const handleNewInputChange = (e) => {
+    const { name, value, type, files } = e.target;
+    setNewFormData((prev) => ({
+      ...prev,
+      [name]: type === "file" ? files[0] : value,
+    }));
+  };
+
+  const handleAddSubmit = async () => {
+    try {
+      if (!trackedEntityInstanceId) {
+        console.error("No tracked entity instance ID available");
+        return;
+      }
+
+      // Generate a new event ID
+      const eventId = generateEventId();
+
+      // Upload files and get fileResourceIds
+      const uploadFileAndGetId = async (file) => {
+        if (!file) return null;
+        const fileData = new FormData();
+        fileData.append("file", file);
+        const fileRes = await fetch("https://qimsdev.5am.co.bw/qims/api/fileResources", {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${credentials}`,
+          },
+          body: fileData,
+        });
+        const fileJson = await fileRes.json();
+        return fileJson.response.fileResource.id;
+      };
+
+      // Upload all files in parallel
+      const [
+        copyOfIdPassportId,
+        professionalReference1Id,
+        professionalReference2Id,
+        qualificationCertificatesId,
+        validRecentPermitId,
+        workPermitWaiverId,
+        companyRegistrationDocumentsId,
+      ] = await Promise.all([
+        uploadFileAndGetId(newFormData.copyOfIdPassport),
+        uploadFileAndGetId(newFormData.professionalReference1),
+        uploadFileAndGetId(newFormData.professionalReference2),
+        uploadFileAndGetId(newFormData.qualificationCertificates),
+        uploadFileAndGetId(newFormData.validRecentPermit),
+        uploadFileAndGetId(newFormData.workPermitWaiver),
+        uploadFileAndGetId(newFormData.companyRegistrationDocuments),
+      ]);
+
+      // Build dataValues array
+      const dataValues = [
+        { dataElement: "HMk4LZ9ESOq", value: newFormData.firstName },
+        { dataElement: "ykwhsQQPVH0", value: newFormData.surname },
+        { dataElement: "zVmmto7HwOc", value: newFormData.citizen },
+        { dataElement: "aUGSyyfbUVI", value: newFormData.id },
+        { dataElement: "FLcrCfTNcQi", value: newFormData.idType },
+        { dataElement: "vAHHXaW0Pna", value: newFormData.ownershipType },
+      ];
+
+      if (copyOfIdPassportId) dataValues.push({ dataElement: "KRj1TOR5cVM", value: copyOfIdPassportId });
+      if (professionalReference1Id) dataValues.push({ dataElement: "yP49GKSQxPl", value: professionalReference1Id });
+      if (professionalReference2Id) dataValues.push({ dataElement: "lC217zTgC6C", value: professionalReference2Id });
+      if (qualificationCertificatesId) dataValues.push({ dataElement: "pelCBFPIFY1", value: qualificationCertificatesId });
+      if (validRecentPermitId) dataValues.push({ dataElement: "cUObXSGtCuD", value: validRecentPermitId });
+      if (workPermitWaiverId) dataValues.push({ dataElement: "g9jXH9LJyxU", value: workPermitWaiverId });
+      if (companyRegistrationDocumentsId) dataValues.push({ dataElement: "fSGzyNOvsn3", value: companyRegistrationDocumentsId });
+
+      // Build event payload with the generated event ID and tracked entity instance ID
+      const today = new Date().toISOString().split("T")[0];
+      const eventPayload = {
+        event: eventId,
+        eventDate: today,
+        orgUnit: orgUnitId,
+        program: "EE8yeLVo6cN",
+        programStage: "MuJubgTzJrY",
+        status: "ACTIVE",
+        trackedEntityInstance: trackedEntityInstanceId,
+        dataValues,
+      };
+
+      // Send event creation request
+      const response = await fetch("https://qimsdev.5am.co.bw/qims/api/events", {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(eventPayload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create event");
+      }
+
+      handleCloseAddDialog();
+      // Refresh the events list
+      window.location.reload();
+    } catch (error) {
+      console.error("Error creating event:", error);
+    }
+  };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -260,10 +431,17 @@ function FacilityOwnership() {
       <MDBox py={3}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <MDBox mb={3}>
+            <MDBox mb={3} display="flex" alignItems="center">
               <MDTypography variant="h4" fontWeight="medium">
                 Facility Ownership
               </MDTypography>
+              <IconButton
+                color="primary"
+                onClick={handleAddNew}
+                sx={{ ml: 2 }}
+              >
+                <AddIcon />
+              </IconButton>
             </MDBox>
           </Grid>
           <Grid item xs={12}>
@@ -301,9 +479,18 @@ function FacilityOwnership() {
                         <StyledTableRow key={event.event} onClick={() => handleRowClick(event)}>
                           <TableCell>{event.eventDate}</TableCell>
                           <TableCell>{event.orgUnitName}</TableCell>
-                          <TableCell>{event.dataValues?.find((dv) => dv.dataElement === "HMk4LZ9ESOq")?.value || ""}</TableCell>
-                          <TableCell>{event.dataValues?.find((dv) => dv.dataElement === "ykwhsQQPVH0")?.value || ""}</TableCell>
-                          <TableCell>{event.dataValues?.find((dv) => dv.dataElement === "zVmmto7HwOc")?.value || ""}</TableCell>
+                          <TableCell>
+                            {event.dataValues?.find((dv) => dv.dataElement === "HMk4LZ9ESOq")
+                              ?.value || ""}
+                          </TableCell>
+                          <TableCell>
+                            {event.dataValues?.find((dv) => dv.dataElement === "ykwhsQQPVH0")
+                              ?.value || ""}
+                          </TableCell>
+                          <TableCell>
+                            {event.dataValues?.find((dv) => dv.dataElement === "zVmmto7HwOc")
+                              ?.value || ""}
+                          </TableCell>
                           <TableCell>{event.programStage}</TableCell>
                           <TableCell>{event.event}</TableCell>
                           <TableCell>{event.trackedEntityInstance}</TableCell>
@@ -389,114 +576,59 @@ function FacilityOwnership() {
             <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
               Copy of ID / Passport
             </MDTypography>
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-            >
+            <Button variant="outlined" component="label" fullWidth>
               {editFormData.copyOfIdPassport ? editFormData.copyOfIdPassport.name : "Upload file"}
-              <input
-                type="file"
-                name="copyOfIdPassport"
-                hidden
-                onChange={handleFileUpload}
-              />
+              <input type="file" name="copyOfIdPassport" hidden onChange={handleFileUpload} />
             </Button>
             <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
               Professional Reference 1
             </MDTypography>
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-            >
-              {editFormData.professionalReference1 ? editFormData.professionalReference1.name : "Upload file"}
-              <input
-                type="file"
-                name="professionalReference1"
-                hidden
-                onChange={handleFileUpload}
-              />
+            <Button variant="outlined" component="label" fullWidth>
+              {editFormData.professionalReference1
+                ? editFormData.professionalReference1.name
+                : "Upload file"}
+              <input type="file" name="professionalReference1" hidden onChange={handleFileUpload} />
             </Button>
             <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
               Professional Reference 2
             </MDTypography>
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-            >
-              {editFormData.professionalReference2 ? editFormData.professionalReference2.name : "Upload file"}
-              <input
-                type="file"
-                name="professionalReference2"
-                hidden
-                onChange={handleFileUpload}
-              />
+            <Button variant="outlined" component="label" fullWidth>
+              {editFormData.professionalReference2
+                ? editFormData.professionalReference2.name
+                : "Upload file"}
+              <input type="file" name="professionalReference2" hidden onChange={handleFileUpload} />
             </Button>
             <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
               Qualification Certificates
             </MDTypography>
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-            >
-              {editFormData.qualificationCertificates ? editFormData.qualificationCertificates.name : "Upload file"}
-              <input
-                type="file"
-                name="qualificationCertificates"
-                hidden
-                onChange={handleFileUpload}
-              />
+            <Button variant="outlined" component="label" fullWidth>
+              {editFormData.qualificationCertificates
+                ? editFormData.qualificationCertificates.name
+                : "Upload file"}
+              <input type="file" name="qualificationCertificates" hidden onChange={handleFileUpload} />
             </Button>
             <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
               Copy of Valid Recent Permit
             </MDTypography>
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-            >
+            <Button variant="outlined" component="label" fullWidth>
               {editFormData.validRecentPermit ? editFormData.validRecentPermit.name : "Upload file"}
-              <input
-                type="file"
-                name="validRecentPermit"
-                hidden
-                onChange={handleFileUpload}
-              />
+              <input type="file" name="validRecentPermit" hidden onChange={handleFileUpload} />
             </Button>
             <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
               Work Permit / Waiver
             </MDTypography>
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-            >
+            <Button variant="outlined" component="label" fullWidth>
               {editFormData.workPermitWaiver ? editFormData.workPermitWaiver.name : "Upload file"}
-              <input
-                type="file"
-                name="workPermitWaiver"
-                hidden
-                onChange={handleFileUpload}
-              />
+              <input type="file" name="workPermitWaiver" hidden onChange={handleFileUpload} />
             </Button>
             <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
               Company Registration Documents
             </MDTypography>
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-            >
-              {editFormData.companyRegistrationDocuments ? editFormData.companyRegistrationDocuments.name : "Upload file"}
-              <input
-                type="file"
-                name="companyRegistrationDocuments"
-                hidden
-                onChange={handleFileUpload}
-              />
+            <Button variant="outlined" component="label" fullWidth>
+              {editFormData.companyRegistrationDocuments
+                ? editFormData.companyRegistrationDocuments.name
+                : "Upload file"}
+              <input type="file" name="companyRegistrationDocuments" hidden onChange={handleFileUpload} />
             </Button>
           </MDBox>
         </DialogContent>
@@ -506,6 +638,134 @@ function FacilityOwnership() {
           </Button>
           <Button onClick={handleUpdate} variant="contained" color="primary">
             Update
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* New Add Dialog */}
+      <Dialog open={openAddDialog} onClose={handleCloseAddDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Add New Facility Ownership
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseAddDialog}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <MDBox display="flex" flexDirection="column" gap={2}>
+            <TextField
+              fullWidth
+              select
+              label="Type of ownership"
+              name="ownershipType"
+              value={newFormData.ownershipType}
+              onChange={handleNewInputChange}
+              SelectProps={{ native: true }}
+            >
+              <option value="">Select Type</option>
+              <option value="Private Owned">Private Owned</option>
+              <option value="Public Owned">Public Owned</option>
+              <option value="Other">Other</option>
+            </TextField>
+            <TextField
+              fullWidth
+              label="Surname"
+              name="surname"
+              value={newFormData.surname}
+              onChange={handleNewInputChange}
+            />
+            <TextField
+              fullWidth
+              label="First Name"
+              name="firstName"
+              value={newFormData.firstName}
+              onChange={handleNewInputChange}
+            />
+            <TextField
+              fullWidth
+              label="Citizenship"
+              name="citizen"
+              value={newFormData.citizen}
+              onChange={handleNewInputChange}
+            />
+            <TextField
+              fullWidth
+              label="ID Type"
+              name="idType"
+              value={newFormData.idType}
+              onChange={handleNewInputChange}
+            />
+            <TextField
+              fullWidth
+              label="ID"
+              name="id"
+              value={newFormData.id}
+              onChange={handleNewInputChange}
+            />
+            <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
+              Copy of ID / Passport
+            </MDTypography>
+            <Button variant="outlined" component="label" fullWidth>
+              {newFormData.copyOfIdPassport ? newFormData.copyOfIdPassport.name : "Upload file"}
+              <input type="file" name="copyOfIdPassport" hidden onChange={handleNewInputChange} />
+            </Button>
+            <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
+              Professional Reference 1
+            </MDTypography>
+            <Button variant="outlined" component="label" fullWidth>
+              {newFormData.professionalReference1 ? newFormData.professionalReference1.name : "Upload file"}
+              <input type="file" name="professionalReference1" hidden onChange={handleNewInputChange} />
+            </Button>
+            <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
+              Professional Reference 2
+            </MDTypography>
+            <Button variant="outlined" component="label" fullWidth>
+              {newFormData.professionalReference2 ? newFormData.professionalReference2.name : "Upload file"}
+              <input type="file" name="professionalReference2" hidden onChange={handleNewInputChange} />
+            </Button>
+            <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
+              Qualification Certificates
+            </MDTypography>
+            <Button variant="outlined" component="label" fullWidth>
+              {newFormData.qualificationCertificates ? newFormData.qualificationCertificates.name : "Upload file"}
+              <input type="file" name="qualificationCertificates" hidden onChange={handleNewInputChange} />
+            </Button>
+            <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
+              Copy of Valid Recent Permit
+            </MDTypography>
+            <Button variant="outlined" component="label" fullWidth>
+              {newFormData.validRecentPermit ? newFormData.validRecentPermit.name : "Upload file"}
+              <input type="file" name="validRecentPermit" hidden onChange={handleNewInputChange} />
+            </Button>
+            <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
+              Work Permit / Waiver
+            </MDTypography>
+            <Button variant="outlined" component="label" fullWidth>
+              {newFormData.workPermitWaiver ? newFormData.workPermitWaiver.name : "Upload file"}
+              <input type="file" name="workPermitWaiver" hidden onChange={handleNewInputChange} />
+            </Button>
+            <MDTypography variant="caption" color="text" sx={{ mb: 0.5 }}>
+              Company Registration Documents
+            </MDTypography>
+            <Button variant="outlined" component="label" fullWidth>
+              {newFormData.companyRegistrationDocuments ? newFormData.companyRegistrationDocuments.name : "Upload file"}
+              <input type="file" name="companyRegistrationDocuments" hidden onChange={handleNewInputChange} />
+            </Button>
+          </MDBox>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAddDialog} color="inherit">
+            Cancel
+          </Button>
+          <Button onClick={handleAddSubmit} variant="contained" color="primary">
+            Add
           </Button>
         </DialogActions>
       </Dialog>

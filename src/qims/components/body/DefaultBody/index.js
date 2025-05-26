@@ -20,9 +20,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useTheme, styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Snackbar from "@mui/material/Snackbar";
 import { Backdrop, CircularProgress } from "@mui/material";
+import Autocomplete from "@mui/material/Autocomplete";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialogContent-root": {
@@ -88,18 +89,48 @@ function DefaultBody() {
     surname: "",
     cellNumber: "",
     locationInBotswana: "",
+    userName: "",
   });
 
   const [successOpen, setSuccessOpen] = useState(false);
+  const [organisationalUnits, setOrganisationalUnits] = useState([]);
+  const [isLoadingOrgUnits, setIsLoadingOrgUnits] = useState(true);
   const username = process.env.REACT_APP_API_USERNAME;
   const password = process.env.REACT_APP_API_PASSWORD;
 
   const credentials = btoa(`${username}:${password}`);
 
+  // Fetch organisational units on component mount
+  useEffect(() => {
+    const fetchOrganisationalUnits = async () => {
+      try {
+        const response = await fetch(
+          "https://qimsdev.5am.co.bw/qims/api/organisationUnits.json?filter=level:eq:4&fields=id,displayName&paging=false",
+          {
+            headers: {
+              Authorization: `Basic ${credentials}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch organisational units");
+        }
+        const data = await response.json();
+        setOrganisationalUnits(data.organisationUnits);
+      } catch (error) {
+        console.error("Error fetching organisational units:", error);
+      } finally {
+        setIsLoadingOrgUnits(false);
+      }
+    };
+
+    fetchOrganisationalUnits();
+  }, [credentials]); // Dependency array includes credentials
+
   // create user profile
   const createUserProfile = async () => {
     const profilePayload = {
-      username: formData.username,
+      username: formData.userName,
       disabled: true,
       password: "selfRegistration@123$",
       accountExpiry: "2025-04-25",
@@ -142,7 +173,7 @@ function DefaultBody() {
   const sendLoginEmail = async (userId) => {
     const messagePayload = {
       subject: "Welcome to the System",
-      text: `Hello ${formData.firstName},\n\nYour account has been created.\n\nUsername: ${formData.username}\nPassword: ${formData.password}\n\nPlease log in and change your password.`,
+      text: `Hello ${formData.firstName},\n\nYour account has been created.\n\nUsername: ${formData.userName}\nPassword: ${formData.password}\n\nPlease log in and change your password.`,
       users: [{ id: userId }],
       email: true,
     };
@@ -217,6 +248,7 @@ function DefaultBody() {
             { dataElement: "NVlLoMZbXIW", value: formData.email },
             { dataElement: "SVzSsDiZMN5", value: formData.BHPCRegistrationNumber },
             { dataElement: "aMFg2iq9VIg", value: formData.privatePracticeNumber },
+            { dataElement: "g3J1CH26hSA", value: formData.userName },
           ],
         },
       ],
@@ -499,51 +531,6 @@ function DefaultBody() {
         </Grid>
       </Grid>
 
-      {/* <BootstrapDialog onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}> */}
-      {/*  <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title"> */}
-      {/*    Registration Form */}
-      {/*  </DialogTitle> */}
-      {/*  <IconButton */}
-      {/*    aria-label="close" */}
-      {/*    onClick={handleClose} */}
-      {/*    sx={{ */}
-      {/*      position: "absolute", */}
-      {/*      right: 8, */}
-      {/*      top: 8, */}
-      {/*      color: theme.palette.grey[500], */}
-      {/*    }} */}
-      {/*  > */}
-      {/*    <CloseIcon /> */}
-      {/*  </IconButton> */}
-      {/*  <DialogContent dividers> */}
-      {/*    <Typography gutterBottom> */}
-      {/*      <TextField fullWidth label="email" id="email" /> */}
-      {/*    </Typography> */}
-      {/*    <Typography gutterBottom> */}
-      {/*      <TextField id="outlined-basic" label="username" variant="outlined" /> */}
-      {/*      <TextField id="outlined-basic" label="password" variant="outlined" /> */}
-      {/*    </Typography> */}
-      {/*    <br /> */}
-      {/*    <Typography gutterBottom> */}
-      {/*      <TextField id="outlined-basic" label="FirstName" variant="outlined" /> */}
-      {/*      <TextField id="outlined-basic" label="Surname" variant="outlined" /> */}
-      {/*    </Typography> */}
-      {/*    <Typography gutterBottom> */}
-      {/*      <TextField id="outlined-basic" label="Cellnumber" variant="outlined" /> */}
-      {/*    </Typography> */}
-      {/*    <Typography gutterBottom> */}
-      {/*      <TextField id="outlined-basic" label="Type of professional" variant="outlined" /> */}
-      {/*    </Typography> */}
-      {/*    <Typography gutterBottom> */}
-      {/*      <TextField id="outlined-basic" label="Registration number" variant="outlined" /> */}
-      {/*    </Typography> */}
-      {/*  </DialogContent> */}
-      {/*  <DialogActions> */}
-      {/*    <Button autoFocus onClick={handleClose}> */}
-      {/*      Save */}
-      {/*    </Button> */}
-      {/*  </DialogActions> */}
-      {/* </BootstrapDialog> */}
       <BootstrapDialog onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>
         <DialogTitle
           sx={{ m: 0, p: 2, fontWeight: "bold", textAlign: "left" }}
@@ -575,6 +562,31 @@ function DefaultBody() {
             onChange={handleChange}
             variant="outlined"
             margin="dense"
+            required
+            InputLabelProps={{
+              sx: {
+                "& .MuiFormLabel-asterisk": {
+                  color: "red",
+                },
+              },
+            }}
+          />
+          <TextField
+            fullWidth
+            label="User Name"
+            name="userName"
+            value={formData.userName}
+            onChange={handleChange}
+            variant="outlined"
+            margin="dense"
+            required
+            InputLabelProps={{
+              sx: {
+                "& .MuiFormLabel-asterisk": {
+                  color: "red",
+                },
+              },
+            }}
           />
           <Box display="flex" gap={2} mt={1}>
             <TextField
@@ -585,6 +597,14 @@ function DefaultBody() {
               onChange={handleChange}
               variant="outlined"
               margin="dense"
+              required
+              InputLabelProps={{
+                sx: {
+                  "& .MuiFormLabel-asterisk": {
+                    color: "red",
+                  },
+                },
+              }}
             />
             <TextField
               fullWidth
@@ -594,6 +614,14 @@ function DefaultBody() {
               onChange={handleChange}
               variant="outlined"
               margin="dense"
+              required
+              InputLabelProps={{
+                sx: {
+                  "& .MuiFormLabel-asterisk": {
+                    color: "red",
+                  },
+                },
+              }}
             />
           </Box>
           <TextField
@@ -604,6 +632,14 @@ function DefaultBody() {
             onChange={handleChange}
             variant="outlined"
             margin="dense"
+            required
+            InputLabelProps={{
+              sx: {
+                "& .MuiFormLabel-asterisk": {
+                  color: "red",
+                },
+              },
+            }}
           />
           <TextField
             fullWidth
@@ -613,6 +649,14 @@ function DefaultBody() {
             onChange={handleChange}
             variant="outlined"
             margin="dense"
+            required
+            InputLabelProps={{
+              sx: {
+                "& .MuiFormLabel-asterisk": {
+                  color: "red",
+                },
+              },
+            }}
           />
           <TextField
             fullWidth
@@ -622,30 +666,15 @@ function DefaultBody() {
             onChange={handleChange}
             variant="outlined"
             margin="dense"
+            required
+            InputLabelProps={{
+              sx: {
+                "& .MuiFormLabel-asterisk": {
+                  color: "red",
+                },
+              },
+            }}
           />
-          {/* <TextField */}
-          {/*  fullWidth */}
-          {/*  label="Username" */}
-          {/*  name="username" */}
-          {/*  value={formData.username} */}
-          {/*  onChange={handleChange} */}
-          {/*  variant="outlined" */}
-          {/*  margin="dense" */}
-          {/*  sx={{ backgroundColor: "#fff9c4" }} */}
-          {/* /> */}
-
-          {/* <TextField */}
-          {/*  fullWidth */}
-          {/*  label="Password" */}
-          {/*  type="password" */}
-          {/*  name="password" */}
-          {/*  value={formData.password} */}
-          {/*  onChange={handleChange} */}
-          {/*  variant="outlined" */}
-          {/*  margin="dense" */}
-          {/*  sx={{ backgroundColor: "#fff9c4" }} */}
-          {/* /> */}
-
           <TextField
             fullWidth
             label="Phone Number"
@@ -654,6 +683,14 @@ function DefaultBody() {
             onChange={handleChange}
             variant="outlined"
             margin="dense"
+            required
+            InputLabelProps={{
+              sx: {
+                "& .MuiFormLabel-asterisk": {
+                  color: "red",
+                },
+              },
+            }}
           />
           <TextField
             fullWidth
@@ -663,6 +700,14 @@ function DefaultBody() {
             onChange={handleChange}
             variant="outlined"
             margin="dense"
+            required
+            InputLabelProps={{
+              sx: {
+                "& .MuiFormLabel-asterisk": {
+                  color: "red",
+                },
+              },
+            }}
           />
           <TextField
             fullWidth
@@ -672,6 +717,14 @@ function DefaultBody() {
             onChange={handleChange}
             variant="outlined"
             margin="dense"
+            required
+            InputLabelProps={{
+              sx: {
+                "& .MuiFormLabel-asterisk": {
+                  color: "red",
+                },
+              },
+            }}
           />
           <TextField
             fullWidth
@@ -682,14 +735,40 @@ function DefaultBody() {
             variant="outlined"
             margin="dense"
           />
-          <TextField
+          <Autocomplete
             fullWidth
-            label="Location in Botswana"
-            name="locationInBotswana"
-            value={formData.locationInBotswana}
-            onChange={handleChange}
-            variant="outlined"
-            margin="dense"
+            options={organisationalUnits}
+            getOptionLabel={(option) => option.displayName}
+            value={organisationalUnits.find((ou) => ou.id === formData.locationInBotswana) || null}
+            onChange={(event, newValue) => {
+              setFormData((prev) => ({ ...prev, locationInBotswana: newValue ? newValue.id : "" }));
+            }}
+            loading={isLoadingOrgUnits}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Location in Botswana"
+                variant="outlined"
+                margin="dense"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {isLoadingOrgUnits ? <CircularProgress color="inherit" size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+                required
+                InputLabelProps={{
+                  sx: {
+                    "& .MuiFormLabel-asterisk": {
+                      color: "red",
+                    },
+                  },
+                }}
+              />
+            )}
           />
         </DialogContent>
 
