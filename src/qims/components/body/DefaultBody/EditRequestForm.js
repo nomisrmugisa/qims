@@ -30,6 +30,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
         privatePracticeNumber: request.dataValues.find(dv => dv.dataElement === 'aMFg2iq9VIg')?.value || '',
         location: request.dataValues.find(dv => dv.dataElement === 'VJzk8OdFJKA')?.value || '',
         tei: request.dataValues.find(dv => dv.dataElement === 'PdtizqOqE6Q')?.value || '',
+        employeeUsername: request.dataValues.find(dv => dv.dataElement === 'g3J1CH26hSA')?.value || ''
 
     });
 
@@ -428,6 +429,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                         { dataElement: 'aMFg2iq9VIg', value: formData.privatePracticeNumber },
                         { dataElement: 'VJzk8OdFJKA', value: formData.location },
                         { dataElement: "PdtizqOqE6Q", value: formData.tei },
+                        { dataElement: "g3J1CH26hSA", value: formData.employeeUsername },
                         { dataElement: "jV5Y8XOfkgb", value: checklist.accepted ? "true" : null },
                         // (checklist.accepted ? [{ dataElement: 'jV5Y8XOfkgb', value: "true" }] : []),
                         { dataElement: 'Bz0oYRvSypS', value: checklist.applicationLetterValid ? "true" : null },
@@ -476,15 +478,15 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             setOpenSnackbar(true);
 
             // Creating org unit
-            setCurrentStep('Creating organization unit...');
+            setCurrentStep('Creating facility...');
             await createOrgUnit(orgUnitId);
-            setSuccessMessages(prev => [...prev, 'Organization unit created successfully']);
+            setSuccessMessages(prev => [...prev, 'Facility created successfully']);
             setOpenSnackbar(true);
 
             // Step 2b: Add org unit to program
-            setCurrentStep('Adding organization unit to programs...');
+            setCurrentStep('Adding facility to programs...');
             await addOrgUnitToProgram(orgUnitId);
-            setSuccessMessages(prev => [...prev, 'Organization unit added to programs']);
+            setSuccessMessages(prev => [...prev, 'Facility added to programs']);
             setOpenSnackbar(true);
 
             // New Step: Create or Update TEI
@@ -594,6 +596,16 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                             }}
                         />
                         <TextField
+                            label="Employee User Name"
+                            name="employeeUsername"
+                            value={formData.employeeUsername}
+                            fullWidth
+                            margin="normal"
+                            InputProps={{
+                                readOnly: true,
+                            }}
+                        />
+                        <TextField
                             label="Physical Address"
                             name="physicalAddress"
                             value={formData.physicalAddress}
@@ -613,6 +625,9 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                                 readOnly: true,
                             }}
                         />
+
+                    </div>
+                    <div className="col-md-6">
                         <TextField
                             label="Tracked Entity Instance"
                             name="tei"
@@ -623,8 +638,6 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                                 readOnly: true,
                             }}
                         />
-                    </div>
-                    <div className="col-md-6">
                         <TextField
                             label="Surname"
                             name="surname"
