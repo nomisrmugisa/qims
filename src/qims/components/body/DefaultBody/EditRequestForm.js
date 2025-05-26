@@ -30,12 +30,13 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
         privatePracticeNumber: request.dataValues.find(dv => dv.dataElement === 'aMFg2iq9VIg')?.value || '',
         location: request.dataValues.find(dv => dv.dataElement === 'VJzk8OdFJKA')?.value || '',
         tei: request.dataValues.find(dv => dv.dataElement === 'PdtizqOqE6Q')?.value || '',
-        employeeUsername: request.dataValues.find(dv => dv.dataElement === 'g3J1CH26hSA')?.value || ''
+        employeeUsername: request.dataValues.find(dv => dv.dataElement === 'g3J1CH26hSA')?.value || '',
+        // accepted: request.dataValues.find(dv => dv.dataElement === 'jV5Y8XOfkgb') !== undefined,
 
     });
 
     const [checklist, setChecklist] = useState({
-        accepted: request.dataValues.find(dv => dv.dataElement === 'jV5Y8XOfkgb') !== undefined,
+        
         applicationLetterValid: request.dataValues.find(dv => dv.dataElement === 'Bz0oYRvSypS')?.value === 'true' || false,
         postBasicQualification: request.dataValues.find(dv => dv.dataElement === 'fD7DQkmT1im')?.value === 'true' || false,
         practiceValid: request.dataValues.find(dv => dv.dataElement === 'XcWt8b12E85')?.value === 'true' || false,
@@ -356,7 +357,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                         {
                             "op": "replace",
                             "path": "/userCredentials/enabled",
-                            "value": false
+                            "value": true
                         }
                     ])
                 }
@@ -430,7 +431,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                         { dataElement: 'VJzk8OdFJKA', value: formData.location },
                         { dataElement: "PdtizqOqE6Q", value: formData.tei },
                         { dataElement: "g3J1CH26hSA", value: formData.employeeUsername },
-                        { dataElement: "jV5Y8XOfkgb", value: checklist.accepted ? "true" : null },
+                        { dataElement: "jV5Y8XOfkgb", value: "true" },
                         // (checklist.accepted ? [{ dataElement: 'jV5Y8XOfkgb', value: "true" }] : []),
                         { dataElement: 'Bz0oYRvSypS', value: checklist.applicationLetterValid ? "true" : null },
                         { dataElement: 'fD7DQkmT1im', value: checklist.postBasicQualification ? "true" : null },

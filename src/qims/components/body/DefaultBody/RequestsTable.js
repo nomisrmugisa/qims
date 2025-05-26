@@ -219,7 +219,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                                     paddingLeft: '16px',
                                     width: 100
                                 }}>
-                                    {request.dataValues.some(dv => dv.dataElement === 'jV5Y8XOfkgb')?.value === 'true' ? (
+                                    {request.dataValues.find(dv => dv.dataElement === 'jV5Y8XOfkgb')?.value === 'true' ? (
                                         <span style={{ color: 'green' }}>✓</span>
                                     ) : (
                                         <span style={{ color: 'red' }}>✗</span>
