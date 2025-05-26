@@ -320,10 +320,10 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
         }
     };
 
-    const fetchOrgUnitUsersAssoc = async (orgUnitId) => {
+    const fetchOrgUnitUsersAssoc = async () => {
         try {
             const response = await fetch(
-                `${process.env.REACT_APP_DHIS2_URL}/api/users.json?filter=organisationUnits.id:eq:${orgUnitId}&fields=id`,
+                `${process.env.REACT_APP_DHIS2_URL}/api/users?filter=username:eq:${formData.employeeUsername}`,
                 {
                     headers: {
                         'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
@@ -390,12 +390,12 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             );
 
             if (!response.ok) {
-                throw new Error(`Failed to enable user ${userId}`);
+                throw new Error(`Failed to add user ${userId} to location`);
             }
 
             return true;
         } catch (error) {
-            console.error(`Error enabling user ${userId}:`, error);
+            console.error(`Error adding user ${userId}:`, error);
             throw error;
         }
     };
@@ -546,12 +546,12 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             // NEW STEP: Enable users associated with the org unit
             setCurrentStep('Enabling users...');
             try {
-                const users = await fetchOrgUnitUsersAssoc(formData.location);
-                console.log(`Found ${users.length} users to enable for org unit ${formData.location}`);
+                const users = await fetchOrgUnitUsersAssoc();
+                console.log(`Found ${users.length} users to enable for org unit`);
 
                 for (const user of users) {
-                    await enableUser(user.id);
                     await addUsertoLocation(user.id);
+                    await enableUser(user.id);                    
                     console.log(`Enabled user ${user.id}`);
                 }
                 setSuccessMessages(prev => [...prev, 'Users enabled successfully']);
