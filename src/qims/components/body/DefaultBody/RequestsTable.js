@@ -62,12 +62,12 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                         <TableRow>
                             <TableCell sx={{
                                 width: 177,
-                                fontWeight: 'bold',   
-                                marginLeft: '-10px',                             
+                                fontWeight: 'bold',
+                                marginLeft: '-10px',
                                 paddingLeft: '16px',
                                 borderRight: 'none'
                             }}>
-                                Date     
+                                Date
                             </TableCell>
                             <TableCell sx={{
                                 width: 177,
@@ -139,7 +139,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                                 key={request.event}
                                 hover
                                 // onClick={() => onRowClick(request)}
-                                onClick={() => onEditClick(request)} 
+                                onClick={() => onEditClick(request)}
                                 sx={{
                                     cursor: 'pointer',
                                     '&:hover': { backgroundColor: 'action.hover' },
@@ -157,7 +157,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                                 }}>
                                     {new Date(request.occurredAt).toLocaleDateString()}
                                 </TableCell>
-                                
+
                                 {/* Facility Name - D707dj4Rpjz */}
                                 <TableCell sx={{
                                     overflow: 'hidden',
@@ -168,7 +168,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                                 }}>
                                     {request.dataValues.find(dv => dv.dataElement === 'D707dj4Rpjz')?.value || 'N/A'}
                                 </TableCell>
-                                
+
                                 {/* Surname - ykwhsQQPVH0 */}
                                 <TableCell sx={{
                                     overflow: 'hidden',
@@ -179,7 +179,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                                 }}>
                                     {request.dataValues.find(dv => dv.dataElement === 'ykwhsQQPVH0')?.value || 'N/A'}
                                 </TableCell>
-                                
+
                                 {/* Phone Number - SReqZgQk0RY */}
                                 <TableCell sx={{
                                     overflow: 'hidden',
@@ -190,7 +190,7 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                                 }}>
                                     {request.dataValues.find(dv => dv.dataElement === 'SReqZgQk0RY')?.value || 'N/A'}
                                 </TableCell>
-                                
+
                                 {/* Email Address - NVlLoMZbXIW */}
                                 <TableCell sx={{
                                     overflow: 'hidden',
@@ -201,28 +201,31 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                                 }}>
                                     {request.dataValues.find(dv => dv.dataElement === 'NVlLoMZbXIW')?.value || 'N/A'}
                                 </TableCell>
-                                
+
                                 {/* Status */}
                                 <TableCell sx={{
                                     textTransform: 'capitalize',
                                     paddingLeft: '16px',
                                     width: 100
                                 }}>
-                                    {request.status.toLowerCase()}
+                                    {/* {request.status.toLowerCase()} */}
+                                    {request.status === 'COMPLETED' ? 'Completed' :
+                                        request.status === 'ACTIVE' ? 'Active' :
+                                            request.status.toLowerCase()}
                                 </TableCell>
-                                
+
                                 {/* Accepted */}
-                                <TableCell sx={{ 
+                                <TableCell sx={{
                                     paddingLeft: '16px',
                                     width: 100
                                 }}>
-                                    {request.dataValues.some(dv => dv.dataElement === 'jV5Y8XOfkgb') ? (
+                                    {request.dataValues.some(dv => dv.dataElement === 'jV5Y8XOfkgb')?.value === 'true' ? (
                                         <span style={{ color: 'green' }}>✓</span>
                                     ) : (
                                         <span style={{ color: 'red' }}>✗</span>
                                     )}
                                 </TableCell>
-                                
+
                                 {/* Actions */}
                                 {/* <TableCell sx={{ 
                                     paddingLeft: '16px',

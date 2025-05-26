@@ -1,5 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Checkbox, FormControlLabel, TextField, Box, Collapse } from '@mui/material';
+// import { Button, Checkbox, FormControlLabel, TextField, Box, Collapse } from '@mui/material';
+import {
+    Button,
+    Checkbox,
+    FormControlLabel,
+    TextField,
+    Box,
+    Collapse,
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    CircularProgress,
+    Typography,
+    Snackbar,
+    Alert
+} from '@mui/material';
 
 const EditRequestForm = ({ request, onSave, onCancel }) => {
     const [formData, setFormData] = useState({
@@ -37,6 +52,12 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
     const [showChecklist, setShowChecklist] = useState(checklist.accepted);
     const [isProcessing, setIsProcessing] = useState(false);
     const [locationName, setLocationName] = useState('');
+
+    const [loading, setLoading] = useState(false);
+    const [progressMessage, setProgressMessage] = useState('');
+    const [successMessages, setSuccessMessages] = useState([]);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [currentStep, setCurrentStep] = useState('');
 
     useEffect(() => {
         setShowChecklist(checklist.accepted);
@@ -105,7 +126,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
         setComments(e.target.value);
     };
 
-    const generateTEIID = () => {
+    const generate_orgUnitID = () => {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let result = '';
         for (let i = 0; i < 11; i++) {
@@ -297,12 +318,74 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
         }
     };
 
+    const fetchOrgUnitUsersAssoc = async (orgUnitId) => {
+        try {
+            const response = await fetch(
+                `${process.env.REACT_APP_DHIS2_URL}/api/users.json?filter=organisationUnits.id:eq:${orgUnitId}&fields=id`,
+                {
+                    headers: {
+                        'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch users for org unit');
+            }
+
+            const data = await response.json();
+            return data.users || [];
+        } catch (error) {
+            console.error('Error fetching org unit users:', error);
+            throw error;
+        }
+    };
+
+    const enableUser = async (userId) => {
+        try {
+            const response = await fetch(
+                `${process.env.REACT_APP_DHIS2_URL}/api/40/users/${userId}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                    },
+                    body: JSON.stringify([
+                        {
+                            "op": "replace",
+                            "path": "/userCredentials/disabled",
+                            "value": false
+                        }
+                    ])
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Failed to enable user ${userId}`);
+            }
+
+            return true;
+        } catch (error) {
+            console.error(`Error enabling user ${userId}:`, error);
+            throw error;
+        }
+    };
+
+    const handleCloseSnackbar = () => {
+        setOpenSnackbar(false);
+    };
+
     const handleSubmit = async () => {
         try {
+            setLoading(true);
+            setSuccessMessages([]);
+
             // Generate a new ID for org unit if complete is checked
-            const orgUnitId = checklist.complete ? generateTEIID() : null;
+            const orgUnitId = generate_orgUnitID();
 
             // Prepare the payload
+            setCurrentStep('Preparing request data...');
             const payload = {
                 events: [{
                     event: request.event, // Make sure this matches the event ID
@@ -359,41 +442,15 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                 }]
             };
 
-            console.log('DHIS2 URL:', process.env.REACT_APP_DHIS2_URL);
-            console.log('API URL:', `${process.env.REACT_APP_DHIS2_URL}/api/40/tracker?async=false&importStrategy=UPDATE`)
-
             // If complete is checked, perform the additional steps
-            if (checklist.complete && orgUnitId) {
-                // Step 2a: Create org unit
-                await createOrgUnit(orgUnitId);
+            // if (checklist.complete && orgUnitId) {
+            // Step 2a: Create org unit
 
-                // Step 2b: Add org unit to program
-                await addOrgUnitToProgram(orgUnitId);
-
-                // New Step: Create or Update TEI
-                const updatedTei = await createOrUpdateTEI(orgUnitId);
-
-                // Update the payload with the new TEI if it was created
-                if (!formData.tei && updatedTei) {
-                    payload.events[0].dataValues = payload.events[0].dataValues.map(dv =>
-                        dv.dataElement === "PdtizqOqE6Q" ? { ...dv, value: updatedTei } : dv
-                    );
-                }
-
-                // Step 2c: Create enrollments for all programs
-                const programs = [
-                    'EE8yeLVo6cN', 'Xje2ga2tJcA', 'QSQWCmnsQtG',
-                    'adbaKjLFtYH', 'fWc9nCmUjez', 'Y4W5qIKlOsh',
-                    'wlWC4vYeTzt', 'cghjivP9xA2'
-                ];
-
-                for (const programId of programs) {
-                    await createEnrollment(orgUnitId, programId, updatedTei);
-                }
-            }
+            // }
 
             // Send the request
-            const API_URL = `${process.env.REACT_APP_DHIS2_URL}/40/tracker?async=false&importStrategy=UPDATE`;
+            setCurrentStep('Updating request in DHIS2...');
+            const API_URL = `${process.env.REACT_APP_DHIS2_URL}/api/40/tracker?async=false&importStrategy=UPDATE`;
             const USERNAME = 'admin';
             const PASSWORD = '5Am53808053@';
 
@@ -401,17 +458,80 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // 'Authorization': 'Basic ' + btoa(`${USERNAME}:${PASSWORD}`)
+                    'Authorization': 'Basic ' + btoa(`${USERNAME}:${PASSWORD}`)
                 },
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to update request');
-            }
+            // const contentType = response.headers.get('content-type');
+            // if (!response.ok || !contentType?.includes('application/json')) {
+            //     const raw = await response.text(); // Get raw response
+            //     console.error('Unexpected response:', raw);
+            //     throw new Error('Server did not return JSON. Check API URL and authentication.');
+            // }
 
             const result = await response.json();
             console.log('Update successful:', result);
+            setSuccessMessages(prev => [...prev, 'Request updated successfully in DHIS2']);
+            setOpenSnackbar(true);
+
+            // Creating org unit
+            setCurrentStep('Creating organization unit...');
+            await createOrgUnit(orgUnitId);
+            setSuccessMessages(prev => [...prev, 'Organization unit created successfully']);
+            setOpenSnackbar(true);
+
+            // Step 2b: Add org unit to program
+            setCurrentStep('Adding organization unit to programs...');
+            await addOrgUnitToProgram(orgUnitId);
+            setSuccessMessages(prev => [...prev, 'Organization unit added to programs']);
+            setOpenSnackbar(true);
+
+            // New Step: Create or Update TEI
+            setCurrentStep('Creating/updating tracked entity instance...');
+            const updatedTei = await createOrUpdateTEI(orgUnitId);
+            setSuccessMessages(prev => [...prev, 'Tracked entity instance processed successfully']);
+            setOpenSnackbar(true);
+
+            // Update the payload with the new TEI if it was created
+            if (!formData.tei && updatedTei) {
+                payload.events[0].dataValues = payload.events[0].dataValues.map(dv =>
+                    dv.dataElement === "PdtizqOqE6Q" ? { ...dv, value: updatedTei } : dv
+                );
+            }
+
+            // Step 2c: Create enrollments for all programs
+            setCurrentStep('Creating program enrollments...');
+            const programs = [
+                'EE8yeLVo6cN', 'Xje2ga2tJcA', 'QSQWCmnsQtG',
+                'adbaKjLFtYH', 'fWc9nCmUjez', 'Y4W5qIKlOsh',
+                'wlWC4vYeTzt', 'cghjivP9xA2'
+            ];
+
+            for (const programId of programs) {
+                await createEnrollment(orgUnitId, programId, updatedTei);
+            }
+            setSuccessMessages(prev => [...prev, 'Program enrollments created successfully']);
+            setOpenSnackbar(true);
+
+            // NEW STEP: Enable users associated with the org unit
+            setCurrentStep('Enabling users...');
+            try {
+                const users = await fetchOrgUnitUsersAssoc(formData.location);
+                console.log(`Found ${users.length} users to enable for org unit ${formData.location}`);
+
+                for (const user of users) {
+                    await enableUser(user.id);
+                    console.log(`Enabled user ${user.id}`);
+                }
+                setSuccessMessages(prev => [...prev, 'Users enabled successfully']);
+                setOpenSnackbar(true);
+            } catch (error) {
+                console.error('Error in user enabling process:', error);
+                // Continue even if user enabling fails - this shouldn't block the main process
+                setSuccessMessages(prev => [...prev, 'User enabling partially completed']);
+                setOpenSnackbar(true);
+            }
 
             // Call the onSave callback with the updated data
             onSave({
@@ -420,9 +540,17 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                 comments
             });
 
+            setCurrentStep('Process completed successfully!');
+            setTimeout(() => {
+                setLoading(false);
+            }, 1000);
+
         } catch (error) {
             console.error('Error updating request:', error);
             // You might want to show an error message to the user here
+            setSuccessMessages(prev => [...prev, `Error: ${error.message}`]);
+            setOpenSnackbar(true);
+            setLoading(false);
         } finally {
             setIsProcessing(false);
         }
@@ -550,7 +678,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                     </div>
                 </div>
                 {/* Accepted Checkbox */}
-                <FormControlLabel
+                {/* <FormControlLabel
                     control={
                         <Checkbox
                             checked={checklist.accepted}
@@ -641,24 +769,58 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                         }
                         label="Complete event"
                     />
+                </Collapse> */}
 
-                    <Box mt={4}>
-                        <Button
-                            onClick={handleSubmit}
-                            variant="contained"
-                            color="primary"
-                            sx={{ mr: 2 }}
-                        >
-                            Save
-                        </Button>
-                        <Button
-                            onClick={onCancel}
-                            variant="outlined"
-                        >
-                            Cancel
-                        </Button>
-                    </Box>
-                </Collapse>
+                <Box mt={4}>
+                    <Button
+                        onClick={handleSubmit}
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                            mr: 2, backgroundColor: 'white', color: 'black', '&:hover': {
+                                backgroundColor: '#f5f5f5',
+                            }
+                        }}
+                    >
+                        Accept Request
+                    </Button>
+                    <Button
+                        onClick={onCancel}
+                        variant="outlined"
+                        sx={{
+                            color: 'red', borderColor: 'black', '&:hover': {
+                                borderColor: 'black',
+                                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                            }
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                </Box>
+                {/* Loading Dialog */}
+                <Dialog open={loading} onClose={() => { }}>
+                    <DialogTitle>Processing Request</DialogTitle>
+                    <DialogContent>
+                        <Box display="flex" flexDirection="column" alignItems="center">
+                            <CircularProgress />
+                            <Typography variant="body1" mt={2}>
+                                {currentStep}
+                            </Typography>
+                        </Box>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Success Snackbar */}
+                <Snackbar
+                    open={openSnackbar}
+                    autoHideDuration={6000}
+                    onClose={handleCloseSnackbar}
+                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                >
+                    <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+                        {successMessages.length > 0 && successMessages[successMessages.length - 1]}
+                    </Alert>
+                </Snackbar>
             </div>
         </div>
     );
