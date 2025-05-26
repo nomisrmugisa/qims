@@ -36,7 +36,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
     });
 
     const [checklist, setChecklist] = useState({
-        
+
         applicationLetterValid: request.dataValues.find(dv => dv.dataElement === 'Bz0oYRvSypS')?.value === 'true' || false,
         postBasicQualification: request.dataValues.find(dv => dv.dataElement === 'fD7DQkmT1im')?.value === 'true' || false,
         practiceValid: request.dataValues.find(dv => dv.dataElement === 'XcWt8b12E85')?.value === 'true' || false,
@@ -374,6 +374,32 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
         }
     };
 
+    const addUsertoLocation = async (userId) => {
+        try {
+            const response = await fetch(
+                `${process.env.REACT_APP_DHIS2_URL}/api/40/users/${userId}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                    },
+                    body: JSON.stringify([{ "op": "add", "path": "/organisationUnits", "value": [{ "id": formData.location }] },
+                    { "op": "add", "path": "/attributeValues", "value": [] }])
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Failed to enable user ${userId}`);
+            }
+
+            return true;
+        } catch (error) {
+            console.error(`Error enabling user ${userId}:`, error);
+            throw error;
+        }
+    };
+
     const handleCloseSnackbar = () => {
         setOpenSnackbar(false);
     };
@@ -525,6 +551,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
 
                 for (const user of users) {
                     await enableUser(user.id);
+                    await addUsertoLocation(user.id);
                     console.log(`Enabled user ${user.id}`);
                 }
                 setSuccessMessages(prev => [...prev, 'Users enabled successfully']);
