@@ -27,6 +27,7 @@ import { Backdrop, CircularProgress } from "@mui/material";
 import RequestsTable from "./RequestsTable";
 import RequestDetails from "./RequestDetails";
 import EditRequestForm from "./EditRequestForm";
+import ManageUsers from "./ManageUsers";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialogContent-root": {
@@ -325,7 +326,7 @@ function DefaultBody() {
               <div className="container text-center">
                 <div className="row g-0">
                   <div
-                    className="col-md-12 d-flex align-items-left"
+                    className="col-md-12 d-flex align-items-center justify-content-between"
                     style={{ margin: "32px 0", paddingLeft: "16px", paddingRight: "16px" }}
                   >
                     <h5
@@ -336,11 +337,25 @@ function DefaultBody() {
                         color: "#0096FF",
                         textAlign: "left",
                         fontSize: "24px",
+                        margin: 0
                       }}
                     >
-                      {/* PRIVATE FACILITY INSPECTION & LICENSING */}
                       ADMIN PANEL
                     </h5>
+                    <Button
+                      onClick={() => window.open("https://qimsdev.5am.co.bw/qims/dhis-web-dashboard/#/", "_blank")}
+                      sx={{
+                        color: "#0096FF",
+                        textTransform: "none",
+                        fontSize: "16px",
+                        "&:hover": {
+                          backgroundColor: "transparent",
+                          textDecoration: "underline",
+                        },
+                      }}
+                    >
+                      Navigate to Main Dashboard
+                    </Button>
                   </div>
                 </div>
 
@@ -394,6 +409,28 @@ function DefaultBody() {
                           }}
                         >
                           Requests
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setActiveTab('users');
+                            setSelectedRequest(null);
+                            setEditingRequest(null);
+                          }}
+                          sx={{
+                            backgroundColor: activeTab === 'users' ? '#e0e0e0' : 'transparent',
+                            color: "#000",
+                            borderRadius: 0,
+                            paddingX: 3,
+                            paddingY: 1,
+                            boxShadow: "none",
+                            borderBottom: activeTab === 'users' ? '2px solid #000' : 'none',
+                            "&:hover": {
+                              backgroundColor: "#f0f0f0",
+                              boxShadow: "none",
+                            },
+                          }}
+                        >
+                          Manage Users
                         </Button>
                       </div>
                     </div>
@@ -508,10 +545,24 @@ function DefaultBody() {
                     )} */}
                     {activeTab === 'requests' && (
                       <div className="col-12">
+                        <h5
+                          className="card-title text-capitalize"
+                          style={{
+                            fontWeight: 650,
+                            display: "block",
+                            color: "#0096FF",
+                            textAlign: "left",
+                            fontSize: "24px",
+                            margin: "32px 0",
+                            paddingLeft: "16px"
+                          }}
+                        >
+                          Review Requests For Registration
+                        </h5>
                         {!editingRequest && (
                           <RequestsTable
-                            onRowClick={setSelectedRequest} // Keep this if needed for other cases
-                            onEditClick={setEditingRequest} // This will be called directly now
+                            onRowClick={setSelectedRequest}
+                            onEditClick={setEditingRequest}
                           />
                         )}
 
@@ -527,6 +578,12 @@ function DefaultBody() {
                             }}
                           />
                         )}
+                      </div>
+                    )}
+
+                    {activeTab === 'users' && (
+                      <div className="col-12">
+                        <ManageUsers />
                       </div>
                     )}
                   </div>

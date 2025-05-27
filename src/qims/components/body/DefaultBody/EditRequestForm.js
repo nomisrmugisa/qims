@@ -641,7 +641,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
     return (
         <div className="card">
             <div className="card-body">
-                <h4 className="mb-4">Edit Request</h4>
+                <h4 className="mb-4">Review Request</h4>
 
                 <div className="row">
                     <div className="col-md-6">
@@ -655,40 +655,12 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                                 readOnly: true,
                             }}
                         />
+                        <br></br>
+                        <h6>Facility Profile</h6>
                         <TextField
                             label="Facility Name"
                             name="facilityName"
                             value={formData.facilityName}
-                            fullWidth
-                            margin="normal"
-                            InputProps={{
-                                readOnly: true,
-                            }}
-                        />
-                        <TextField
-                            label="First Name"
-                            name="firstName"
-                            value={formData.firstName}
-                            fullWidth
-                            margin="normal"
-                            InputProps={{
-                                readOnly: true,
-                            }}
-                        />
-                        <TextField
-                            label="Employee User Name"
-                            name="employeeUsername"
-                            value={formData.employeeUsername}
-                            fullWidth
-                            margin="normal"
-                            InputProps={{
-                                readOnly: true,
-                            }}
-                        />
-                        <TextField
-                            label="Physical Address"
-                            name="physicalAddress"
-                            value={formData.physicalAddress}
                             fullWidth
                             margin="normal"
                             InputProps={{
@@ -705,13 +677,12 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                                 readOnly: true,
                             }}
                         />
-
-                    </div>
-                    <div className="col-md-6">
+                        <br></br>
+                        <h6>User Profile</h6>
                         <TextField
-                            label="Tracked Entity Instance"
-                            name="tei"
-                            value={formData.tei}
+                            label="First Name"
+                            name="firstName"
+                            value={formData.firstName}
                             fullWidth
                             margin="normal"
                             InputProps={{
@@ -728,6 +699,41 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                                 readOnly: true,
                             }}
                         />
+                        <TextField
+                            label="Employee User Name"
+                            name="employeeUsername"
+                            value={formData.employeeUsername}
+                            fullWidth
+                            margin="normal"
+                            InputProps={{
+                                readOnly: true,
+                            }}
+                        />
+                        
+                        
+
+                    </div>
+                    <div className="col-md-6">
+                        <TextField
+                            label="Tracked Entity Instance"
+                            name="tei"
+                            value={formData.tei}
+                            fullWidth
+                            margin="normal"
+                            InputProps={{
+                                readOnly: true,
+                            }}
+                        />
+                        <TextField
+                            label="Physical Address"
+                            name="physicalAddress"
+                            value={formData.physicalAddress}
+                            fullWidth
+                            margin="normal"
+                            InputProps={{
+                                readOnly: true,
+                            }}
+                        />                        
                         <TextField
                             label="Email"
                             name="email"
@@ -887,7 +893,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                             }
                         }}
                     >
-                        Cancel
+                        Decline
                     </Button>
                 </Box>
                 {/* Loading Dialog */}
