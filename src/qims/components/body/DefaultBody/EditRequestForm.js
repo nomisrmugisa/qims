@@ -356,8 +356,8 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                     body: JSON.stringify([
                         {
                             "op": "replace",
-                            "path": "/userCredentials/enabled",
-                            "value": true
+                            "path": "/userCredentials/disabled",
+                            "value": false
                         }
                     ])
                 }
@@ -396,6 +396,48 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             return true;
         } catch (error) {
             console.error(`Error adding user ${userId}:`, error);
+            throw error;
+        }
+    };
+
+    const updateUserOrgUnits = async (userId, orgUnitUpdateType, newOrgUnitId) => {
+        try {
+            // Step 1: Assign new org unit
+            const assignResponse = await fetch(
+                `${process.env.REACT_APP_DHIS2_URL}/api/users/${userId}/${orgUnitUpdateType}/${newOrgUnitId}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                    },
+                    body: JSON.stringify({})
+                }
+            );
+
+            if (!assignResponse.ok) {
+                throw new Error(`Failed to assign new org unit for ${orgUnitUpdateType}Updates`);
+            }
+
+            // Step 2: Delete Botswana org unit (OVpBNoteQ2Y)
+            const deleteResponse = await fetch(
+                `${process.env.REACT_APP_DHIS2_URL}/api/users/${userId}/${orgUnitUpdateType}/OVpBNoteQ2Y`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                    }
+                }
+            );
+
+            if (!deleteResponse.ok) {
+                throw new Error(`Failed to delete Botswana org unit for ${orgUnitUpdateType}`);
+            }
+
+            return true;
+        } catch (error) {
+            console.error(`Error in updateUserOrgUnits for ${orgUnitUpdateType}:`, error);
             throw error;
         }
     };
@@ -478,7 +520,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             // }
 
             // Send the request
-            setCurrentStep('Updating request in DHIS2...');
+            setCurrentStep('Accepting request ...');
             const API_URL = `${process.env.REACT_APP_DHIS2_URL}/api/40/tracker?async=false&importStrategy=UPDATE`;
             const USERNAME = 'admin';
             const PASSWORD = '5Am53808053@';
@@ -505,21 +547,21 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             setOpenSnackbar(true);
 
             // Creating org unit
-            setCurrentStep('Creating facility...');
+            setCurrentStep(`Adding ${locationName} facility to registry...`);
             await createOrgUnit(orgUnitId);
-            setSuccessMessages(prev => [...prev, 'Facility created successfully']);
+            setSuccessMessages(prev => [...prev, 'Facility added to registry successfully']);
             setOpenSnackbar(true);
 
             // Step 2b: Add org unit to program
-            setCurrentStep('Adding facility to programs...');
+            // setCurrentStep(`Facility updated...`);
             await addOrgUnitToProgram(orgUnitId);
-            setSuccessMessages(prev => [...prev, 'Facility added to programs']);
+            // setSuccessMessages(prev => [...prev, 'Facility added ']);
             setOpenSnackbar(true);
 
             // New Step: Create or Update TEI
-            setCurrentStep('Creating/updating tracked entity instance...');
+            setCurrentStep('Updating facility dependecies...');
             const updatedTei = await createOrUpdateTEI(orgUnitId);
-            setSuccessMessages(prev => [...prev, 'Tracked entity instance processed successfully']);
+            setSuccessMessages(prev => [...prev, 'Facility dependecies updated successfully']);
             setOpenSnackbar(true);
 
             // Update the payload with the new TEI if it was created
@@ -544,17 +586,27 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             setOpenSnackbar(true);
 
             // NEW STEP: Enable users associated with the org unit
-            setCurrentStep('Enabling users...');
+            // setCurrentStep('Enabling users and adding user to location...');
             try {
                 const users = await fetchOrgUnitUsersAssoc();
                 console.log(`Found ${users.length} users to enable for org unit`);
 
+                const orgUnitTypes = [
+                    'organisationUnits',
+                    'dataViewOrganisationUnits',
+                    'teiSearchOrganisationUnits'
+                ];
+
+                setCurrentStep(`Assigning User to New Facility...`);
                 for (const user of users) {
-                    await addUsertoLocation(user.id);
-                    await enableUser(user.id);                    
+                    for (const orgUnitType of orgUnitTypes) {
+                        await updateUserOrgUnits(user.id, orgUnitType, formData.location);
+                    }
+                    // await enableUser(user.id);
+                    // await addUsertoLocation(user.id);
                     console.log(`Enabled user ${user.id}`);
                 }
-                setSuccessMessages(prev => [...prev, 'Users enabled successfully']);
+                setSuccessMessages(prev => [...prev, 'User assigned to new facility successfully']);
                 setOpenSnackbar(true);
             } catch (error) {
                 console.error('Error in user enabling process:', error);
