@@ -600,7 +600,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                 setCurrentStep(`Assigning User to New Facility...`);
                 for (const user of users) {
                     for (const orgUnitType of orgUnitTypes) {
-                        await updateUserOrgUnits(user.id, orgUnitType, formData.location);
+                        await updateUserOrgUnits(user.id, orgUnitType, orgUnitId);
                     }
                     // await enableUser(user.id);
                     // await addUsertoLocation(user.id);
