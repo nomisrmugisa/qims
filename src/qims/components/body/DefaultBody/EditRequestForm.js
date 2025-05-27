@@ -455,7 +455,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             const orgUnitId = generate_orgUnitID();
 
             // Prepare the payload
-            setCurrentStep('Preparing request data...');
+            setCurrentStep('Saving...');
             const payload = {
                 events: [{
                     event: request.event, // Make sure this matches the event ID
@@ -520,7 +520,8 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             // }
 
             // Send the request
-            setCurrentStep('Accepting request ...');
+            // setCurrentStep('Accepting request ...');
+            setCurrentStep('Saving...');
             const API_URL = `${process.env.REACT_APP_DHIS2_URL}/api/40/tracker?async=false&importStrategy=UPDATE`;
             const USERNAME = 'admin';
             const PASSWORD = '5Am53808053@';
@@ -543,13 +544,16 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
 
             const result = await response.json();
             console.log('Update successful:', result);
-            setSuccessMessages(prev => [...prev, 'Request updated successfully in DHIS2']);
+            // setSuccessMessages(prev => [...prev, 'Request updated successfully in DHIS2']);
+            setSuccessMessages(prev => [...prev, '1 / 5']);
             setOpenSnackbar(true);
 
             // Creating org unit
-            setCurrentStep(`Adding ${locationName} facility to registry...`);
+            // setCurrentStep(`Adding ${locationName} facility to registry...`);
+            setCurrentStep('Saving...');
             await createOrgUnit(orgUnitId);
-            setSuccessMessages(prev => [...prev, 'Facility added to registry successfully']);
+            // setSuccessMessages(prev => [...prev, 'Facility added to registry successfully']);
+            setSuccessMessages(prev => [...prev, '2 / 5']);
             setOpenSnackbar(true);
 
             // Step 2b: Add org unit to program
@@ -559,9 +563,11 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             setOpenSnackbar(true);
 
             // New Step: Create or Update TEI
-            setCurrentStep('Updating facility dependecies...');
+            // setCurrentStep('Updating facility dependecies...');
+            setCurrentStep('Saving...');
             const updatedTei = await createOrUpdateTEI(orgUnitId);
-            setSuccessMessages(prev => [...prev, 'Facility dependecies updated successfully']);
+            // setSuccessMessages(prev => [...prev, 'Facility dependecies updated successfully']);
+            setSuccessMessages(prev => [...prev, '3 / 5']);
             setOpenSnackbar(true);
 
             // Update the payload with the new TEI if it was created
@@ -572,7 +578,8 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             }
 
             // Step 2c: Create enrollments for all programs
-            setCurrentStep('Creating program enrollments...');
+            setCurrentStep('Saving...');
+            // setCurrentStep('Creating program enrollments...');
             const programs = [
                 'EE8yeLVo6cN', 'Xje2ga2tJcA', 'QSQWCmnsQtG',
                 'adbaKjLFtYH', 'fWc9nCmUjez', 'Y4W5qIKlOsh',
@@ -582,7 +589,8 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
             for (const programId of programs) {
                 await createEnrollment(orgUnitId, programId, updatedTei);
             }
-            setSuccessMessages(prev => [...prev, 'Program enrollments created successfully']);
+            // setSuccessMessages(prev => [...prev, 'Program enrollments created successfully']);
+            setSuccessMessages(prev => [...prev, '4 / 5']);
             setOpenSnackbar(true);
 
             // NEW STEP: Enable users associated with the org unit
@@ -597,7 +605,8 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                     'teiSearchOrganisationUnits'
                 ];
 
-                setCurrentStep(`Assigning User to New Facility...`);
+                // setCurrentStep(`Assigning User to New Facility...`);
+                setCurrentStep('Saving...');
                 for (const user of users) {
                     for (const orgUnitType of orgUnitTypes) {
                         await updateUserOrgUnits(user.id, orgUnitType, orgUnitId);
@@ -606,12 +615,14 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                     // await addUsertoLocation(user.id);
                     console.log(`Enabled user ${user.id}`);
                 }
-                setSuccessMessages(prev => [...prev, 'User assigned to new facility successfully']);
+                // setSuccessMessages(prev => [...prev, 'User assigned to new facility successfully']);
+                setSuccessMessages(prev => [...prev, '5 / 5']);
+                
                 setOpenSnackbar(true);
             } catch (error) {
                 console.error('Error in user enabling process:', error);
                 // Continue even if user enabling fails - this shouldn't block the main process
-                setSuccessMessages(prev => [...prev, 'User enabling partially completed']);
+                // setSuccessMessages(prev => [...prev, 'User enabling partially completed']);
                 setOpenSnackbar(true);
             }
 
@@ -622,7 +633,7 @@ const EditRequestForm = ({ request, onSave, onCancel }) => {
                 comments
             });
 
-            setCurrentStep('Process completed successfully!');
+            setCurrentStep('Request accepted successfully!');
             setTimeout(() => {
                 setLoading(false);
             }, 1000);

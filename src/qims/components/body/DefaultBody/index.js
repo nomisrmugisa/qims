@@ -432,6 +432,28 @@ function DefaultBody() {
                         >
                           Manage Users
                         </Button>
+                        <Button
+                          onClick={() => {
+                            setActiveTab('users');
+                            setSelectedRequest(null);
+                            setEditingRequest(null);
+                          }}
+                          sx={{
+                            backgroundColor: activeTab === 'users' ? '#e0e0e0' : 'transparent',
+                            color: "#000",
+                            borderRadius: 0,
+                            paddingX: 3,
+                            paddingY: 1,
+                            boxShadow: "none",
+                            borderBottom: activeTab === 'users' ? '2px solid #000' : 'none',
+                            "&:hover": {
+                              backgroundColor: "#f0f0f0",
+                              boxShadow: "none",
+                            },
+                          }}
+                        >
+                          Inspections
+                        </Button>
                       </div>
                     </div>
 
