@@ -418,6 +418,7 @@ const GenerateDataEntryForms = () => {
                                             value={selectedDataElement}
                                             onChange={(e) => setSelectedDataElement(e.target.value)}
                                             label="Select Data Element"
+                                            style={{ height: '40px'}}
                                         >
                                             <MenuItem value="" disabled>
                                                 Select a data element
@@ -436,6 +437,7 @@ const GenerateDataEntryForms = () => {
                                             value={selectedSection}
                                             onChange={(e) => setSelectedSection(e.target.value)}
                                             label="Select Section"
+                                            style={{ height: '40px'}}
                                         >
                                             <MenuItem value="" disabled>
                                                 Select a section
@@ -488,6 +490,7 @@ const GenerateDataEntryForms = () => {
                                             value={newDataElement.valueType}
                                             onChange={(e) => setNewDataElement({...newDataElement, valueType: e.target.value})}
                                             label="Value Type"
+                                            style={{ height: '40px'}}
                                         >
                                             <MenuItem value="TEXT">Text</MenuItem>
                                             <MenuItem value="LONG_TEXT">Long Text</MenuItem>
