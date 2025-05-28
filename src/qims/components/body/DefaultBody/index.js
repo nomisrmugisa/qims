@@ -28,6 +28,7 @@ import RequestsTable from "./RequestsTable";
 import RequestDetails from "./RequestDetails";
 import EditRequestForm from "./EditRequestForm";
 import ManageUsers from "./ManageUsers";
+import GenerateDataEntryForms from "./GenerateDataEntryForms";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialogContent-root": {
@@ -454,6 +455,28 @@ function DefaultBody() {
                         >
                           Inspections
                         </Button>
+                        <Button
+                          onClick={() => {
+                            setActiveTab('forms');
+                            setSelectedRequest(null);
+                            setEditingRequest(null);
+                          }}
+                          sx={{
+                            backgroundColor: activeTab === 'forms' ? '#e0e0e0' : 'transparent',
+                            color: "#000",
+                            borderRadius: 0,
+                            paddingX: 3,
+                            paddingY: 1,
+                            boxShadow: "none",
+                            borderBottom: activeTab === 'forms' ? '2px solid #000' : 'none',
+                            "&:hover": {
+                              backgroundColor: "#f0f0f0",
+                              boxShadow: "none",
+                            },
+                          }}
+                        >
+                          Generate Data Entry Forms
+                        </Button>
                       </div>
                     </div>
 
@@ -606,6 +629,26 @@ function DefaultBody() {
                     {activeTab === 'users' && (
                       <div className="col-12">
                         <ManageUsers />
+                      </div>
+                    )}
+
+                    {activeTab === 'forms' && (
+                      <div className="col-12">
+                        <h5
+                          className="card-title text-capitalize"
+                          style={{
+                            fontWeight: 650,
+                            display: "block",
+                            color: "#0096FF",
+                            textAlign: "left",
+                            fontSize: "24px",
+                            margin: "32px 0",
+                            paddingLeft: "16px"
+                          }}
+                        >
+                          Generate Data Entry Forms
+                        </h5>
+                        <GenerateDataEntryForms />
                       </div>
                     )}
                   </div>
