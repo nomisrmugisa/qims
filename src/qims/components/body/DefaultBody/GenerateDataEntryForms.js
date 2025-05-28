@@ -23,21 +23,34 @@ import {
     ListItemText,
     ListItemSecondaryAction,
     Checkbox,
-    FormControlLabel
+    FormControlLabel,
+    Tabs,
+    Tab,
+    Grid,
+    Card,
+    CardContent,
+    CardHeader,
+    CardActions
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const GenerateDataEntryForms = () => {
     const [loading, setLoading] = useState(false);
+    const [activeSubTab, setActiveSubTab] = useState(0);
+    const [programs, setPrograms] = useState([]);
+    const [programStages, setProgramStages] = useState([]);
+    const [selectedProgram, setSelectedProgram] = useState('');
+    const [selectedProgramStage, setSelectedProgramStage] = useState('');
     const [dataElements, setDataElements] = useState([]);
+    const [selectedDataElements, setSelectedDataElements] = useState([]);
     const [sections, setSections] = useState([]);
     const [newSectionName, setNewSectionName] = useState('');
     const [newSectionDesc, setNewSectionDesc] = useState('');
-    const [selectedDataElement, setSelectedDataElement] = useState('');
-    const [selectedSection, setSelectedSection] = useState('');
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [formName, setFormName] = useState('');
@@ -50,32 +63,104 @@ const GenerateDataEntryForms = () => {
     });
     const [previewMode, setPreviewMode] = useState(false);
 
-    // Fetch data elements from DHIS2
+    // Fetch programs from DHIS2
     useEffect(() => {
-        const fetchDataElements = async () => {
+        const fetchPrograms = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/api/dataElements`, {
+                const response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/api/programs`, {
                     headers: {
                         'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
                     }
                 });
 
                 if (!response.ok) {
+                    throw new Error('Failed to fetch programs');
+                }
+
+                const data = await response.json();
+                setPrograms(data.programs);
+            } catch (error) {
+                console.error('Error fetching programs:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPrograms();
+    }, []);
+
+    // Fetch program stages when program is selected
+    useEffect(() => {
+        const fetchProgramStages = async () => {
+            if (!selectedProgram) return;
+
+            try {
+                setLoading(true);
+                const response = await fetch(`${process.env.REACT_APP_DHIS2_URL}/api/programStages`, {
+                    headers: {
+                        'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch program stages');
+                }
+
+                const data = await response.json();
+                setProgramStages(data.programStages);
+            } catch (error) {
+                console.error('Error fetching program stages:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProgramStages();
+    }, [selectedProgram]);
+
+    // Fetch data elements when program stage is selected
+    useEffect(() => {
+        const fetchDataElements = async () => {
+            if (!selectedProgramStage) return;
+
+            try {
+                setLoading(true);
+                const response = await fetch(
+                    `${process.env.REACT_APP_DHIS2_URL}/api/programStages/${selectedProgramStage}?fields=programStageDataElements[dataElement[id,name,code,valueType]]`,
+                    {
+                        headers: {
+                            'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+                        }
+                    }
+                );
+
+                if (!response.ok) {
                     throw new Error('Failed to fetch data elements');
                 }
 
                 const data = await response.json();
-                setDataElements(data.dataElements);
+                // Extract the data elements from programStageDataElements
+                const elements = data.programStageDataElements.map(pde => ({
+                    id: pde.dataElement.id,
+                    displayName: pde.dataElement.name,
+                    name: pde.dataElement.name,
+                    code: pde.dataElement.code,
+                    valueType: pde.dataElement.valueType
+                }));
+
+                setDataElements(elements);
             } catch (error) {
                 console.error('Error fetching data elements:', error);
+                setSuccessMessage(`Error fetching data elements: ${error.message}`);
+                setOpenSnackbar(true);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchDataElements();
-    }, []);
+    }, [selectedProgramStage]);
 
     // Load saved forms from localStorage (or API in production)
     useEffect(() => {
@@ -100,25 +185,20 @@ const GenerateDataEntryForms = () => {
         setNewSectionDesc('');
     };
 
-    const handleAddDataElement = () => {
-        if (!selectedDataElement || !selectedSection) return;
+    const handleAddDataElement = (element) => {
+        setSelectedDataElements([...selectedDataElements, element]);
+    };
 
-        const sectionIndex = sections.findIndex(s => s.id === selectedSection);
-        if (sectionIndex === -1) return;
+    const handleRemoveDataElement = (element) => {
+        setSelectedDataElements(selectedDataElements.filter(de => de.id !== element.id));
+    };
 
-        const element = dataElements.find(de => de.id === selectedDataElement);
-        if (!element) return;
+    const handleAddAllDataElements = () => {
+        setSelectedDataElements([...selectedDataElements, ...dataElements]);
+    };
 
-        const updatedSections = [...sections];
-        updatedSections[sectionIndex].dataElements.push({
-            id: element.id,
-            name: element.displayName,
-            valueType: element.valueType,
-            code: element.code
-        });
-
-        setSections(updatedSections);
-        setSelectedDataElement('');
+    const handleRemoveAllDataElements = () => {
+        setSelectedDataElements([]);
     };
 
     const handleCreateNewDataElement = async () => {
@@ -157,21 +237,7 @@ const GenerateDataEntryForms = () => {
 
             // Add to local state
             setDataElements([...dataElements, createdElement]);
-            
-            // If a section is selected, add to that section
-            if (selectedSection) {
-                const sectionIndex = sections.findIndex(s => s.id === selectedSection);
-                if (sectionIndex !== -1) {
-                    const updatedSections = [...sections];
-                    updatedSections[sectionIndex].dataElements.push({
-                        id: createdElement.uid,
-                        name: createdElement.displayName,
-                        valueType: createdElement.valueType,
-                        code: createdElement.code
-                    });
-                    setSections(updatedSections);
-                }
-            }
+            setSelectedDataElements([...selectedDataElements, createdElement]);
 
             setNewDataElement({
                 name: '',
@@ -190,18 +256,6 @@ const GenerateDataEntryForms = () => {
         }
     };
 
-    const handleRemoveDataElement = (sectionId, elementId) => {
-        const sectionIndex = sections.findIndex(s => s.id === sectionId);
-        if (sectionIndex === -1) return;
-
-        const updatedSections = [...sections];
-        updatedSections[sectionIndex].dataElements = updatedSections[sectionIndex].dataElements.filter(
-            de => de.id !== elementId
-        );
-
-        setSections(updatedSections);
-    };
-
     const handleRemoveSection = (sectionId) => {
         setSections(sections.filter(s => s.id !== sectionId));
     };
@@ -216,7 +270,10 @@ const GenerateDataEntryForms = () => {
         const newForm = {
             id: Date.now().toString(),
             name: formName,
+            programId: selectedProgram,
+            programStageId: selectedProgramStage,
             sections: [...sections],
+            dataElements: selectedDataElements,
             createdAt: new Date().toISOString()
         };
 
@@ -236,6 +293,9 @@ const GenerateDataEntryForms = () => {
             setSelectedForm(formToLoad);
             setSections(formToLoad.sections);
             setFormName(formToLoad.name);
+            setSelectedProgram(formToLoad.programId);
+            setSelectedProgramStage(formToLoad.programStageId);
+            setSelectedDataElements(formToLoad.dataElements);
         }
     };
 
@@ -301,6 +361,10 @@ const GenerateDataEntryForms = () => {
         setPreviewMode(!previewMode);
     };
 
+    const handleSubTabChange = (event, newValue) => {
+        setActiveSubTab(newValue);
+    };
+
     return (
         <div className="card">
             <div className="card-body">
@@ -309,161 +373,77 @@ const GenerateDataEntryForms = () => {
                         Generate Data Entry Forms
                     </Typography>
 
-                    <Box display="flex" alignItems="center" mb={2}>
-                        <TextField
-                            label="Form Name"
-                            value={formName}
-                            onChange={(e) => setFormName(e.target.value)}
-                            fullWidth
-                            margin="normal"
-                            sx={{ mr: 2 }}
-                        />
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            startIcon={<SaveIcon />}
-                            onClick={handleSaveForm}
-                            disabled={!formName } // || sections.length === 0
-                            sx={{ mr: 2 }}
-                        >
-                            Save Form
-                        </Button>
-                        {sections.length > 0 && (
-                            <Button
-                                variant="outlined"
-                                color="primary"
-                                startIcon={<VisibilityIcon />}
-                                onClick={togglePreviewMode}
-                            >
-                                {previewMode ? 'Edit Mode' : 'Preview Mode'}
-                            </Button>
-                        )}
-                    </Box>
+                    <Tabs value={activeSubTab} onChange={handleSubTabChange} sx={{ mb: 3 }}>
+                        <Tab label="1. Select Program" />
+                        <Tab label="2. Assign Data Elements" disabled={!selectedProgram} />
+                        <Tab label="3. Create Form" disabled={!selectedProgramStage} />
+                        <Tab label="4. Access" disabled={!selectedProgramStage} />
+                    </Tabs>
 
-                    {forms.length > 0 && (
-                        <Box mb={4}>
-                            <Typography variant="subtitle1" gutterBottom>
-                                Load Saved Form:
+                    {activeSubTab === 0 && (
+                        <Box>
+                            <Typography variant="h6" gutterBottom>
+                                Select Program and Program Stage
                             </Typography>
-                            <FormControl fullWidth>
-                                <InputLabel>Select a saved form</InputLabel>
-                                <Select
-                                    value={selectedForm?.id || ''}
-                                    onChange={(e) => handleLoadForm(e.target.value)}
-                                    label="Select a saved form"
-                                >
-                                    <MenuItem value="" disabled>
-                                        Select a saved form
-                                    </MenuItem>
-                                    {forms.map(form => (
-                                        <MenuItem key={form.id} value={form.id}>
-                                            {form.name} - {new Date(form.createdAt).toLocaleDateString()}
+                            <Box display="flex" alignItems="center" mb={4}>
+                                <FormControl fullWidth sx={{ mr: 2 }}>
+                                    <InputLabel>Select Program</InputLabel>
+                                    <Select
+                                        value={selectedProgram}
+                                        onChange={(e) => setSelectedProgram(e.target.value)}
+                                        label="Select Program"
+                                        style={{ height: '40px' }}
+                                    >
+                                        <MenuItem value="" disabled>
+                                            Select a program
                                         </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                                        {programs.map(program => (
+                                            <MenuItem key={program.id} value={program.id}>
+                                                {program.displayName}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
+                                <FormControl fullWidth>
+                                    <InputLabel>Select Program Stage</InputLabel>
+                                    <Select
+                                        value={selectedProgramStage}
+                                        onChange={(e) => setSelectedProgramStage(e.target.value)}
+                                        label="Select Program Stage"
+                                        style={{ height: '40px' }}
+                                        disabled={!selectedProgram}
+                                    >
+                                        <MenuItem value="" disabled>
+                                            Select a program stage
+                                        </MenuItem>
+                                        {programStages.map(stage => (
+                                            <MenuItem key={stage.id} value={stage.id}>
+                                                {stage.displayName}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => setActiveSubTab(1)}
+                                disabled={!selectedProgramStage}
+                            >
+                                Next: Assign Data Elements
+                            </Button>
                         </Box>
                     )}
-                </Box>
 
-                {!previewMode && (
-                    <>
-                        <Box mb={4}>
+                    {activeSubTab === 1 && (
+                        <Box>
                             <Typography variant="h6" gutterBottom>
-                                Add New Section
+                                Assign Data Elements
                             </Typography>
-                            <Box display="flex" alignItems="center" mb={2}>
-                                <TextField
-                                    label="Section Name"
-                                    value={newSectionName}
-                                    onChange={(e) => setNewSectionName(e.target.value)}
-                                    fullWidth
-                                    margin="normal"
-                                    sx={{ mr: 2 }}
-                                />
-                                <TextField
-                                    label="Description (Optional)"
-                                    value={newSectionDesc}
-                                    onChange={(e) => setNewSectionDesc(e.target.value)}
-                                    fullWidth
-                                    margin="normal"
-                                    sx={{ mr: 2 }}
-                                />
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    startIcon={<AddIcon />}
-                                    onClick={handleAddSection}
-                                    disabled={!newSectionName.trim()}
-                                >
-                                    Add Section
-                                </Button>
-                            </Box>
-                        </Box>
 
-                        <Box mb={4}>
-                            <Typography variant="h6" gutterBottom>
-                                Add Data Elements to Section
-                            </Typography>
-                            
-                            {/* Existing Data Elements */}
-                            <Box mb={4}>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    Select Existing Data Element:
-                                </Typography>
-                                <Box display="flex" alignItems="center" mb={2}>
-                                    <FormControl fullWidth sx={{ mr: 2 }}>
-                                        <InputLabel >Select Data Element</InputLabel>
-                                        <Select
-                                            value={selectedDataElement}
-                                            onChange={(e) => setSelectedDataElement(e.target.value)}
-                                            label="Select Data Element"
-                                            style={{ height: '40px'}}
-                                        >
-                                            <MenuItem value="" disabled>
-                                                Select a data element
-                                            </MenuItem>
-                                            {dataElements.map(element => (
-                                                <MenuItem key={element.id} value={element.id}>
-                                                    {element.displayName} ({element.valueType})
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-
-                                    <FormControl fullWidth sx={{ mr: 2 }}>
-                                        <InputLabel>Select Section</InputLabel>
-                                        <Select
-                                            value={selectedSection}
-                                            onChange={(e) => setSelectedSection(e.target.value)}
-                                            label="Select Section"
-                                            style={{ height: '40px'}}
-                                        >
-                                            <MenuItem value="" disabled>
-                                                Select a section
-                                            </MenuItem>
-                                            {sections.map(section => (
-                                                <MenuItem key={section.id} value={section.id}>
-                                                    {section.name}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        startIcon={<AddIcon />}
-                                        onClick={handleAddDataElement}
-                                        disabled={!selectedDataElement || !selectedSection}
-                                    >
-                                        Add Element
-                                    </Button>
-                                </Box>
-                            </Box>
-                            
                             {/* Create New Data Element */}
-                            <Box>
+                            <Box mb={4}>
                                 <Typography variant="subtitle1" gutterBottom>
                                     Create New Data Element:
                                 </Typography>
@@ -471,7 +451,7 @@ const GenerateDataEntryForms = () => {
                                     <TextField
                                         label="Data Element Name"
                                         value={newDataElement.name}
-                                        onChange={(e) => setNewDataElement({...newDataElement, name: e.target.value})}
+                                        onChange={(e) => setNewDataElement({ ...newDataElement, name: e.target.value })}
                                         fullWidth
                                         margin="normal"
                                         sx={{ mr: 2 }}
@@ -479,7 +459,7 @@ const GenerateDataEntryForms = () => {
                                     <TextField
                                         label="Code"
                                         value={newDataElement.code}
-                                        onChange={(e) => setNewDataElement({...newDataElement, code: e.target.value})}
+                                        onChange={(e) => setNewDataElement({ ...newDataElement, code: e.target.value })}
                                         fullWidth
                                         margin="normal"
                                         sx={{ mr: 2 }}
@@ -488,9 +468,9 @@ const GenerateDataEntryForms = () => {
                                         <InputLabel>Value Type</InputLabel>
                                         <Select
                                             value={newDataElement.valueType}
-                                            onChange={(e) => setNewDataElement({...newDataElement, valueType: e.target.value})}
+                                            onChange={(e) => setNewDataElement({ ...newDataElement, valueType: e.target.value })}
                                             label="Value Type"
-                                            style={{ height: '40px'}}
+                                            style={{ height: '40px' }}
                                         >
                                             <MenuItem value="TEXT">Text</MenuItem>
                                             <MenuItem value="LONG_TEXT">Long Text</MenuItem>
@@ -510,65 +490,321 @@ const GenerateDataEntryForms = () => {
                                     </Button>
                                 </Box>
                             </Box>
-                        </Box>
-                    </>
-                )}
 
-                {sections.length > 0 && (
-                    <Box>
-                        <Typography variant="h6" gutterBottom>
-                            {previewMode ? 'Form Preview' : 'Form Builder'}
-                        </Typography>
-                        {sections.map(section => (
-                            <Paper key={section.id} sx={{ mb: 4, p: 2 }}>
-                                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                                    <Typography variant="subtitle1">
-                                        {section.name}
-                                    </Typography>
-                                    {!previewMode && (
-                                        <IconButton
-                                            color="error"
-                                            onClick={() => handleRemoveSection(section.id)}
+                            {/* Data Elements Selection */}
+                            <Grid container spacing={2}>
+                                <Grid item xs={5}>
+                                    <Card>
+                                        <CardHeader
+                                            title="Available Data Elements"
+                                            action={
+                                                <Button
+                                                    size="small"
+                                                    onClick={handleAddAllDataElements}
+                                                    disabled={dataElements.length === 0}
+                                                >
+                                                    Add All
+                                                </Button>
+                                            }
+                                        />
+                                        <CardContent style={{ maxHeight: '400px', overflow: 'auto' }}>
+                                            <List dense>
+                                                {dataElements.map(element => (
+                                                    <ListItem
+                                                        key={element.id}
+                                                        button
+                                                        onClick={() => handleAddDataElement(element)}
+                                                        selected={selectedDataElements.some(de => de.id === element.id)}
+                                                    >
+                                                        <ListItemText
+                                                            primary={element.displayName}
+                                                            secondary={`(${element.valueType})`}
+                                                        />
+                                                        <ArrowForwardIcon color="action" />
+                                                    </ListItem>
+                                                ))}
+                                            </List>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                                <Grid item xs={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Box display="flex" flexDirection="column">
+                                        <Button
+                                            variant="outlined"
+                                            onClick={handleAddAllDataElements}
+                                            disabled={dataElements.length === 0}
+                                            sx={{ mb: 1 }}
                                         >
-                                            <DeleteIcon />
-                                        </IconButton>
+                                            All →
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            onClick={handleRemoveAllDataElements}
+                                            disabled={selectedDataElements.length === 0}
+                                        >
+                                            ← All
+                                        </Button>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={5}>
+                                    <Card>
+                                        <CardHeader
+                                            title="Selected Data Elements"
+                                            action={
+                                                <Button
+                                                    size="small"
+                                                    onClick={handleRemoveAllDataElements}
+                                                    disabled={selectedDataElements.length === 0}
+                                                >
+                                                    Remove All
+                                                </Button>
+                                            }
+                                        />
+                                        <CardContent style={{ maxHeight: '400px', overflow: 'auto' }}>
+                                            <List dense>
+                                                {selectedDataElements.map(element => (
+                                                    <ListItem
+                                                        key={element.id}
+                                                        button
+                                                        onClick={() => handleRemoveDataElement(element)}
+                                                    >
+                                                        <ArrowBackIcon color="action" />
+                                                        <ListItemText
+                                                            primary={element.displayName}
+                                                            secondary={`(${element.valueType})`}
+                                                            sx={{ ml: 1 }}
+                                                        />
+                                                    </ListItem>
+                                                ))}
+                                            </List>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            </Grid>
+
+                            <Box mt={4} display="flex" justifyContent="space-between">
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => setActiveSubTab(0)}
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={() => setActiveSubTab(2)}
+                                    disabled={selectedDataElements.length === 0}
+                                >
+                                    Next: Create Form
+                                </Button>
+                            </Box>
+                        </Box>
+                    )}
+
+                    {activeSubTab === 2 && (
+                        <Box>
+                            <Typography variant="h6" gutterBottom>
+                                Create Data Entry Form
+                            </Typography>
+
+                            <Box mb={4}>
+                                <Typography variant="subtitle1" gutterBottom>
+                                    Form Details:
+                                </Typography>
+                                <Box display="flex" alignItems="center" mb={2}>
+                                    <TextField
+                                        label="Form Name"
+                                        value={formName}
+                                        onChange={(e) => setFormName(e.target.value)}
+                                        fullWidth
+                                        margin="normal"
+                                        sx={{ mr: 2 }}
+                                    />
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        startIcon={<SaveIcon />}
+                                        onClick={handleSaveForm}
+                                        disabled={!formName}
+                                        sx={{ mr: 2 }}
+                                    >
+                                        Save Form
+                                    </Button>
+                                    {sections.length > 0 && (
+                                        <Button
+                                            variant="outlined"
+                                            color="primary"
+                                            startIcon={<VisibilityIcon />}
+                                            onClick={togglePreviewMode}
+                                        >
+                                            {previewMode ? 'Edit Mode' : 'Preview Mode'}
+                                        </Button>
                                     )}
                                 </Box>
-                                {section.description && (
-                                    <Typography variant="body2" color="text.secondary" mb={2}>
-                                        {section.description}
-                                    </Typography>
-                                )}
-                                <Divider sx={{ my: 2 }} />
+                            </Box>
 
-                                {section.dataElements.length > 0 ? (
-                                    <List>
-                                        {section.dataElements.map(element => (
-                                            <ListItem key={element.id}>
-                                                {renderInputField(element)}
-                                                {!previewMode && (
-                                                    <ListItemSecondaryAction>
-                                                        <IconButton
-                                                            edge="end"
-                                                            aria-label="delete"
-                                                            onClick={() => handleRemoveDataElement(section.id, element.id)}
-                                                        >
-                                                            <DeleteIcon />
-                                                        </IconButton>
-                                                    </ListItemSecondaryAction>
-                                                )}
-                                            </ListItem>
-                                        ))}
-                                    </List>
-                                ) : (
-                                    <Typography variant="body2" color="text.secondary">
-                                        No data elements added to this section yet.
+                            {forms.length > 0 && (
+                                <Box mb={4}>
+                                    <Typography variant="subtitle1" gutterBottom>
+                                        Load Saved Form:
                                     </Typography>
-                                )}
-                            </Paper>
-                        ))}
-                    </Box>
-                )}
+                                    <FormControl fullWidth>
+                                        <InputLabel>Select a saved form</InputLabel>
+                                        <Select
+                                            value={selectedForm?.id || ''}
+                                            onChange={(e) => handleLoadForm(e.target.value)}
+                                            label="Select a saved form"
+                                        >
+                                            <MenuItem value="" disabled>
+                                                Select a saved form
+                                            </MenuItem>
+                                            {forms.map(form => (
+                                                <MenuItem key={form.id} value={form.id}>
+                                                    {form.name} - {new Date(form.createdAt).toLocaleDateString()}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Box>
+                            )}
+
+                            {!previewMode && (
+                                <Box mb={4}>
+                                    <Typography variant="subtitle1" gutterBottom>
+                                        Add New Section:
+                                    </Typography>
+                                    <Box display="flex" alignItems="center" mb={2}>
+                                        <TextField
+                                            label="Section Name"
+                                            value={newSectionName}
+                                            onChange={(e) => setNewSectionName(e.target.value)}
+                                            fullWidth
+                                            margin="normal"
+                                            sx={{ mr: 2 }}
+                                        />
+                                        <TextField
+                                            label="Description (Optional)"
+                                            value={newSectionDesc}
+                                            onChange={(e) => setNewSectionDesc(e.target.value)}
+                                            fullWidth
+                                            margin="normal"
+                                            sx={{ mr: 2 }}
+                                        />
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            startIcon={<AddIcon />}
+                                            onClick={handleAddSection}
+                                            disabled={!newSectionName.trim()}
+                                        >
+                                            Add Section
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            )}
+
+                            {sections.length > 0 && (
+                                <Box>
+                                    <Typography variant="h6" gutterBottom>
+                                        {previewMode ? 'Form Preview' : 'Form Builder'}
+                                    </Typography>
+                                    {sections.map(section => (
+                                        <Paper key={section.id} sx={{ mb: 4, p: 2 }}>
+                                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                                                <Typography variant="subtitle1">
+                                                    {section.name}
+                                                </Typography>
+                                                {!previewMode && (
+                                                    <IconButton
+                                                        color="error"
+                                                        onClick={() => handleRemoveSection(section.id)}
+                                                    >
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                )}
+                                            </Box>
+                                            {section.description && (
+                                                <Typography variant="body2" color="text.secondary" mb={2}>
+                                                    {section.description}
+                                                </Typography>
+                                            )}
+                                            <Divider sx={{ my: 2 }} />
+
+                                            {selectedDataElements.length > 0 ? (
+                                                <List>
+                                                    {selectedDataElements.map(element => (
+                                                        <ListItem key={element.id}>
+                                                            {renderInputField(element)}
+                                                            {!previewMode && (
+                                                                <ListItemSecondaryAction>
+                                                                    <IconButton
+                                                                        edge="end"
+                                                                        aria-label="delete"
+                                                                        onClick={() => handleRemoveDataElement(element)}
+                                                                    >
+                                                                        <DeleteIcon />
+                                                                    </IconButton>
+                                                                </ListItemSecondaryAction>
+                                                            )}
+                                                        </ListItem>
+                                                    ))}
+                                                </List>
+                                            ) : (
+                                                <Typography variant="body2" color="text.secondary">
+                                                    No data elements added to this form yet.
+                                                </Typography>
+                                            )}
+                                        </Paper>
+                                    ))}
+                                </Box>
+                            )}
+
+                            <Box mt={4} display="flex" justifyContent="space-between">
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => setActiveSubTab(1)}
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={() => setActiveSubTab(3)}
+                                    disabled={!formName || sections.length === 0}
+                                >
+                                    Next: Access
+                                </Button>
+                            </Box>
+                        </Box>
+                    )}
+
+                    {activeSubTab === 3 && (
+                        <Box>
+                            <Typography variant="h6" gutterBottom>
+                                Form Access Control
+                            </Typography>
+                            <Typography variant="body1" paragraph>
+                                Your form "{formName}" has been successfully created. You can now assign access permissions to user groups.
+                            </Typography>
+                            {/* Add access control components here */}
+                            <Box mt={4} display="flex" justifyContent="space-between">
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => setActiveSubTab(2)}
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={() => setActiveSubTab(0)}
+                                >
+                                    Create Another Form
+                                </Button>
+                            </Box>
+                        </Box>
+                    )}
+                </Box>
 
                 {/* Loading Dialog */}
                 <Dialog open={loading} onClose={() => { }}>

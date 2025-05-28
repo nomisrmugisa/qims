@@ -475,7 +475,7 @@ function DefaultBody() {
                             },
                           }}
                         >
-                          Generate Data Entry Forms
+                          Form Management
                         </Button>
                       </div>
                     </div>
