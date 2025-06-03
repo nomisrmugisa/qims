@@ -43,9 +43,6 @@ import booking1 from "assets/images/products/product-1-min.jpg";
 import booking2 from "assets/images/products/product-2-min.jpg";
 import booking3 from "assets/images/products/product-3-min.jpg";
 
-// Additional component
-import TabsNavBar from "components/TabsNavBar";
-
 // dashboard page on login
 function ServiceOffered() {
   const { sales, tasks } = reportsLineChartData;
@@ -74,7 +71,6 @@ function ServiceOffered() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <TabsNavBar />
       <MDBox py={3}>
         <Grid container>
           <SalesByCountry />
