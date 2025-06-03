@@ -165,6 +165,8 @@ function Sidenav({ color = "info", brand = "", brandName, routes, ...rest }) {
       let returnValue;
 
       if (type === "collapse") {
+        const currentCollapse = collapse;
+
         returnValue = href ? (
           <Link
             href={href}
@@ -189,7 +191,7 @@ function Sidenav({ color = "info", brand = "", brandName, routes, ...rest }) {
             open={openCollapse === key}
             onClick={() => (openCollapse === key ? setOpenCollapse(false) : setOpenCollapse(key))}
           >
-            {collapse ? renderCollapse(collapse) : null}
+            {currentCollapse ? renderCollapse(currentCollapse) : null}
           </SidenavCollapse>
         );
       } else if (type === "title") {

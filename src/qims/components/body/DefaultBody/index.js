@@ -20,11 +20,12 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useTheme, styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Snackbar from "@mui/material/Snackbar";
 import { Backdrop, CircularProgress } from "@mui/material";
 import Autocomplete from "@mui/material/Autocomplete";
 import MDTypography from "components/MDTypography";
+import { debounce } from "lodash";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialogContent-root": {
@@ -137,7 +138,7 @@ function DefaultBody() {
 
     const profilePayload = {
       username: formData.userName,
-      disabled: true,
+      disabled: false,
       password: "selfRegistration@123$",
       accountExpiry: formattedExpiryDate,
       userRoles: [{ id: "aOxLneGCVvO" }],
@@ -229,6 +230,24 @@ function DefaultBody() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const [filteredOrgUnits, setFilteredOrgUnits] = useState([]);
+
+  // Debounced search handler
+  const debouncedSearch = useCallback(
+    debounce((query) => {
+      const filtered = organisationalUnits.filter((unit) =>
+        unit.displayName.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredOrgUnits(filtered);
+    }, 300),
+    [organisationalUnits]
+  );
+
+  // Handle search input change
+  const handleSearchChange = (event, value) => {
+    debouncedSearch(value);
   };
 
   // registration
@@ -583,12 +602,13 @@ function DefaultBody() {
           />
           <Autocomplete
             fullWidth
-            options={organisationalUnits}
+            options={filteredOrgUnits}
             getOptionLabel={(option) => option.displayName}
             value={organisationalUnits.find((ou) => ou.id === formData.locationInBotswana) || null}
             onChange={(event, newValue) => {
               setFormData((prev) => ({ ...prev, locationInBotswana: newValue ? newValue.id : "" }));
             }}
+            onInputChange={handleSearchChange}
             loading={isLoadingOrgUnits}
             renderInput={(params) => (
               <TextField
