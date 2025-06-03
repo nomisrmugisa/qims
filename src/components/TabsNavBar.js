@@ -11,6 +11,7 @@ function TabsNavBar() {
     "/dashboards/facility-ownership",
     "/dashboards/employee-registration",
     "/dashboards/service-offered",
+    "/dashboards/inspection-schedule",
   ];
 
   const currentTabIndex = tabRoutes.indexOf(location.pathname);
@@ -25,6 +26,7 @@ function TabsNavBar() {
       <Tab label="Facility Ownership" />
       <Tab label="Employee Registration" />
       <Tab label="Services Offered" />
+      <Tab label="Inspection Schedule" />
     </Tabs>
   );
 }

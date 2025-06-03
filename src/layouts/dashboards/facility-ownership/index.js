@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableContainer, TableRow, Paper, Grid } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Paper,
+  Grid,
+} from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import AddIcon from "@mui/icons-material/Add";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -9,13 +18,12 @@ import Footer from "examples/Footer";
 import TabsNavBar from "components/TabsNavBar";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
-import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
-import AddIcon from "@mui/icons-material/Add";
+import { styled } from "@mui/material/styles";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   backgroundColor: theme.palette.primary.main,
@@ -52,8 +60,7 @@ function FacilityOwnership() {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [trackedEntityInstanceId, setTrackedEntityInstanceId] = useState(null);
-
-  // Get credentials and org unit ID from localStorage
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
   const credentials = localStorage.getItem("userCredentials");
   const orgUnitId = localStorage.getItem("userOrgUnitId"); // Fallback to default if not set
   const url = `https://qimsdev.5am.co.bw/qims/api/trackedEntityInstances?ou=${orgUnitId}&ouMode=SELECTED&program=EE8yeLVo6cN&fields=*&paging=false`;
@@ -101,29 +108,36 @@ function FacilityOwnership() {
       return;
     }
 
-    console.log("Fetching data from URL:", url); // Log the GET request URL
+    console.log("Fetching data from URL:", url);
 
     fetch(url, {
       headers: {
         Authorization: `Basic ${credentials}`,
       },
     })
-      .then((res) => {
+      .then(async (res) => {
         if (!res.ok) {
-          throw new Error("Failed to fetch data");
+          // Log the full error response for debugging
+          const errorText = await res.text();
+          console.error("Error response:", {
+            status: res.status,
+            statusText: res.statusText,
+            headers: Object.fromEntries(res.headers.entries()),
+            body: errorText,
+          });
+          throw new Error(`Failed to fetch data: ${res.status} ${res.statusText}`);
         }
         return res.json();
       })
       .then((data) => {
-        console.log("Response data:", data); // Log the full response data
-        // data.trackedEntityInstances is an array
-        // Each instance may have enrollments, each with events
+        console.log("Response data:", data);
         let fetchedEvents = [];
+        let foundInstanceId = false;
         if (Array.isArray(data.trackedEntityInstances)) {
           data.trackedEntityInstances.forEach((instance) => {
-            // Store the first tracked entity instance ID we find
-            if (!trackedEntityInstanceId && instance.trackedEntityInstance) {
+            if (instance.trackedEntityInstance) {
               setTrackedEntityInstanceId(instance.trackedEntityInstance);
+              foundInstanceId = true;
               console.log("Tracked Entity Instance ID found:", instance.trackedEntityInstance);
               console.log("Obtained from GET request URL:", url);
             }
@@ -136,7 +150,9 @@ function FacilityOwnership() {
             }
           });
         }
-        // Filter events to only those with the desired programStage
+        if (!foundInstanceId) {
+          setShowReviewDialog(true);
+        }
         const filteredEvents = fetchedEvents.filter(
           (event) => event.programStage === "MuJubgTzJrY"
         );
@@ -146,8 +162,9 @@ function FacilityOwnership() {
       .catch((error) => {
         console.error("Error fetching data:", error);
         setIsLoading(false);
+        setShowReviewDialog(true);
       });
-  }, [url, credentials, trackedEntityInstanceId]);
+  }, [url, credentials]);
 
   const handleRowClick = (event) => {
     setSelectedEvent(event);
@@ -246,29 +263,41 @@ function FacilityOwnership() {
         uploadFileAndGetId(editFormData.companyRegistrationDocuments),
       ]);
 
+      // Helper function to convert values to proper string format
+      const convertToProperString = (value) => {
+        if (value === null || value === undefined) {
+          return "";
+        }
+        if (typeof value === "boolean") {
+          return value ? "true" : "";
+        }
+        return String(value);
+      };
+
       // 2. Build dataValues array with all fields and correct dataElement IDs
       const dataValues = [
-        { dataElement: "HMk4LZ9ESOq", value: editFormData.firstName }, // First Name
-        { dataElement: "ykwhsQQPVH0", value: editFormData.surname }, // Surname
-        { dataElement: "zVmmto7HwOc", value: editFormData.citizen }, // Citizenship
-        { dataElement: "aUGSyyfbUVI", value: editFormData.id }, // ID
-        { dataElement: "FLcrCfTNcQi", value: editFormData.idType }, // ID Type
-        { dataElement: "vAHHXaW0Pna", value: editFormData.ownershipType }, // Type of ownership
+        { dataElement: "HMk4LZ9ESOq", value: convertToProperString(editFormData.firstName) }, // First Name
+        { dataElement: "ykwhsQQPVH0", value: convertToProperString(editFormData.surname) }, // Surname
+        { dataElement: "zVmmto7HwOc", value: convertToProperString(editFormData.citizen) }, // Citizenship
+        { dataElement: "aUGSyyfbUVI", value: convertToProperString(editFormData.id) }, // ID
+        { dataElement: "FLcrCfTNcQi", value: convertToProperString(editFormData.idType) }, // ID Type
+        { dataElement: "vAHHXaW0Pna", value: convertToProperString(editFormData.ownershipType) }, // Type of ownership
+        { dataElement: "RCvjFJQUaPV", value: "true" }, // Set to true for boolean value
       ];
       if (copyOfIdPassportId)
-        dataValues.push({ dataElement: "KRj1TOR5cVM", value: copyOfIdPassportId });
+        dataValues.push({ dataElement: "KRj1TOR5cVM", value: convertToProperString(copyOfIdPassportId) });
       if (professionalReference1Id)
-        dataValues.push({ dataElement: "yP49GKSQxPl", value: professionalReference1Id });
+        dataValues.push({ dataElement: "yP49GKSQxPl", value: convertToProperString(professionalReference1Id) });
       if (professionalReference2Id)
-        dataValues.push({ dataElement: "lC217zTgC6C", value: professionalReference2Id });
+        dataValues.push({ dataElement: "lC217zTgC6C", value: convertToProperString(professionalReference2Id) });
       if (qualificationCertificatesId)
-        dataValues.push({ dataElement: "pelCBFPIFY1", value: qualificationCertificatesId });
+        dataValues.push({ dataElement: "pelCBFPIFY1", value: convertToProperString(qualificationCertificatesId) });
       if (validRecentPermitId)
-        dataValues.push({ dataElement: "cUObXSGtCuD", value: validRecentPermitId });
+        dataValues.push({ dataElement: "cUObXSGtCuD", value: convertToProperString(validRecentPermitId) });
       if (workPermitWaiverId)
-        dataValues.push({ dataElement: "g9jXH9LJyxU", value: workPermitWaiverId });
+        dataValues.push({ dataElement: "g9jXH9LJyxU", value: convertToProperString(workPermitWaiverId) });
       if (companyRegistrationDocumentsId)
-        dataValues.push({ dataElement: "fSGzyNOvsn3", value: companyRegistrationDocumentsId });
+        dataValues.push({ dataElement: "fSGzyNOvsn3", value: convertToProperString(companyRegistrationDocumentsId) });
 
       // 3. Build event update payload
       const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
@@ -400,30 +429,42 @@ function FacilityOwnership() {
         uploadFileAndGetId(newFormData.companyRegistrationDocuments),
       ]);
 
+      // Helper function to convert values to proper string format
+      const convertToProperString = (value) => {
+        if (value === null || value === undefined) {
+          return "";
+        }
+        if (typeof value === "boolean") {
+          return value ? "true" : "";
+        }
+        return String(value);
+      };
+
       // Build dataValues array
       const dataValues = [
-        { dataElement: "HMk4LZ9ESOq", value: newFormData.firstName },
-        { dataElement: "ykwhsQQPVH0", value: newFormData.surname },
-        { dataElement: "zVmmto7HwOc", value: newFormData.citizen },
-        { dataElement: "aUGSyyfbUVI", value: newFormData.id },
-        { dataElement: "FLcrCfTNcQi", value: newFormData.idType },
-        { dataElement: "vAHHXaW0Pna", value: newFormData.ownershipType },
+        { dataElement: "HMk4LZ9ESOq", value: convertToProperString(newFormData.firstName) },
+        { dataElement: "ykwhsQQPVH0", value: convertToProperString(newFormData.surname) },
+        { dataElement: "zVmmto7HwOc", value: convertToProperString(newFormData.citizen) },
+        { dataElement: "aUGSyyfbUVI", value: convertToProperString(newFormData.id) },
+        { dataElement: "FLcrCfTNcQi", value: convertToProperString(newFormData.idType) },
+        { dataElement: "vAHHXaW0Pna", value: convertToProperString(newFormData.ownershipType) },
+        { dataElement: "RCvjFJQUaPV", value: "true" }, // Set to true for boolean value
       ];
 
       if (copyOfIdPassportId)
-        dataValues.push({ dataElement: "KRj1TOR5cVM", value: copyOfIdPassportId });
+        dataValues.push({ dataElement: "KRj1TOR5cVM", value: convertToProperString(copyOfIdPassportId) });
       if (professionalReference1Id)
-        dataValues.push({ dataElement: "yP49GKSQxPl", value: professionalReference1Id });
+        dataValues.push({ dataElement: "yP49GKSQxPl", value: convertToProperString(professionalReference1Id) });
       if (professionalReference2Id)
-        dataValues.push({ dataElement: "lC217zTgC6C", value: professionalReference2Id });
+        dataValues.push({ dataElement: "lC217zTgC6C", value: convertToProperString(professionalReference2Id) });
       if (qualificationCertificatesId)
-        dataValues.push({ dataElement: "pelCBFPIFY1", value: qualificationCertificatesId });
+        dataValues.push({ dataElement: "pelCBFPIFY1", value: convertToProperString(qualificationCertificatesId) });
       if (validRecentPermitId)
-        dataValues.push({ dataElement: "cUObXSGtCuD", value: validRecentPermitId });
+        dataValues.push({ dataElement: "cUObXSGtCuD", value: convertToProperString(validRecentPermitId) });
       if (workPermitWaiverId)
-        dataValues.push({ dataElement: "g9jXH9LJyxU", value: workPermitWaiverId });
+        dataValues.push({ dataElement: "g9jXH9LJyxU", value: convertToProperString(workPermitWaiverId) });
       if (companyRegistrationDocumentsId)
-        dataValues.push({ dataElement: "fSGzyNOvsn3", value: companyRegistrationDocumentsId });
+        dataValues.push({ dataElement: "fSGzyNOvsn3", value: convertToProperString(companyRegistrationDocumentsId) });
 
       // Build event payload with the generated event ID and tracked entity instance ID
       const today = new Date().toISOString().split("T")[0];
@@ -469,16 +510,17 @@ function FacilityOwnership() {
           <Grid item xs={12}>
             <MDBox mb={3} display="flex" alignItems="center">
               <MDTypography variant="h4" fontWeight="medium">
-                Facility Ownership
+                Facility Ownership Details
               </MDTypography>
               <IconButton
-                color="primary" onClick={handleAddNew} sx={{ ml: 2 }}
+                color="primary"
+                onClick={handleAddNew}
+                sx={{ ml: 2 }}
+                disabled={!trackedEntityInstanceId}
               >
                 <AddIcon />
               </IconButton>
             </MDBox>
-          </Grid>
-          <Grid item xs={12}>
             <MDBox
               sx={{
                 backgroundColor: "white",
@@ -543,7 +585,7 @@ function FacilityOwnership() {
       {/* Edit Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
-          Edit Event
+          Edit Ownership Details
           <IconButton
             aria-label="close"
             onClick={handleCloseDialog}
@@ -662,7 +704,7 @@ function FacilityOwnership() {
           <Button onClick={handleCloseDialog} color="inherit">
             Cancel
           </Button>
-          <Button onClick={handleUpdate} variant="contained" color="primary">
+          <Button onClick={handleUpdate} variant="contained" color="primary" disabled={!editFormData.ownershipType || !editFormData.surname || !editFormData.firstName || !editFormData.citizen || !editFormData.idType || !editFormData.id || !editFormData.copyOfIdPassport || !editFormData.professionalReference1 || !editFormData.professionalReference2 || !editFormData.qualificationCertificates || !editFormData.validRecentPermit || !editFormData.workPermitWaiver || !editFormData.companyRegistrationDocuments}>
             Update
           </Button>
         </DialogActions>
@@ -790,8 +832,23 @@ function FacilityOwnership() {
           <Button onClick={handleCloseAddDialog} color="inherit">
             Cancel
           </Button>
-          <Button onClick={handleAddSubmit} variant="contained" color="primary">
+          <Button onClick={handleAddSubmit} variant="contained" color="primary" disabled={!newFormData.ownershipType || !newFormData.surname || !newFormData.firstName || !newFormData.citizen || !newFormData.idType || !newFormData.id || !newFormData.copyOfIdPassport || !newFormData.professionalReference1 || !newFormData.professionalReference2 || !newFormData.qualificationCertificates || !newFormData.validRecentPermit || !newFormData.workPermitWaiver || !newFormData.companyRegistrationDocuments}>
             Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Review Dialog */}
+      <Dialog open={showReviewDialog} onClose={() => setShowReviewDialog(false)}>
+        <DialogTitle>Registration Under Review</DialogTitle>
+        <DialogContent>
+          <MDTypography>
+            Your Request is under Review, you will be notified on email when review is complete to complete your registration
+          </MDTypography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowReviewDialog(false)} color="primary">
+            Close
           </Button>
         </DialogActions>
       </Dialog>

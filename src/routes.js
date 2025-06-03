@@ -35,7 +35,7 @@ Coded by www.creative-tim.com
   10. The `component` key is used to store the component of its route.
 */
 
-// Otis Admin PRO React layouts
+import React from "react";
 import Analytics from "layouts/dashboards/analytics";
 import Sales from "layouts/dashboards/sales";
 import ProfileOverview from "layouts/pages/profile/profile-overview";
@@ -78,7 +78,8 @@ import Icon from "@mui/material/Icon";
 import profilePicture from "assets/images/team-3.jpg";
 import EmployeeRegistration from "./layouts/dashboards/employee-registration";
 import FacilityOwnership from "./layouts/dashboards/facility-ownership";
-import ServiceOffered from "./layouts/dashboards/service offered";
+import ServiceOffered from "./layouts/dashboards/services-offered";
+import InspectionSchedule from "./layouts/dashboards/inspection-schedule";
 
 const routes = [
   {
@@ -127,7 +128,7 @@ const routes = [
     icon: <Icon fontSize="medium">dashboard</Icon>,
     collapse: [
       {
-        name: "Facility Ownership",
+        name: "Complete Registration",
         key: "facility",
         route: "/dashboards/facility-ownership",
         component: <FacilityOwnership />,
@@ -144,18 +145,12 @@ const routes = [
         route: "/dashboards/service-offered",
         component: <ServiceOffered />,
       },
-      // {
-      //   name: "Analytics",
-      //   key: "analytics",
-      //   route: "/dashboards/analytics",
-      //   component: <Analytics />,
-      // },
-      // {
-      //   name: "Sales",
-      //   key: "sales",
-      //   route: "/dashboards/sales",
-      //   component: <Sales />,
-      // },
+      {
+        name: "Inspection Schedule",
+        key: "inspection",
+        route: "/dashboards/inspection-schedule",
+        component: <InspectionSchedule />,
+      },
     ],
   },
   // { type: "title", title: "Pages", key: "title-pages" },
