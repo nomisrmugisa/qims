@@ -665,7 +665,7 @@ function DefaultBody() {
                   gap: 2,
                 }}
               >
-                {cards.map((card, index) => (
+                {/* {cards.map((card, index) => (
                   <Card>
                     <CardActionArea
                       onClick={() => setSelectedCard(index)}
@@ -690,7 +690,7 @@ function DefaultBody() {
                       </CardContent>
                     </CardActionArea>
                   </Card>
-                ))}
+                ))} */}
               </Box>
             </Card>
 
@@ -704,7 +704,7 @@ function DefaultBody() {
                 alignItems: "center",
               }}
             >
-              <div className="container text-center">
+              {/* <div className="container text-center">
                 <div className="row g-0">
                   <div
                     className="col-md-12 d-flex align-items-left"
@@ -726,7 +726,7 @@ function DefaultBody() {
                 </div>
                 <div className="card mb-3" style={{ maxWidth: "1440px" }}>
                   <div className="row g-0">
-                    {/* Text Section */}
+                    
                     <div className="col-md-7 d-flex align-items-center">
                       <div className="card-body">
                         <p
@@ -748,13 +748,13 @@ function DefaultBody() {
                       </div>
                     </div>
 
-                    {/* Image Section */}
+                    
                     <div className="col-md-5" style={{ overflow: "hidden" }}>
                       <img src={woman} alt="Apple Icon" className="img-fluid" />
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               <div className="row g-0">
                 <div className="col-md-12 d-flex align-items-center" />

@@ -94,41 +94,71 @@ const GenerateDataEntryForms = () => {
     }, []);
 
     // Fetch program stages when program is selected
+    // useEffect(() => {
+    //     const fetchProgramStages = async () => {
+    //         if (!selectedProgram) return;
+
+    //         try {
+    //             setLoading(true);
+    //             const response = await fetch(
+    //                 `${process.env.REACT_APP_DHIS2_URL}/api/programStages?fields=id,name,program[id,name]&paging=false`,
+    //                 {
+    //                     headers: {
+    //                         'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
+    //                     }
+    //                 }
+    //             );
+
+    //             if (!response.ok) {
+    //                 throw new Error('Failed to fetch program stages');
+    //             }
+
+    //             const data = await response.json();
+    //             // Filter stages by selected program
+    //             const filteredStages = data.programStages.filter(
+    //                 stage => stage.program.id === selectedProgram
+    //             );
+    //             setProgramStages(filteredStages);
+    //         } catch (error) {
+    //             console.error('Error fetching program stages:', error);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
+
+    //     fetchProgramStages();
+    // }, [selectedProgram]);
+
     useEffect(() => {
         const fetchProgramStages = async () => {
-            if (!selectedProgram) return;
-
             try {
                 setLoading(true);
                 const response = await fetch(
-                    `${process.env.REACT_APP_DHIS2_URL}/api/programStages?fields=id,name,program[id,name]&paging=false`,
+                    `${process.env.REACT_APP_DHIS2_URL}/api/programStages?fields=id,name&paging=false`,
                     {
                         headers: {
                             'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
                         }
                     }
                 );
-
+    
                 if (!response.ok) {
                     throw new Error('Failed to fetch program stages');
                 }
-
+    
                 const data = await response.json();
-                // Filter stages by selected program
-                const filteredStages = data.programStages.filter(
-                    stage => stage.program.id === selectedProgram
-                );
-                setProgramStages(filteredStages);
+                // Set all program stages without filtering
+                setProgramStages(data.programStages);
             } catch (error) {
                 console.error('Error fetching program stages:', error);
             } finally {
                 setLoading(false);
             }
         };
-
+    
         fetchProgramStages();
-    }, [selectedProgram]);
-
+    }, []); // Remove selectedProgram from dependencies
+    
     // Fetch data elements when program stage is selected
     useEffect(() => {
         const fetchDataElements = async () => {
@@ -257,28 +287,8 @@ const GenerateDataEntryForms = () => {
     //     }
     // }, [selectedForm]);
 
-    // useEffect(() => {
-    //     const loadForms = async () => {
-    //         try {
-    //             setLoading(true);
-    //             const loadedForms = await getAllFormsFromDataStore();
-    //             setForms(loadedForms);
-    //         } catch (error) {
-    //             console.error('Error loading forms:', error);
-    //             // Fallback to localStorage if needed
-    //             // const savedForms = localStorage.getItem('dataEntryForms');
-    //             // if (savedForms) {
-    //             //     setForms(JSON.parse(savedForms));
-    //             // }
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
 
-    //     loadForms();
-    // }, []);
-
-    // Replace the current useEffect for loading forms with this:
+    // useEffect for loading forms from dataStore
     useEffect(() => {
         const loadInitialForms = async () => {
             try {
@@ -872,19 +882,19 @@ const GenerateDataEntryForms = () => {
                     </Typography>
 
                     <Tabs value={activeSubTab} onChange={handleSubTabChange} sx={{ mb: 3 }}>
-                        <Tab label="1. Select Program" />
-                        <Tab label="2. Assign Data Elements" disabled={!selectedProgram} />
-                        <Tab label="3. Create Form" disabled={!selectedProgramStage} />
-                        <Tab label="4. Access" disabled={!selectedProgramStage} />
+                        <Tab label="1. Select Program Stage" />
+                        <Tab label="2. Assign Questions" disabled={!selectedProgram} />
+                        <Tab label="3. Build Form" disabled={!selectedProgramStage} />
+                        {/* <Tab label="4. Access" disabled={!selectedProgramStage} /> */}
                     </Tabs>
 
                     {activeSubTab === 0 && (
                         <Box>
                             <Typography variant="h6" gutterBottom>
-                                Select Program and Program Stage
+                                Select Program Stage
                             </Typography>
                             <Box display="flex" alignItems="center" mb={4}>
-                                <FormControl fullWidth sx={{ mr: 2 }}>
+                                {/* <FormControl fullWidth sx={{ mr: 2 }}>
                                     <InputLabel>Select Program</InputLabel>
                                     <Select
                                         value={selectedProgram}
@@ -901,7 +911,7 @@ const GenerateDataEntryForms = () => {
                                             </MenuItem>
                                         ))}
                                     </Select>
-                                </FormControl>
+                                </FormControl> */}
 
                                 <FormControl fullWidth>
                                     <InputLabel>Select Program Stage</InputLabel>
@@ -910,7 +920,7 @@ const GenerateDataEntryForms = () => {
                                         onChange={(e) => setSelectedProgramStage(e.target.value)}
                                         label="Select Program Stage"
                                         style={{ height: '40px' }}
-                                        disabled={!selectedProgram}
+                                        // disabled={!selectedProgram}
                                     >
                                         <MenuItem value="" disabled>
                                             Select a program stage
@@ -929,7 +939,7 @@ const GenerateDataEntryForms = () => {
                                 onClick={() => setActiveSubTab(1)}
                                 disabled={!selectedProgramStage}
                             >
-                                Next: Assign Data Elements
+                                Next
                             </Button>
                         </Box>
                     )}
@@ -937,7 +947,7 @@ const GenerateDataEntryForms = () => {
                     {activeSubTab === 1 && (
                         <Box>
                             <Typography variant="h6" gutterBottom>
-                                Assign Data Elements
+                                Assign Questions
                             </Typography>
 
                             {/* Create New Data Element */}
@@ -950,7 +960,7 @@ const GenerateDataEntryForms = () => {
                                             onChange={(e) => setShowNewDataElementForm(e.target.checked)}
                                         />
                                     }
-                                    label="Create New Data Element"
+                                    label="Add A New Question"
                                     sx={{ mr: 2 }}
                                 />
                             </Box>
@@ -960,7 +970,7 @@ const GenerateDataEntryForms = () => {
                                 <Box mb={4}>
                                     <Box display="flex" alignItems="center" mb={2}>
                                         <TextField
-                                            label="Data Element Name"
+                                            label="Question"
                                             value={newDataElement.name}
                                             onChange={(e) => setNewDataElement({ ...newDataElement, name: e.target.value })}
                                             fullWidth
@@ -968,7 +978,7 @@ const GenerateDataEntryForms = () => {
                                             sx={{ mr: 2 }}
                                         />
                                         <TextField
-                                            label="Code"
+                                            label="Question Code"
                                             value={newDataElement.code}
                                             onChange={(e) => setNewDataElement({ ...newDataElement, code: e.target.value })}
                                             fullWidth
@@ -1106,7 +1116,7 @@ const GenerateDataEntryForms = () => {
                                     onClick={() => setActiveSubTab(2)}
                                     disabled={selectedDataElements.length === 0}
                                 >
-                                    Next: Create Form
+                                    Next
                                 </Button>
                             </Box>
                         </Box>
@@ -1126,7 +1136,7 @@ const GenerateDataEntryForms = () => {
                                         </Typography>
                                         <Box display="flex" alignItems="center" mb={2}>
                                             <TextField
-                                                label="Form Key"
+                                                label="Form Name"
                                                 value={formName}
                                                 onChange={(e) => setFormName(e.target.value)}
                                                 fullWidth
@@ -1291,7 +1301,7 @@ const GenerateDataEntryForms = () => {
 
                             <Grid item xs={4}>
                                 {!previewMode && selectedDataElements.length > 0 && (
-                                    <Card sx={{ position: 'sticky', top: 20 }}>
+                                    <Card sx={{ position: 'sticky', marginTop: '300px' }}>
                                         <CardHeader
                                             title="Available Data Elements"
                                             subheader="Double click to add to active section"
