@@ -65,6 +65,8 @@ const GenerateDataEntryForms = () => {
     const [activeSection, setActiveSection] = useState(null);
     const [showNewDataElementForm, setShowNewDataElementForm] = useState(false);
     const [programStageSectionsList, setProgramStageSectionsList] = useState([]);
+    const [useExistingForm, setUseExistingForm] = useState(false);
+    const [useNewForm, setUseNewForm] = useState(true); // Default to new form
 
     // Fetch programs from DHIS2
     useEffect(() => {
@@ -141,11 +143,11 @@ const GenerateDataEntryForms = () => {
                         }
                     }
                 );
-    
+
                 if (!response.ok) {
                     throw new Error('Failed to fetch program stages');
                 }
-    
+
                 const data = await response.json();
                 // Set all program stages without filtering
                 setProgramStages(data.programStages);
@@ -155,11 +157,11 @@ const GenerateDataEntryForms = () => {
                 setLoading(false);
             }
         };
-    
+
         fetchProgramStages();
     }, []); // Remove selectedProgram from dependencies
-    
-    // Fetch data elements when program stage is selected
+
+    // Fetch Questions when program stage is selected
     useEffect(() => {
         const fetchDataElements = async () => {
             if (!selectedProgramStage) return;
@@ -176,11 +178,11 @@ const GenerateDataEntryForms = () => {
                 );
 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch data elements');
+                    throw new Error('Failed to fetch Questions');
                 }
 
                 const data = await response.json();
-                // Extract the data elements from programStageDataElements and remove duplicates
+                // Extract the Questions from programStageDataElements and remove duplicates
                 const elementsMap = new Map();
                 data.programStageDataElements.forEach(pde => {
                     if (!elementsMap.has(pde.dataElement.id)) {
@@ -227,8 +229,8 @@ const GenerateDataEntryForms = () => {
                 setSelectedDataElements(selectedElements);
 
             } catch (error) {
-                console.error('Error fetching data elements:', error);
-                setSuccessMessage(`Error fetching data elements: ${error.message}`);
+                console.error('Error fetching Questions:', error);
+                setSuccessMessage(`Error fetching Questions: ${error.message}`);
                 setOpenSnackbar(true);
             } finally {
                 setLoading(false);
@@ -630,12 +632,12 @@ const GenerateDataEntryForms = () => {
         }
 
         // Validate form key is a year
-        const yearRegex = /^\d{4}$/;
-        if (!yearRegex.test(formName)) {
-            setSuccessMessage('Form key must be a 4-digit year (e.g., 2023)');
-            setOpenSnackbar(true);
-            return;
-        }
+        // const yearRegex = /^\d{4}$/;
+        // if (!yearRegex.test(formName)) {
+        //     setSuccessMessage('Form key must be a 4-digit year (e.g., 2023)');
+        //     setOpenSnackbar(true);
+        //     return;
+        // }
 
         try {
             setLoading(true);
@@ -743,31 +745,6 @@ const GenerateDataEntryForms = () => {
         }
     };
 
-    // const handleLoadForm = (formId) => {
-    //     const formToLoad = forms.find(f => f.id === formId);
-    //     if (formToLoad) {
-    //         setSelectedForm(formToLoad);
-    //         setSections(formToLoad.sections);
-    //         setFormName(formToLoad.name);
-    //         setSelectedProgram(formToLoad.programId);
-    //         setSelectedProgramStage(formToLoad.programStageId);
-
-    //         // Split elements into available and selected based on the loaded form
-    //         const allElements = [...formToLoad.dataElements];
-    //         const selectedIds = new Set(formToLoad.sections.flatMap(s =>
-    //             s.dataElements.map(de => de.id)
-    //         ));
-
-    //         const updatedSelected = formToLoad.dataElements.map(de => ({
-    //             ...de,
-    //             added: selectedIds.has(de.id)
-    //         }));
-
-    //         setSelectedDataElements(updatedSelected);
-    //         setDataElements([]); // All elements are in selected when loading a form
-    //     }
-    // };
-
     const handleLoadForm = async (formId) => {
         try {
             setLoading(true);
@@ -798,6 +775,8 @@ const GenerateDataEntryForms = () => {
 
             setSelectedDataElements(updatedSelected);
             setDataElements([]); // All elements are in selected when loading a form
+            // Automatically advance to the next tab
+            // setActiveSubTab(2);
         } catch (error) {
             console.error('Error loading form:', error);
             setSuccessMessage(`Error loading form: ${error.message}`);
@@ -882,8 +861,8 @@ const GenerateDataEntryForms = () => {
                     </Typography>
 
                     <Tabs value={activeSubTab} onChange={handleSubTabChange} sx={{ mb: 3 }}>
-                        <Tab label="1. Select Program Stage" />
-                        <Tab label="2. Assign Questions" disabled={!selectedProgram} />
+                        <Tab label="1. Select Survey" />
+                        <Tab label="2. Standard" disabled={!selectedProgramStage} />
                         <Tab label="3. Build Form" disabled={!selectedProgramStage} />
                         {/* <Tab label="4. Access" disabled={!selectedProgramStage} /> */}
                     </Tabs>
@@ -891,7 +870,7 @@ const GenerateDataEntryForms = () => {
                     {activeSubTab === 0 && (
                         <Box>
                             <Typography variant="h6" gutterBottom>
-                                Select Program Stage
+                                {/* Select Survey */}
                             </Typography>
                             <Box display="flex" alignItems="center" mb={4}>
                                 {/* <FormControl fullWidth sx={{ mr: 2 }}>
@@ -914,16 +893,16 @@ const GenerateDataEntryForms = () => {
                                 </FormControl> */}
 
                                 <FormControl fullWidth>
-                                    <InputLabel>Select Program Stage</InputLabel>
+                                    <InputLabel>Survey</InputLabel>
                                     <Select
                                         value={selectedProgramStage}
                                         onChange={(e) => setSelectedProgramStage(e.target.value)}
-                                        label="Select Program Stage"
+                                        label="Survey"
                                         style={{ height: '40px' }}
-                                        // disabled={!selectedProgram}
+                                    // disabled={!selectedProgram}
                                     >
                                         <MenuItem value="" disabled>
-                                            Select a program stage
+                                            Select Survey
                                         </MenuItem>
                                         {programStages.map(stage => (
                                             <MenuItem key={stage.id} value={stage.id}>
@@ -947,10 +926,70 @@ const GenerateDataEntryForms = () => {
                     {activeSubTab === 1 && (
                         <Box>
                             <Typography variant="h6" gutterBottom>
-                                Assign Questions
+                                Standard
                             </Typography>
 
-                            {/* Create New Data Element */}
+                            {/* Form Selection Options */}
+                            <Box mb={4}>
+                                <Typography variant="subtitle1" gutterBottom>
+                                    {/* Form Options: */}
+                                </Typography>
+                                <Box display="flex" alignItems="center" mb={2}>
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={useExistingForm}
+                                                onChange={(e) => {
+                                                    setUseExistingForm(e.target.checked);
+                                                    setUseNewForm(!e.target.checked);
+                                                }}
+                                                disabled={forms.length === 0}
+                                            />
+                                        }
+                                        label="Existing Standard"
+                                    />
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={useNewForm}
+                                                onChange={(e) => {
+                                                    setUseNewForm(e.target.checked);
+                                                    setUseExistingForm(!e.target.checked);
+                                                    if (e.target.checked) {
+                                                        setSelectedForm(null);
+                                                        setSections([]);
+                                                        setFormName('');
+                                                    }
+                                                }}
+                                            />
+                                        }
+                                        label="New Standard"
+                                        sx={{ mr: 2 }}
+                                    />
+
+                                </Box>
+
+                                {useExistingForm && forms.length > 0 && (
+                                    <FormControl fullWidth>
+                                        <InputLabel>Select a saved Standard</InputLabel>
+                                        <Select
+                                            value={selectedForm?.id || ''}
+                                            onChange={(e) => handleLoadForm(e.target.value)}
+                                            label="Select a saved form"
+                                            style={{ height: '40px' }}
+                                        >
+                                            <MenuItem value="" disabled>
+                                                {loading ? 'Loading forms...' : 'Select a saved form'}
+                                            </MenuItem>
+                                            {forms.map(form => (
+                                                <MenuItem key={form.id} value={form.id}>
+                                                    {form.name} - {new Date(form.createdAt).toLocaleDateString()}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
+                            </Box>
                             {/* Create New Data Element Toggle */}
                             <Box mb={2} display="flex" alignItems="center">
                                 <FormControlLabel
@@ -1013,12 +1052,12 @@ const GenerateDataEntryForms = () => {
                                 </Box>
                             )}
 
-                            {/* Data Elements Selection */}
+                            {/* Questions Selection */}
                             <Grid container spacing={2}>
                                 <Grid item xs={5}>
                                     <Card>
                                         <CardHeader
-                                            title="Available Data Elements"
+                                            title="Available Questions"
                                             action={
                                                 <Button
                                                     size="small"
@@ -1070,7 +1109,7 @@ const GenerateDataEntryForms = () => {
                                 <Grid item xs={5}>
                                     <Card>
                                         <CardHeader
-                                            title="Selected Data Elements"
+                                            title="Selected Questions"
                                             action={
                                                 <Button
                                                     size="small"
@@ -1114,7 +1153,10 @@ const GenerateDataEntryForms = () => {
                                     variant="contained"
                                     color="primary"
                                     onClick={() => setActiveSubTab(2)}
-                                    disabled={selectedDataElements.length === 0}
+                                    disabled={
+                                        (useExistingForm && !selectedForm) ||
+                                        (useNewForm && selectedDataElements.length === 0)
+                                    }
                                 >
                                     Next
                                 </Button>
@@ -1127,8 +1169,9 @@ const GenerateDataEntryForms = () => {
                             <Grid item xs={8}>
                                 <Box>
                                     <Typography variant="h6" gutterBottom>
-                                        Create Data Entry Form
+                                        {useExistingForm && selectedForm ? 'Edit Existing Form' : 'Create New Data Entry Form'}
                                     </Typography>
+
 
                                     <Box mb={4}>
                                         <Typography variant="subtitle1" gutterBottom>
@@ -1142,18 +1185,9 @@ const GenerateDataEntryForms = () => {
                                                 fullWidth
                                                 margin="normal"
                                                 sx={{ mr: 2 }}
-                                                helperText="Enter a 4-digit year (e.g., 2020)"
+                                            // helperText="Enter a 4-digit year (e.g., 2020)"
                                             />
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                startIcon={<SaveIcon />}
-                                                onClick={handleSaveForm}
-                                                disabled={!formName}
-                                                sx={{ mr: 2 }}
-                                            >
-                                                Save Form
-                                            </Button>
+
                                             {sections.length > 0 && (
                                                 <Button
                                                     variant="outlined"
@@ -1167,32 +1201,7 @@ const GenerateDataEntryForms = () => {
                                         </Box>
                                     </Box>
 
-                                    {forms.length > 0 && (
-                                        <Box mb={4}>
-                                            <Typography variant="subtitle1" gutterBottom>
-                                                Load Saved Form:
-                                            </Typography>
-                                            <FormControl fullWidth>
-                                                <InputLabel>Select a saved form</InputLabel>
-                                                <Select
-                                                    value={selectedForm?.id || ''}
-                                                    onChange={(e) => handleLoadForm(e.target.value)}
-                                                    label="Select a saved form"
-                                                    style={{ height: '40px' }}
-                                                >
-                                                    <MenuItem value="" disabled>
-                                                        {/* Select a saved form */}
-                                                        {loading ? 'Loading forms...' : 'Select a saved form'}
-                                                    </MenuItem>
-                                                    {forms.map(form => (
-                                                        <MenuItem key={form.id} value={form.id}>
-                                                            {form.name} - {new Date(form.createdAt).toLocaleDateString()}
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                            </FormControl>
-                                        </Box>
-                                    )}
+
 
                                     {!previewMode && (
                                         <Box mb={4}>
@@ -1289,11 +1298,25 @@ const GenerateDataEntryForms = () => {
                                                         </List>
                                                     ) : (
                                                         <Typography variant="body2" color="text.secondary">
-                                                            No data elements added to this section yet.
+                                                            No Questions added to this section yet.
                                                         </Typography>
                                                     )}
                                                 </Paper>
                                             ))}
+                                        </Box>
+                                    )}
+                                    {sections.length > 0 && (
+                                        <Box mt={4} display="flex" justifyContent="flex-end">
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                startIcon={<SaveIcon />}
+                                                onClick={handleSaveForm}
+                                                disabled={!formName}
+                                                sx={{ mr: 2 }}
+                                            >
+                                                Save Form
+                                            </Button>
                                         </Box>
                                     )}
                                 </Box>
@@ -1303,7 +1326,7 @@ const GenerateDataEntryForms = () => {
                                 {!previewMode && selectedDataElements.length > 0 && (
                                     <Card sx={{ position: 'sticky', marginTop: '300px' }}>
                                         <CardHeader
-                                            title="Available Data Elements"
+                                            title="Available Questions"
                                             subheader="Double click to add to active section"
                                         />
                                         <CardContent style={{ maxHeight: 'calc(100vh - 200px)', overflow: 'auto' }}>
