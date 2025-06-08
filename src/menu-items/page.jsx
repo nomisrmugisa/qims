@@ -21,7 +21,7 @@ const pages = {
       type: 'item',
       url: '/management/requests',
       icon: icons.ProfileOutlined,
-      target: true
+      // target: true
     },
     {
       id: 'users',
@@ -29,7 +29,7 @@ const pages = {
       type: 'item',
       url: '/management/users/users',
       icon: icons.ProfileOutlined,
-      target: true
+      // target: true
     },
     {
       id: 'inspections',
@@ -37,7 +37,7 @@ const pages = {
       type: 'item',
       url: '/management/inspections',
       icon: icons.ProfileOutlined,
-      target: true
+      // target: true
     },
     {
       id: 'forms',
@@ -45,7 +45,7 @@ const pages = {
       type: 'item',
       url: '/management/forms',
       icon: icons.ProfileOutlined,
-      target: true
+      // target: true
     },
     {
       id: 'roles',
@@ -53,7 +53,7 @@ const pages = {
       type: 'item',
       url: '/management/users/roles',
       icon: icons.ProfileOutlined,
-      target: true
+      // target: true
     },
     {
       id: 'audits',
@@ -61,7 +61,7 @@ const pages = {
       type: 'item',
       url: '/management/users/audits',
       icon: icons.ProfileOutlined,
-      target: true
+      // target: true
     }
   ]
 };

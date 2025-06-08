@@ -24,10 +24,10 @@ export default function NavItem({ item, level, isParents = false, setSelectedID 
 
   const downLG = useMediaQuery((theme) => theme.breakpoints.down('lg'));
 
-  let itemTarget = '_self';
-  if (item.target) {
-    itemTarget = '_blank';
-  }
+  // let itemTarget = '_self';
+  // if (item.target && item.url.startsWith('http')) {
+  //   itemTarget = '_blank';
+  // }
 
   const itemHandler = () => {
     if (downLG) handlerDrawerOpen(false);
@@ -61,7 +61,7 @@ export default function NavItem({ item, level, isParents = false, setSelectedID 
         <ListItemButton
           component={Link}
           to={item.url}
-          target={itemTarget}
+          target="_self"
           disabled={item.disabled}
           selected={isSelected}
           sx={(theme) => ({
