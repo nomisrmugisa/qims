@@ -1,5 +1,6 @@
 // assets
 import { LoginOutlined, ProfileOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
 
 // icons
 const icons = {
@@ -18,7 +19,7 @@ const pages = {
       id: 'requests',
       title: 'Requests',
       type: 'item',
-      url: '/register',
+      url: '/management/requests',
       icon: icons.ProfileOutlined,
       target: true
     },
@@ -26,7 +27,7 @@ const pages = {
       id: 'users',
       title: 'Users',
       type: 'item',
-      url: '/register',
+      url: '/management/users/users',
       icon: icons.ProfileOutlined,
       target: true
     },
@@ -34,7 +35,7 @@ const pages = {
       id: 'inspections',
       title: 'Inspections',
       type: 'item',
-      url: '/register',
+      url: '/management/inspections',
       icon: icons.ProfileOutlined,
       target: true
     },
@@ -42,7 +43,7 @@ const pages = {
       id: 'forms',
       title: 'Forms',
       type: 'item',
-      url: '/register',
+      url: '/management/forms',
       icon: icons.ProfileOutlined,
       target: true
     },
@@ -50,7 +51,7 @@ const pages = {
       id: 'roles',
       title: 'Role Control',
       type: 'item',
-      url: '/register',
+      url: '/management/users/roles',
       icon: icons.ProfileOutlined,
       target: true
     },
@@ -58,7 +59,7 @@ const pages = {
       id: 'audits',
       title: 'Audit Center',
       type: 'item',
-      url: '/register',
+      url: '/management/users/audits',
       icon: icons.ProfileOutlined,
       target: true
     }

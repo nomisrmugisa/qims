@@ -53,10 +53,11 @@ const actionSX = {
 export default function DashboardDefault() {
   return (
     <Grid container rowSpacing={4.5} columnSpacing={2.75}>
-      {/* row 1 */}
+      
       <Grid sx={{ mb: -2.25 }} size={12}>
         <Typography variant="h5">Dashboard</Typography>
       </Grid>
+      {/* row 1 */}
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <AnalyticEcommerce title="Total Users" count="45" percentage={59.3} extra="35" />
       </Grid>
@@ -69,9 +70,8 @@ export default function DashboardDefault() {
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <AnalyticEcommerce title="Inactive Users" count="35" percentage={27.4} isLoss color="warning" extra="20" />
       </Grid>
-      <Grid sx={{ display: { sm: 'none', md: 'block', lg: 'none' } }} size={{ md: 8 }} />
+      <Grid sx={{ display: { sm: 'none', md: 'block', lg: 'none' } }} size={{ md: 8 }} />      
       {/* row 2 */}
-
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <AnalyticEcommerce title="Total Inspections" count="45" percentage={59.3} extra="35" />
       </Grid>
@@ -89,12 +89,22 @@ export default function DashboardDefault() {
 
 
       <Grid size={{ xs: 12, md: 7, lg: 8 }}>
-        {/* <UniqueVisitorCard /> */}
+        <Grid container alignItems="center" justifyContent="space-between">
+          <Grid>
+            <Typography variant="h5">Users</Typography>
+          </Grid>
+          <Grid />
+        </Grid>
+        <MainCard sx={{ mt: 2 }} content={false}>
+          <OrdersTable />
+        </MainCard>
       </Grid>
+
+
       <Grid size={{ xs: 12, md: 5, lg: 4 }}>
         <Grid container alignItems="center" justifyContent="space-between">
           <Grid>
-            <Typography variant="h5">Income Overview</Typography>
+            <Typography variant="h5">Inspection Overview</Typography>
           </Grid>
           <Grid />
         </Grid>
@@ -104,49 +114,17 @@ export default function DashboardDefault() {
               <Typography variant="h6" color="text.secondary">
                 This Week Statistics
               </Typography>
-              <Typography variant="h3">$7,650</Typography>
+              <Typography variant="h3">75 Inspections</Typography>
             </Stack>
           </Box>
           <MonthlyBarChart />
         </MainCard>
       </Grid>
+
+
       {/* row 3 */}
-      <Grid size={{ xs: 12, md: 7, lg: 8 }}>
-        <Grid container alignItems="center" justifyContent="space-between">
-          <Grid>
-            <Typography variant="h5">Recent Orders</Typography>
-          </Grid>
-          <Grid />
-        </Grid>
-        <MainCard sx={{ mt: 2 }} content={false}>
-          <OrdersTable />
-        </MainCard>
-      </Grid>
-      <Grid size={{ xs: 12, md: 5, lg: 4 }}>
-        <Grid container alignItems="center" justifyContent="space-between">
-          <Grid>
-            <Typography variant="h5">Analytics Report</Typography>
-          </Grid>
-          <Grid />
-        </Grid>
-        <MainCard sx={{ mt: 2 }} content={false}>
-          <List sx={{ p: 0, '& .MuiListItemButton-root': { py: 2 } }}>
-            <ListItemButton divider>
-              <ListItemText primary="Company Finance Growth" />
-              <Typography variant="h5">+45.14%</Typography>
-            </ListItemButton>
-            <ListItemButton divider>
-              <ListItemText primary="Company Expenses Ratio" />
-              <Typography variant="h5">0.58%</Typography>
-            </ListItemButton>
-            <ListItemButton>
-              <ListItemText primary="Business Risk Cases" />
-              <Typography variant="h5">Low</Typography>
-            </ListItemButton>
-          </List>
-          <ReportAreaChart />
-        </MainCard>
-      </Grid>
+      
+      
       {/* row 4 */}
       <Grid size={{ xs: 12, md: 7, lg: 8 }}>
         <SaleReportCard />
