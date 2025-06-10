@@ -10,28 +10,26 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-
-// third-party
-import { NumericFormat } from 'react-number-format';
+import Button from '@mui/material/Button';
 
 // project imports
 import Dot from 'components/@extended/Dot';
 
-function createData(tracking_no, name, fat, carbs, protein) {
-  return { tracking_no, name, fat, carbs, protein };
+function createData(display_name, name, last_login, status) {
+  return { display_name, name, last_login, status };
 }
 
 const rows = [
-  createData(84564564, 'Camera Lens', 40, 2, 40570),
-  createData(98764564, 'Laptop', 300, 0, 180139),
-  createData(98756325, 'Mobile', 355, 1, 90989),
-  createData(98652366, 'Handset', 50, 1, 10239),
-  createData(13286564, 'Computer Accessories', 100, 1, 83348),
-  createData(86739658, 'TV', 99, 0, 410780),
-  createData(13256498, 'Keyboard', 125, 2, 70999),
-  createData(98753263, 'Mouse', 89, 2, 10570),
-  createData(98753275, 'Desktop', 185, 1, 98063),
-  createData(98753291, 'Chair', 100, 0, 14001)
+  createData('Aisha Nakato', 'aishak', '6/09/2025, 3:45:11 PM', 'Active'),
+  createData('David Okello', 'dokello', '6/10/2025, 9:01:27 AM', 'Active'),
+  createData('Emily Johnson', 'emily.j', '-', 'Disabled'),
+  createData('Benjamin Carter', 'bcarter', '5/28/2025, 11:20:53 AM', 'Active'),
+  createData('Olivia Martinez', 'omartinez', '-', 'Disabled'),
+  createData('Liam Chen', 'liam_chen', '6/05/2025, 8:55:04 PM', 'Active'),
+  createData('Sophia Williams', 'sophia.w', '-', 'Disabled'),
+  createData('Jacob Goldstein', 'jgoldstein_admin', '6/10/2025, 11:30:00 AM', 'Active'),
+  createData('Mia Rodriguez', 'mia.r', '-', 'Disabled'),
+  createData('Ethan Kim', 'ethank', '5/12/2025, 7:18:41 AM', 'Active')
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -62,41 +60,38 @@ function stableSort(array, comparator) {
 
 const headCells = [
   {
-    id: 'tracking_no',
+    id: 'display_name',
     align: 'left',
     disablePadding: false,
-    label: 'Tracking No.'
+    label: 'DISPLAY NAME'
   },
   {
     id: 'name',
     align: 'left',
     disablePadding: true,
-    label: 'Product Name'
+    label: 'USERNAME'
   },
   {
-    id: 'fat',
-    align: 'right',
-    disablePadding: false,
-    label: 'Total Order'
-  },
-  {
-    id: 'carbs',
+    id: 'last_login',
     align: 'left',
     disablePadding: false,
-
-    label: 'Status'
+    label: 'LAST LOGIN'
   },
   {
-    id: 'protein',
+    id: 'status',
+    align: 'left',
+    disablePadding: false,
+    label: 'STATUS'
+  },
+  {
+    id: 'actions',
     align: 'right',
     disablePadding: false,
-    label: 'Total Amount'
+    label: 'ACTIONS'
   }
 ];
 
-// ==============================|| ORDER TABLE - HEADER ||============================== //
-
-function OrderTableHead({ order, orderBy }) {
+function UserTableHead({ order, orderBy }) {
   return (
     <TableHead>
       <TableRow>
@@ -107,7 +102,9 @@ function OrderTableHead({ order, orderBy }) {
             padding={headCell.disablePadding ? 'none' : 'normal'}
             sortDirection={orderBy === headCell.id ? order : false}
           >
-            {headCell.label}
+            <Typography variant="subtitle1" fontWeight="bold">
+              {headCell.label}
+            </Typography>
           </TableCell>
         ))}
       </TableRow>
@@ -115,22 +112,18 @@ function OrderTableHead({ order, orderBy }) {
   );
 }
 
-function OrderStatus({ status }) {
+function UserStatus({ status }) {
   let color;
   let title;
 
   switch (status) {
-    case 0:
-      color = 'warning';
-      title = 'Pending';
-      break;
-    case 1:
+    case 'Active':
       color = 'success';
-      title = 'Approved';
+      title = 'Active';
       break;
-    case 2:
+    case 'Disabled':
       color = 'error';
-      title = 'Rejected';
+      title = 'Disabled';
       break;
     default:
       color = 'primary';
@@ -145,11 +138,9 @@ function OrderStatus({ status }) {
   );
 }
 
-// ==============================|| ORDER TABLE ||============================== //
-
 export default function OrderTable() {
   const order = 'asc';
-  const orderBy = 'tracking_no';
+  const orderBy = 'display_name';
 
   return (
     <Box>
@@ -164,7 +155,7 @@ export default function OrderTable() {
         }}
       >
         <Table aria-labelledby="tableTitle">
-          <OrderTableHead order={order} orderBy={orderBy} />
+          <UserTableHead order={order} orderBy={orderBy} />
           <TableBody>
             {stableSort(rows, getComparator(order, orderBy)).map((row, index) => {
               const labelId = `enhanced-table-checkbox-${index}`;
@@ -175,18 +166,24 @@ export default function OrderTable() {
                   role="checkbox"
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                   tabIndex={-1}
-                  key={row.tracking_no}
+                  key={row.display_name}
                 >
                   <TableCell component="th" id={labelId} scope="row">
-                    <Link color="secondary">{row.tracking_no}</Link>
+                    <Link color="secondary">{row.display_name}</Link>
                   </TableCell>
                   <TableCell>{row.name}</TableCell>
-                  <TableCell align="right">{row.fat}</TableCell>
+                  <TableCell>{row.last_login}</TableCell>
                   <TableCell>
-                    <OrderStatus status={row.carbs} />
+                    <UserStatus status={row.status} />
                   </TableCell>
                   <TableCell align="right">
-                    <NumericFormat value={row.protein} displayType="text" thousandSeparator prefix="$" />
+                    <Button 
+                      variant="outlined" 
+                      size="small"
+                      color={row.status === 'Active' ? 'error' : 'success'}
+                    >
+                      {row.status === 'Active' ? 'Disable' : 'Enable'}
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
@@ -198,6 +195,6 @@ export default function OrderTable() {
   );
 }
 
-OrderTableHead.propTypes = { order: PropTypes.any, orderBy: PropTypes.string };
+UserTableHead.propTypes = { order: PropTypes.any, orderBy: PropTypes.string };
 
-OrderStatus.propTypes = { status: PropTypes.number };
+UserStatus.propTypes = { status: PropTypes.string };

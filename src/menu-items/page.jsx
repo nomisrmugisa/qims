@@ -47,22 +47,22 @@ const pages = {
       icon: icons.ProfileOutlined,
       // target: true
     },
-    {
-      id: 'roles',
-      title: 'Role Control',
-      type: 'item',
-      url: '/management/users/roles',
-      icon: icons.ProfileOutlined,
-      // target: true
-    },
-    {
-      id: 'audits',
-      title: 'Audit Center',
-      type: 'item',
-      url: '/management/users/audits',
-      icon: icons.ProfileOutlined,
-      // target: true
-    }
+    // {
+    //   id: 'roles',
+    //   title: 'Role Control',
+    //   type: 'item',
+    //   url: '/management/users/roles',
+    //   icon: icons.ProfileOutlined,
+    //   // target: true
+    // },
+    // {
+    //   id: 'audits',
+    //   title: 'Audit Center',
+    //   type: 'item',
+    //   url: '/management/users/audits',
+    //   icon: icons.ProfileOutlined,
+    //   // target: true
+    // }
   ]
 };
 
