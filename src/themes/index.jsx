@@ -50,7 +50,9 @@ export default function ThemeCustomization({ children }) {
   themes.components = componentsOverride(themes);
 
   return (
+    
     <StyledEngineProvider injectFirst>
+      
       <ThemeProvider theme={themes}>
         <CssBaseline enableColorScheme />
         {children}

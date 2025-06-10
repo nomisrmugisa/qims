@@ -8,7 +8,7 @@ export default function RequestsPage() {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ mb: 3 }}>Requests Management</Typography>
+      {/* <Typography variant="h4" sx={{ mb: 3 }}>Requests Management</Typography> */}
       
       {!editingRequest ? (
         <RequestsTable onEditClick={setEditingRequest} />

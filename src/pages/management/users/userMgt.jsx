@@ -85,12 +85,12 @@ const Users = () => {
         />
 
         <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>Org_unit</InputLabel>
+          <InputLabel>Facility</InputLabel>
           <Select
             value={orgUnitFilter}
             onChange={(e) => setOrgUnitFilter(e.target.value)}
-            label="Org_unit"
-            style={{ height: '40px' }}
+            label="Facility"
+            style={{ width: '140px' }}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="unit1">Unit 1</MenuItem>
@@ -104,7 +104,7 @@ const Users = () => {
             value={timeInactiveFilter}
             onChange={(e) => setTimeInactiveFilter(e.target.value)}
             label="Time inactive"
-            style={{ height: '40px' }}
+            style={{ width: '160px' }}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="1month">1 month</MenuItem>
@@ -118,7 +118,7 @@ const Users = () => {
             value={invitationFilter}
             onChange={(e) => setInvitationFilter(e.target.value)}
             label="Invitation"
-            style={{ height: '40px' }}
+            // style={{ height: '40px' }}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="pending">Pending</MenuItem>
@@ -154,7 +154,10 @@ const Users = () => {
           <TableContainer>
             <Table>
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                <TableRow sx={{ backgroundColor: (theme) => theme.palette.grey[300], 
+                        '& th': {
+                            backgroundColor: (theme) => theme.palette.grey[300]
+                        } }}>
                   <TableCell sx={{ fontWeight: 'bold' }}>Display name</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Username</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Last login</TableCell>

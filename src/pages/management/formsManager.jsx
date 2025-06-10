@@ -30,7 +30,8 @@ import {
     Card,
     CardContent,
     CardHeader,
-    CardActions
+    CardActions,
+    styled
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -38,6 +39,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+
 
 const GenerateDataEntryForms = () => {
     const [loading, setLoading] = useState(false);
@@ -68,6 +70,77 @@ const GenerateDataEntryForms = () => {
     const [useExistingForm, setUseExistingForm] = useState(false);
     const [useNewForm, setUseNewForm] = useState(true); // Default to new form
 
+
+    const StepContainer = styled(Box)(({ theme }) => ({
+        display: 'flex',
+        alignItems: 'center',
+        marginBottom: theme.spacing(3),
+    }));
+
+    const Step = styled(Box)(({ theme, active }) => ({
+        display: 'flex',
+        alignItems: 'center',
+        cursor: 'pointer',
+        '& .step-number': {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 24,
+            height: 24,
+            borderRadius: '50%',
+            backgroundColor: active ? theme.palette.primary.main : theme.palette.grey[300],
+            color: active ? theme.palette.common.white : theme.palette.text.primary,
+            marginRight: theme.spacing(1),
+            fontSize: '0.75rem',
+            fontWeight: 'bold',
+        },
+        '& .step-title': {
+            color: active ? theme.palette.primary.main : theme.palette.text.primary,
+            fontWeight: active ? 'bold' : 'normal',
+            marginRight: theme.spacing(1),
+            whiteSpace: 'nowrap',
+        },
+    }));
+
+    const StyledTab = styled(Tab)(({ theme }) => ({
+        minWidth: 0,
+        padding: '12px 16px',
+        marginRight: theme.spacing(2),
+        '& .MuiTab-wrapper': {
+            flexDirection: 'row',
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+        },
+        '& .tab-number': {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 24,
+            height: 24,
+            borderRadius: '50%',
+            backgroundColor: theme.palette.grey[300],
+            color: theme.palette.text.primary,
+            marginRight: theme.spacing(1),
+            fontSize: '0.75rem',
+        },
+        '&.Mui-selected': {
+            fontWeight: 'bold',
+            color: theme.palette.primary.main,
+            '& .tab-number': {
+                backgroundColor: theme.palette.primary.main,
+                color: theme.palette.common.white,
+            },
+        },
+    }));
+
+    const StyledDivider = styled(Divider)(({ theme }) => ({
+        width: '280px', // Adjust this to make lines longer/shorter
+        borderBottomWidth: 2,
+        borderColor: theme.palette.divider,
+        margin: '0 8px',
+        alignSelf: 'center',
+    }));
+
     // Fetch programs from DHIS2
     useEffect(() => {
         const fetchPrograms = async () => {
@@ -95,41 +168,6 @@ const GenerateDataEntryForms = () => {
         fetchPrograms();
     }, []);
 
-    // Fetch program stages when program is selected
-    // useEffect(() => {
-    //     const fetchProgramStages = async () => {
-    //         if (!selectedProgram) return;
-
-    //         try {
-    //             setLoading(true);
-    //             const response = await fetch(
-    //                 `http://localhost:5002/api/programStages?fields=id,name,program[id,name]&paging=false`,
-    //                 {
-    //                     headers: {
-    //                         'Authorization': 'Basic ' + btoa('admin:5Am53808053@')
-    //                     }
-    //                 }
-    //             );
-
-    //             if (!response.ok) {
-    //                 throw new Error('Failed to fetch program stages');
-    //             }
-
-    //             const data = await response.json();
-    //             // Filter stages by selected program
-    //             const filteredStages = data.programStages.filter(
-    //                 stage => stage.program.id === selectedProgram
-    //             );
-    //             setProgramStages(filteredStages);
-    //         } catch (error) {
-    //             console.error('Error fetching program stages:', error);
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
-
-    //     fetchProgramStages();
-    // }, [selectedProgram]);
 
     useEffect(() => {
         const fetchProgramStages = async () => {
@@ -266,28 +304,6 @@ const GenerateDataEntryForms = () => {
 
         fetchProgramStageSections();
     }, []);
-
-    // Load saved forms from localStorage (or API in production)
-    // useEffect(() => {
-    //     const savedForms = localStorage.getItem('dataEntryForms');
-    //     if (savedForms) {
-    //         const parsedForms = JSON.parse(savedForms);
-    //         setForms(parsedForms);
-
-    //         // Update selectedDataElements with 'added' status when loading a form
-    //         if (selectedForm) {
-    //             const updatedDEs = selectedDataElements.map(de => ({
-    //                 ...de,
-    //                 added: parsedForms.some(form =>
-    //                     form.sections.some(section =>
-    //                         section.dataElements.some(sde => sde.id === de.id)
-    //                     )
-    //                 )
-    //             }));
-    //             setSelectedDataElements(updatedDEs);
-    //         }
-    //     }
-    // }, [selectedForm]);
 
 
     // useEffect for loading forms from dataStore
@@ -857,15 +873,29 @@ const GenerateDataEntryForms = () => {
             <div className="card-body">
                 <Box mb={4}>
                     <Typography variant="h5" gutterBottom>
-                        Generate Data Entry Forms
+                        {/* Generate Data Entry Forms */}
                     </Typography>
 
-                    <Tabs value={activeSubTab} onChange={handleSubTabChange} sx={{ mb: 3 }}>
-                        <Tab label="1. Select Survey" />
-                        <Tab label="2. Standard" disabled={!selectedProgramStage} />
-                        <Tab label="3. Build Form" disabled={!selectedProgramStage} />
-                        {/* <Tab label="4. Access" disabled={!selectedProgramStage} /> */}
-                    </Tabs>
+                    <StepContainer>
+                        {[
+                            { number: 1, title: 'Select Survey' },
+                            { number: 2, title: 'Standard' },
+                            { number: 3, title: 'Build Form' }
+                        ].map((step, index) => (
+                            <React.Fragment key={step.number}>
+                                <Step
+                                    active={activeSubTab === index}
+                                    onClick={() => !(index === 1 || index === 2) || selectedProgramStage ? setActiveSubTab(index) : null}
+                                >
+                                    <span className="step-number">{step.number}</span>
+                                    <Typography variant="subtitle1" className="step-title">
+                                        {step.title}
+                                    </Typography>
+                                </Step>
+                                {index < 2 && <StyledDivider />}
+                            </React.Fragment>
+                        ))}
+                    </StepContainer><br></br>
 
                     {activeSubTab === 0 && (
                         <Box>
@@ -873,25 +903,6 @@ const GenerateDataEntryForms = () => {
                                 {/* Select Survey */}
                             </Typography>
                             <Box display="flex" alignItems="center" mb={4}>
-                                {/* <FormControl fullWidth sx={{ mr: 2 }}>
-                                    <InputLabel>Select Program</InputLabel>
-                                    <Select
-                                        value={selectedProgram}
-                                        onChange={(e) => setSelectedProgram(e.target.value)}
-                                        label="Select Program"
-                                        style={{ height: '40px' }}
-                                    >
-                                        <MenuItem value="" disabled>
-                                            Select a program
-                                        </MenuItem>
-                                        {programs.map(program => (
-                                            <MenuItem key={program.id} value={program.id}>
-                                                {program.displayName}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl> */}
-
                                 <FormControl fullWidth>
                                     <InputLabel>Survey</InputLabel>
                                     <Select
@@ -1045,8 +1056,9 @@ const GenerateDataEntryForms = () => {
                                             startIcon={<AddIcon />}
                                             onClick={handleCreateNewDataElement}
                                             disabled={!newDataElement.name.trim() || !newDataElement.code.trim()}
+                                            style={{ width: '120px'}}
                                         >
-                                            Create & Add
+                                            Add
                                         </Button>
                                     </Box>
                                 </Box>

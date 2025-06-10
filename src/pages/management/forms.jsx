@@ -7,7 +7,7 @@ export default function FormsPage() {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ mb: 3 }}>Forms Management</Typography>
+      {/* <Typography variant="h4" sx={{ mb: 3 }}>Forms Management</Typography> */}
       
       <FormManager 
         form={activeForm}
