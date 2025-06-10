@@ -1,9 +1,9 @@
 /**
-* Template Name: Medilab
-* Template URL: https://bootstrapmade.com/medilab-free-medical-bootstrap-theme/
+* Template Name: QIMS
+* Template URL: https://qims.com
 * Updated: Aug 07 2024 with Bootstrap v5.3.3
-* Author: BootstrapMade.com
-* License: https://bootstrapmade.com/license/
+* Author: QIMS Team
+* License: https://qims.com/license/
 */
 
 /*--------------------------------------------------------------
@@ -286,7 +286,7 @@ h6 {
 }
 
 .header .logo img {
-  max-height: 36px;
+  /* max-height: 36px; */
   margin-right: 8px;
 }
 

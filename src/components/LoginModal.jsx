@@ -2,8 +2,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './LoginModal.css';
 
-const LoginModal = ({ show, onClose }) => {
+const LoginModal = ({ show, onClose, onLogin }) => {
   const modalRef = useRef();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -21,6 +24,80 @@ const LoginModal = ({ show, onClose }) => {
     };
   }, [show, onClose]);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage(''); // Clear previous errors
+
+    try {
+      const credentials = btoa(`${username}:${password}`);
+
+      // First API call to authenticate
+      const response = await fetch("/api/me", {
+        headers: {
+          Authorization: `Basic ${credentials}`,
+        },
+      });
+
+      if (!response.ok) {
+        // Handle authentication errors based on status code
+        switch (response.status) {
+          case 401:
+            setErrorMessage('Invalid credentials. Please check your email and password.');
+            break;
+          case 403:
+            setErrorMessage('Account locked. Please contact support.');
+            break;
+          case 410:
+            setErrorMessage('Account expired. Please renew your account.');
+            break;
+          case 429:
+            setErrorMessage('Too many login attempts. Please try again later.');
+            break;
+          case 500:
+            setErrorMessage('Server error. Please try again later.');
+            break;
+          default:
+            setErrorMessage(`Authentication failed: ${response.statusText}`);
+        }
+        onLogin(false); // Indicate login failure to App.jsx
+        return; // Stop further execution
+      }
+
+      // If authentication successful, fetch organization units
+      const orgUnitsResponse = await fetch(
+        "/api/me?fields=organisationUnits[id,displayName]",
+        {
+          headers: {
+            Authorization: `Basic ${credentials}`,
+          },
+        }
+      );
+
+      if (orgUnitsResponse.ok) {
+        const data = await orgUnitsResponse.json();
+        if (data.organisationUnits && data.organisationUnits.length > 0) {
+          // Store session data in localStorage
+          localStorage.setItem("userOrgUnitId", data.organisationUnits[0].id);
+          localStorage.setItem("userOrgUnitName", data.organisationUnits[0].displayName);
+          localStorage.setItem("userCredentials", credentials);
+          console.log("User Data and Organization Units:", data);
+          onLogin(true); // Login successful
+          onClose(); // Close modal on successful login
+        } else {
+          setErrorMessage('No organization units found for this user.');
+          onLogin(false); // Login failed
+        }
+      } else {
+        setErrorMessage(`Failed to fetch organization units: ${orgUnitsResponse.statusText}`);
+        onLogin(false); // Login failed
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrorMessage('Network error or unexpected issue. Please try again.');
+      onLogin(false); // Login failed due to network or other error
+    }
+  };
+
   if (!show) {
     return null;
   }
@@ -35,16 +112,31 @@ const LoginModal = ({ show, onClose }) => {
           </button>
         </div>
         <div className="modal-body">
-          <form>
-            {/* Email input */}
+          {errorMessage && <div className="alert alert-danger">{errorMessage}</div>} {/* Display error message */}
+          <form onSubmit={handleSubmit}>
+            {/* Username input */}
             <div className="form-outline mb-4">
-              <input type="email" id="form2Example1" className="form-control" />
-              <label className="form-label" htmlFor="form2Example1">Email address</label>
+              <input 
+                type="text"
+                id="form2Example1" 
+                className="form-control"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+              />
+              <label className="form-label" htmlFor="form2Example1">Username</label>
             </div>
 
             {/* Password input */}
             <div className="form-outline mb-4">
-              <input type="password" id="form2Example2" className="form-control" />
+              <input 
+                type="password" 
+                id="form2Example2" 
+                className="form-control"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter any password"
+              />
               <label className="form-label" htmlFor="form2Example2">Password</label>
             </div>
 
@@ -65,7 +157,7 @@ const LoginModal = ({ show, onClose }) => {
             </div>
 
             {/* Submit button */}
-            <button type="button" className="btn btn-primary btn-block mb-4">Sign in</button>
+            <button type="submit" className="btn btn-primary btn-block mb-4">Sign in</button>
 
             {/* Register buttons */}
             <div className="text-center">
