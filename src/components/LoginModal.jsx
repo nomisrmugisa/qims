@@ -7,6 +7,9 @@ const LoginModal = ({ show, onClose, onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
+  const [useTwoFactor, setUseTwoFactor] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -35,6 +38,7 @@ const LoginModal = ({ show, onClose, onLogin }) => {
       const response = await fetch("/api/me", {
         headers: {
           Authorization: `Basic ${credentials}`,
+          ...(useTwoFactor && twoFactorCode && { 'X-2FA-Code': twoFactorCode }),
         },
       });
 
@@ -49,6 +53,9 @@ const LoginModal = ({ show, onClose, onLogin }) => {
             break;
           case 410:
             setErrorMessage('Account expired. Please renew your account.');
+            break;
+          case 423:
+            setErrorMessage('Two factor authentication required.');
             break;
           case 429:
             setErrorMessage('Too many login attempts. Please try again later.');
@@ -80,6 +87,11 @@ const LoginModal = ({ show, onClose, onLogin }) => {
           localStorage.setItem("userOrgUnitId", data.organisationUnits[0].id);
           localStorage.setItem("userOrgUnitName", data.organisationUnits[0].displayName);
           localStorage.setItem("userCredentials", credentials);
+          if (rememberMe) {
+            localStorage.setItem("rememberMe", "true");
+          } else {
+            localStorage.removeItem("rememberMe");
+          }
           console.log("User Data and Organization Units:", data);
           onLogin(true); // Login successful
           onClose(); // Close modal on successful login
@@ -112,7 +124,7 @@ const LoginModal = ({ show, onClose, onLogin }) => {
           </button>
         </div>
         <div className="login-modal-body">
-          {errorMessage && <div className="alert alert-danger">{errorMessage}</div>} {/* Display error message */}
+          {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
           <form onSubmit={handleSubmit}>
             {/* Username input */}
             <div className="login-form-outline mb-4">
@@ -140,18 +152,59 @@ const LoginModal = ({ show, onClose, onLogin }) => {
               <label className="login-form-label" htmlFor="form2Example2">Password</label>
             </div>
 
-            {/* 2 column grid layout for inline styling */}
+            {/* 2FA Checkbox - appears above the input field */}
+            <div className="mb-3">
+              <div className="form-check">
+                <input 
+                  className="form-check-input" 
+                  type="checkbox" 
+                  id="useTwoFactor"
+                  checked={useTwoFactor}
+                  onChange={(e) => setUseTwoFactor(e.target.checked)}
+                />
+                <label className="form-check-label" htmlFor="useTwoFactor">
+                  Login using two factor authentication
+                </label>
+              </div>
+            </div>
+
+            {/* 2FA Code input - conditionally rendered */}
+            {useTwoFactor && (
+              <div className="login-form-outline mb-4">
+                <input 
+                  type="text" 
+                  id="twoFactorCode"
+                  className="login-form-control"
+                  value={twoFactorCode}
+                  onChange={(e) => setTwoFactorCode(e.target.value)}
+                  // placeholder="Enter two factor authentication code"
+                />
+                <label className="login-form-label" htmlFor="twoFactorCode" >
+                  Two factor authentication code
+                </label>
+              </div>
+            )}
+
+            {/* Remember me and Forgot password row */}
             <div className="row mb-4">
               <div className="col d-flex justify-content-center">
-                {/* Checkbox */}
+                {/* Remember me checkbox */}
                 <div className="form-check">
-                  <input className="form-check-input" type="checkbox" value="" id="form2Example31" defaultChecked />
-                  <label className="form-check-label" htmlFor="form2Example31"> Remember me </label>
+                  <input 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                  <label className="form-check-label" htmlFor="rememberMe">
+                    Remember me
+                  </label>
                 </div>
               </div>
 
               <div className="col">
-                {/* Simple link */}
+                {/* Forgot password link */}
                 <a href="#!">Forgot password?</a>
               </div>
             </div>

@@ -3,8 +3,14 @@ import './RegistrationDetails.css'; // We'll create this CSS file next
 import AddFacilityOwnershipDialog from './AddFacilityOwnershipDialog';
 import EditFacilityOwnershipDialog from './EditFacilityOwnershipDialog';
 import AddEmployeeRegistrationDialog from './AddEmployeeRegistrationDialog';
+import { styled, Box, Typography, Divider, useTheme } from '@mui/material';
+// import { useTheme } from '@mui/material/styles';
+
+// Inside your component:
+
 
 const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
+  const theme = useTheme();
   const [activeTab, setActiveTab] = useState('facilityOwnership');
   const [events, setEvents] = useState([]);
   const [employeeEvents, setEmployeeEvents] = useState([]);
@@ -14,6 +20,80 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [openEmployeeDialog, setOpenEmployeeDialog] = useState(false);
+
+  const StepContainer = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: theme.spacing(3),
+  }));
+  
+  const Step = styled(Box)(({ theme, active, hasdata }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+    '& .step-number': {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 24,
+      height: 24,
+      borderRadius: '50%',
+      backgroundColor: active 
+        ? hasdata 
+          ? theme.palette.success.main 
+          : theme.palette.error.main
+        : theme.palette.grey[300],
+      color: active ? theme.palette.common.white : theme.palette.text.primary,
+      marginRight: theme.spacing(1),
+      fontSize: '0.75rem',
+      fontWeight: 'bold',
+    },
+    '& .step-title': {
+      color: active 
+        ? hasdata 
+          ? theme.palette.success.main 
+          : theme.palette.error.main
+        : theme.palette.text.primary,
+      fontWeight: active ? 'bold' : 'normal',
+      marginRight: theme.spacing(1),
+      whiteSpace: 'nowrap',
+    },
+    '& .completion-indicator': {
+      marginLeft: theme.spacing(1),
+      fontSize: '0.9rem',
+      fontWeight: 'bold',
+    },
+  }));
+  
+  const StyledDivider = styled(Divider)(({ theme }) => ({
+    width: '120px', // Adjust this to match your design
+    borderBottomWidth: 2,
+    borderColor: theme.palette.divider,
+    margin: '0 8px',
+    alignSelf: 'center',
+  }));
+  
+  const hasTabData = (tabKey) => {
+    switch (tabKey) {
+      case 'facilityOwnership':
+        return events.length > 0;
+      case 'employeeRegistration':
+        return employeeEvents.length > 0;
+      case 'servicesOffered':
+        // For services offered and inspection schedule, we'll assume they have data for now
+        // since they appear to be static in your screenshots
+        return true;
+      case 'inspectionSchedule':
+        return true;
+      default:
+        return false;
+    }
+  };
+  
+  const getTabColor = (tabKey, isActive) => {
+    if (!isActive) return 'inherit';
+    return hasTabData(tabKey) ? 'success.main' : 'error.main';
+  };
 
   const fetchFacilityOwnershipData = async () => {
     if (!trackedEntityInstanceId) {
@@ -380,33 +460,46 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
 
   return (
     <div className="registration-details-container">
-      <div className="tab-buttons">
-        <button
-          className={activeTab === 'facilityOwnership' ? 'active' : ''}
-          onClick={() => setActiveTab('facilityOwnership')}
-        >
-          Facility Ownership
-        </button>
-        <button
-          className={activeTab === 'employeeRegistration' ? 'active' : ''}
-          onClick={() => setActiveTab('employeeRegistration')}
-        >
-          Employee Registration
-        </button>
-        <button
-          className={activeTab === 'servicesOffered' ? 'active' : ''}
-          onClick={() => setActiveTab('servicesOffered')}
-        >
-          Services Offered
-        </button>
-        <button
-          className={activeTab === 'inspectionSchedule' ? 'active' : ''}
-          onClick={() => setActiveTab('inspectionSchedule')}
-        >
-          Inspection Schedule
-        </button>
-      </div>
-      {renderTabContent()}
+      <Box sx={{ width: '100%' }}>
+        <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
+          Registration Details
+        </Typography>
+        
+        <StepContainer>
+          {[
+            { number: 1, title: 'Facility Ownership', key: 'facilityOwnership' },
+            { number: 2, title: 'Employee Registration', key: 'employeeRegistration' },
+            { number: 3, title: 'Services Offered', key: 'servicesOffered' },
+            { number: 4, title: 'Inspection Schedule', key: 'inspectionSchedule' }
+          ].map((step, index) => (
+            <React.Fragment key={step.number}>
+              <Step 
+                active={activeTab === step.key}
+                hasdata={hasTabData(step.key)}
+                onClick={() => setActiveTab(step.key)}
+              >
+                <span className="step-number">{step.number}</span>
+                <Typography variant="subtitle1" className="step-title">
+                  {step.title}
+                </Typography>
+                <span 
+                  className="completion-indicator" 
+                  style={{
+                    color: hasTabData(step.key) 
+                      ? theme.palette.success.main 
+                      : theme.palette.error.main
+                  }}
+                >
+                  {hasTabData(step.key) ? '✓' : '✗'}
+                </span>
+              </Step>
+              {index < 3 && <StyledDivider />}
+            </React.Fragment>
+          ))}
+        </StepContainer>
+
+        {renderTabContent()}
+      </Box>
 
       {/* Add New Facility Ownership Dialog */}
       {openAddDialog && (
