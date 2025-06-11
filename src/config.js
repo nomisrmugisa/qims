@@ -1,1 +1,1 @@
-export const API_URL = 'YOUR_DHIS2_API_URL'; 
+export const API_URL = ''; 

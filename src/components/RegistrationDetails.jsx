@@ -7,13 +7,19 @@ import AddEmployeeRegistrationDialog from './AddEmployeeRegistrationDialog';
 const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
   const [activeTab, setActiveTab] = useState('facilityOwnership');
   const [events, setEvents] = useState([]);
+  const [employeeEvents, setEmployeeEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(true);
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [openEmployeeDialog, setOpenEmployeeDialog] = useState(false);
 
   const fetchFacilityOwnershipData = async () => {
+    if (!trackedEntityInstanceId) {
+      setIsLoading(false);
+      return;
+    }
     const credentials = localStorage.getItem('userCredentials');
     const userOrgUnitId = localStorage.getItem('userOrgUnitId');
 
@@ -60,6 +66,7 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
   useEffect(() => {
     if (trackedEntityInstanceId) {
       fetchFacilityOwnershipData();
+      fetchEmployeeData();
     }
   }, [trackedEntityInstanceId]);
 
@@ -83,6 +90,53 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
   const handleEmployeeAddSuccess = () => {
     console.log('Employee added successfully');
     setOpenEmployeeDialog(false);
+    fetchEmployeeData();
+  };
+
+  const fetchEmployeeData = async () => {
+    if (!trackedEntityInstanceId) {
+      setIsLoadingEmployees(false);
+      return;
+    }
+
+    const credentials = localStorage.getItem('userCredentials');
+    const userOrgUnitId = localStorage.getItem('userOrgUnitId');
+
+    if (!credentials || !userOrgUnitId) {
+      setIsLoadingEmployees(false);
+      return;
+    }
+
+    try {
+      setIsLoadingEmployees(true);
+      const url = `/api/trackedEntityInstances/${trackedEntityInstanceId}?ou=${userOrgUnitId}&ouMode=SELECTED&program=EE8yeLVo6cN&fields=enrollments[events]!programStage=xjhA4eEHyhw&paging=false`;
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Basic ${credentials}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      let fetchedEvents = [];
+
+      if (data.enrollments && data.enrollments.length > 0) {
+        data.enrollments.forEach((enrollment) => {
+          fetchedEvents = fetchedEvents.concat(enrollment.events);
+        });
+      }
+
+      setEmployeeEvents(fetchedEvents);
+      setIsLoadingEmployees(false);
+
+    } catch (error) {
+      console.error("Error fetching employee data:", error);
+      setIsLoadingEmployees(false);
+    }
   };
 
   const renderTabContent = () => {
@@ -168,70 +222,46 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
                   +
                 </button>
               </h2>
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>First Name</th>
-                      <th>Last Name</th>
-                      <th>BHPC/NMC Number</th>
-                      <th>Position</th>
-                      <th>Contract Type</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>SIMON k test1</td>
-                      <td>SSKK011</td>
-                      <td>98098092</td>
-                      <td>Head of Medical Services</td>
-                      <td>Part-Time</td>
-                    </tr>
-                    <tr>
-                      <td>kjkjj</td>
-                      <td>nm</td>
-                      <td>9809809</td>
-                      <td>MEDICAL/DENTAL PERSONNEL: Dentist</td>
-                      <td>Full-Time</td>
-                    </tr>
-                    <tr>
-                      <td>bhkj</td>
-                      <td>bkjbk</td>
-                      <td>980</td>
-                      <td>Facility Manager</td>
-                      <td>Contracted Staff</td>
-                    </tr>
-                    <tr>
-                      <td>bhkj</td>
-                      <td>bkjbkuio</td>
-                      <td>980</td>
-                      <td>Facility Manager</td>
-                      <td>Contracted Staff</td>
-                    </tr>
-                    <tr>
-                      <td>bhkj</td>
-                      <td>bkjbkuio</td>
-                      <td>980</td>
-                      <td>Facility Manager</td>
-                      <td>Contracted Staff</td>
-                    </tr>
-                    <tr>
-                      <td>bhkj</td>
-                      <td>bkjbkuio</td>
-                      <td>980</td>
-                      <td>Facility Manager</td>
-                      <td>Contracted Staff</td>
-                    </tr>
-                    <tr>
-                      <td>bhkj</td>
-                      <td>bkjbkuio</td>
-                      <td>980</td>
-                      <td>Facility Manager</td>
-                      <td>Contracted Staff</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              {isLoadingEmployees ? (
+                <p>Loading employee data...</p>
+              ) : employeeEvents.length === 0 ? (
+                <p>No employee records found.</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>BHPC/NMC Number</th>
+                        <th>Position</th>
+                        <th>Contract Type</th>
+                        <th>Organization Unit</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {employeeEvents.map((event, index) => {
+                        const dataValues = event.dataValues || [];
+                        const getFormattedValue = (dataElementId) => {
+                          const dataValue = dataValues.find(dv => dv.dataElement === dataElementId);
+                          return dataValue ? dataValue.value : '';
+                        };
+
+                        return (
+                          <tr key={event.event || index}>
+                            <td>{getFormattedValue("IIxbad41cH6")}</td>
+                            <td>{getFormattedValue("VFTRgPnvSHV")}</td>
+                            <td>{getFormattedValue("xcTxmEUy6g6")}</td>
+                            <td>{getFormattedValue("FClCncccLzw")}</td>
+                            <td>{getFormattedValue("F3h1A96t3uL")}</td>
+                            <td>{localStorage.getItem('userOrgUnitName')}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -410,4 +440,4 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
   );
 };
 
-export default RegistrationDetails; 
+export default RegistrationDetails;

@@ -7,6 +7,7 @@ import { Pagination, Autoplay } from 'swiper/modules';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import './Main.css';
+import RegistrationForm from './RegistrationForm';
 
 const Main = () => {
   useEffect(() => {
@@ -147,87 +148,9 @@ const Main = () => {
 </div>{/* End Section Title */}
 
 <div className="container" data-aos="fade-up" data-aos-delay="100">
-
-  <form role="form" className="php-email-form">
-    {/* Facility Profile Section */}
-    <div className="row">
-      <div className="col-md-12">
-        <h4>Facility Profile</h4>
-      </div>
-    </div>
-
-    <div className="row">
-      <div className="col-md-6 form-group">
-        <input type="text" name="facility" className="form-control" id="facility" placeholder="Facility Name" required></input>
-      </div>
-      <div className="col-md-6 form-group mt-3 mt-md-0">
-        <input type="text" name="locationInBotswana" className="form-control" id="location" placeholder="Location in Botswana (Ward)" required></input>
-      </div>
-    </div>
-
-    {/* User Profile Section */}
-    <div className="row mt-4">
-      <div className="col-md-12">
-        <h4>User Profile</h4>
-      </div>
-    </div>
-
-    <div className="row">
-      <div className="col-md-6 form-group">
-        <input type="text" name="userName" className="form-control" id="username" placeholder="Preferred User Name" required></input>
-      </div>
-      <div className="col-md-6 form-group mt-3 mt-md-0">
-        <input type="text" name="physicalAddress" className="form-control" id="address" placeholder="Physical Address" required></input>
-      </div>
-    </div>
-
-    <div className="row mt-3">
-      <div className="col-md-6 form-group">
-        <input type="text" name="firstName" className="form-control" id="firstname" placeholder="First Name" required></input>
-      </div>
-      <div className="col-md-6 form-group mt-3 mt-md-0">
-        <input type="text" name="surname" className="form-control" id="surname" placeholder="Surname" required></input>
-      </div>
-    </div>
-
-    <div className="row mt-3">
-      <div className="col-md-6 form-group">
-        <input type="text" name="correspondenceAddress" className="form-control" id="correspondence" placeholder="Correspondence Address (Town/Village)" required></input>
-      </div>
-      <div className="col-md-6 form-group mt-3 mt-md-0">
-        <input type="email" name="email" className="form-control" id="email" placeholder="Email" required></input>
-      </div>
-    </div>
-
-    <div className="row mt-3">
-      <div className="col-md-6 form-group">
-        <input type="tel" name="cellNumber" className="form-control" id="phone" placeholder="Phone Number" required></input>
-      </div>
-      <div className="col-md-6 form-group mt-3 mt-md-0">
-        <input type="text" name="BHPCRegistrationNumber" className="form-control" id="bhpc" placeholder="B H.P.C Registration Number" required></input>
-      </div>
-    </div>
-
-    <div className="row mt-3">
-      <div className="col-md-6 form-group">
-        <input type="text" name="privatePracticeNumber" className="form-control" id="practice" placeholder="Private Practice Number" required></input>
-      </div>
-      <div className="col-md-6 form-group mt-3 mt-md-0">
-        <input type="file" name="attachments" className="form-control" id="attachments" placeholder="Attachments"></input>
-      </div>
-    </div>
-
-    <div className="mt-4">
-      <div className="loading">Loading</div>
-      <div className="error-message"></div>
-      <div className="sent-message">Your registration request has been submitted successfully. Thank you!</div>
-      <div className="text-center register-btns" >
-        <button type="button" className="btn-submit">Register</button>
-        <button type="button" className="btn-cancel">Cancel</button>
-      </div>
-    </div>
-  </form>
-
+  <div className="text-center">
+    <RegistrationForm />
+  </div>
 </div>
 
 </section>{/* /Registration Section */}

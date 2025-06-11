@@ -251,10 +251,10 @@ const AddFacilityOwnershipDialog = ({ onClose, onAddSuccess, trackedEntityInstan
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" disabled={!isFormValid}>
-              Add
-            </button>
-            <button type="button" className="btn btn-secondary cancel-btn" onClick={onClose}>Cancel</button>
+            <div className="button-container">
+              <button type="submit" className="btn-primary" disabled={!isFormValid}>Add</button>
+              <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+            </div>
           </form>
         </div>
       </div>
@@ -262,4 +262,4 @@ const AddFacilityOwnershipDialog = ({ onClose, onAddSuccess, trackedEntityInstan
   );
 };
 
-export default AddFacilityOwnershipDialog; 
+export default AddFacilityOwnershipDialog;

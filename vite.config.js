@@ -7,9 +7,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://qimsdev.5am.co.bw',
+        target: 'https://qimsdev.5am.co.bw/qims/api',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '/qims/api'),
+        rewrite: (path) => path.replace(/^\/api/, ''),
         secure: false,
       },
     }

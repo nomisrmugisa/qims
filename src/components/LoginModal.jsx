@@ -103,41 +103,41 @@ const LoginModal = ({ show, onClose, onLogin }) => {
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" ref={modalRef}>
-        <div className="modal-header">
-          <h5 className="modal-title">Login</h5>
-          <button type="button" className="close-btn" onClick={onClose}>
+    <div className="login-modal-overlay">
+      <div className="login-modal-content" ref={modalRef}>
+        <div className="login-modal-header">
+          <h5 className="login-modal-title">Login</h5>
+          <button type="button" className="login-modal-close" onClick={onClose}>
             &times;
           </button>
         </div>
-        <div className="modal-body">
+        <div className="login-modal-body">
           {errorMessage && <div className="alert alert-danger">{errorMessage}</div>} {/* Display error message */}
           <form onSubmit={handleSubmit}>
             {/* Username input */}
-            <div className="form-outline mb-4">
+            <div className="login-form-outline mb-4">
               <input 
                 type="text"
                 id="form2Example1" 
-                className="form-control"
+                className="login-form-control"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your username"
               />
-              <label className="form-label" htmlFor="form2Example1">Username</label>
+              <label className="login-form-label" htmlFor="form2Example1">Username</label>
             </div>
 
             {/* Password input */}
-            <div className="form-outline mb-4">
+            <div className="login-form-outline mb-4">
               <input 
                 type="password" 
                 id="form2Example2" 
-                className="form-control"
+                className="login-form-control"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter any password"
               />
-              <label className="form-label" htmlFor="form2Example2">Password</label>
+              <label className="login-form-label" htmlFor="form2Example2">Password</label>
             </div>
 
             {/* 2 column grid layout for inline styling */}
@@ -157,7 +157,7 @@ const LoginModal = ({ show, onClose, onLogin }) => {
             </div>
 
             {/* Submit button */}
-            <button type="submit" className="btn btn-primary btn-block mb-4">Sign in</button>
+            <button type="submit" className="login-btn-primary mb-4">Sign in</button>
 
             {/* Register buttons */}
             <div className="text-center">
