@@ -18,8 +18,9 @@ import AnalyticEcommerce from 'components/cards/statistics/AnalyticEcommerce';
 import MonthlyBarChart from 'sections/dashboard/default/MonthlyBarChart';
 import ReportAreaChart from 'sections/dashboard/default/ReportAreaChart';
 import UniqueVisitorCard from 'sections/dashboard/default/UniqueVisitorCard';
-import RequestsInspections from 'sections/dashboard/default/RequestsInspections';
 
+import RequestsInspections from 'sections/dashboard/default/RequestsInspections';
+import RegisteredFacilitiesMap from 'sections/dashboard/default/RegisteredFacilitiesMap';
 import NewUsersTable from 'sections/dashboard/default/NewUsersTable';
 
 // assets
@@ -72,6 +73,7 @@ export default function DashboardDefault() {
         <AnalyticEcommerce title="Inactive Users" count="35" percentage={27.4} isLoss color="warning" extra="20" />
       </Grid>
       <Grid sx={{ display: { sm: 'none', md: 'block', lg: 'none' } }} size={{ md: 8 }} />
+
       {/* row 2 */}
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <AnalyticEcommerce title="Total Requests" count="45" percentage={59.3} extra="35" />
@@ -87,17 +89,25 @@ export default function DashboardDefault() {
       </Grid>
       <Grid sx={{ display: { sm: 'none', md: 'block', lg: 'none' } }} size={{ md: 8 }} />
 
+      {/* row 3 */}
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+        <AnalyticEcommerce title="Total Registered Personnel" count="45" percentage={59.3} extra="35" />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+        <AnalyticEcommerce title="Total Services Offered" count="78" percentage={70.5} extra="8" />
+      </Grid>
 
-
+      {/* Registred Facilities Map */}
       <Grid size={{ xs: 12, md: 7, lg: 8 }}>
         <Grid container alignItems="center" justifyContent="space-between">
           <Grid>
-            <Typography variant="h5">Newly Added Users</Typography>
+            <Typography variant="h5">Registered Health Facilities</Typography>
           </Grid>
           <Grid />
         </Grid>
         <MainCard sx={{ mt: 2 }} content={false}>
-          <NewUsersTable />
+          {/* <NewUsersTable /> */}
+          <RegisteredFacilitiesMap />
         </MainCard>
       </Grid>
 
