@@ -9,6 +9,7 @@ import Box from '@mui/material/Box';
 import Drawer from './Drawer';
 import Header from './Header';
 import Footer from './Footer';
+import MinistryHeader from './MinistryHeader';
 import Loader from 'components/Loader';
 import Breadcrumbs from 'components/@extended/Breadcrumbs';
 
@@ -29,24 +30,28 @@ export default function DashboardLayout() {
   if (menuMasterLoading) return <Loader />;
 
   return (
-    <Box sx={{ display: 'flex', width: '100%' }}>
-      <Header />
-      <Drawer />
+    <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column' }}>
+      <MinistryHeader />
+      
+      <Box sx={{ display: 'flex', width: '100%', mt: '130px' }}>
+        <Header />
+        <Drawer />
 
-      <Box component="main" sx={{ width: 'calc(100% - 260px)', flexGrow: 1, p: { xs: 2, sm: 3 } }}>
-        <Toolbar sx={{ mt: 'inherit' }} />
-        <Box
-          sx={{
-            ...{ px: { xs: 0, sm: 2 } },
-            position: 'relative',
-            minHeight: 'calc(100vh - 110px)',
-            display: 'flex',
-            flexDirection: 'column'
-          }}
-        >
-          {pathname !== '/apps/profiles/account/my-account' && <Breadcrumbs />}
-          <Outlet />
-          <Footer />
+        <Box component="main" sx={{ width: 'calc(100% - 260px)', flexGrow: 1, p: { xs: 2, sm: 3 } }}>
+          <Toolbar sx={{ mt: 'inherit' }} />
+          <Box
+            sx={{
+              ...{ px: { xs: 0, sm: 2 } },
+              position: 'relative',
+              minHeight: 'calc(100vh - 110px)',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            {pathname !== '/apps/profiles/account/my-account' && <Breadcrumbs />}
+            <Outlet />
+            <Footer />
+          </Box>
         </Box>
       </Box>
     </Box>

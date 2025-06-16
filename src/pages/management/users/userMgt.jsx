@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Button, TextField, Select, MenuItem, InputLabel, FormControl,
   Table, TableBody, TableCell, TableHead, TableRow, Paper, TableContainer,
-  Checkbox, FormControlLabel, CircularProgress, TablePagination
+  Checkbox, FormControlLabel, CircularProgress, TablePagination, Chip, Tooltip
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -22,7 +22,7 @@ const Users = () => {
     try {
       setLoading(true);
       const url = new URL(`http://localhost:5002/api/40/users`);
-      url.searchParams.append('fields', 'id,displayName,access,email,twoFactorEnabled,userCredentials[username,disabled,lastLogin],teiSearchOrganisationUnits[id,path]');
+      url.searchParams.append('fields', 'id,displayName,access,email,twoFactorEnabled,userCredentials[username,disabled,lastLogin,userRoles[id,name,displayName]],teiSearchOrganisationUnits[id,path,displayName],organisationUnits[id,displayName,path],lastUpdated,created');
       url.searchParams.append('order', 'firstName:asc,surname:asc');
       url.searchParams.append('userOrgUnits', 'true');
       url.searchParams.append('includeChildren', 'true');
@@ -160,7 +160,11 @@ const Users = () => {
                         } }}>
                   <TableCell sx={{ fontWeight: 'bold' }}>Display name</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Username</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>User Role</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>User Roles</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Facility</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Last login</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Last Modified</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
                 </TableRow>
@@ -171,8 +175,34 @@ const Users = () => {
                     <TableCell>{user.displayName}</TableCell>
                     <TableCell>{user.userCredentials?.username}</TableCell>
                     <TableCell>
+                      {user.userCredentials?.userRoles && user.userCredentials?.userRoles.length > 0
+                        ? user.userCredentials.userRoles[0].displayName
+                        : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {user.userCredentials?.userRoles?.map(role => (
+                          <Tooltip key={role.id} title={role.displayName}>
+                            <Chip
+                              label={role.displayName}
+                              size="small"
+                              sx={{ maxWidth: 120 }}
+                            />
+                          </Tooltip>
+                        )) || '-'}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      {user.organisationUnits?.map(ou => ou.displayName).join(', ') || '-'}
+                    </TableCell>
+                    <TableCell>
                       {user.userCredentials?.lastLogin ? 
                         new Date(user.userCredentials.lastLogin).toLocaleString() : 
+                        '-'}
+                    </TableCell>
+                    <TableCell>
+                      {user.lastUpdated ? 
+                        new Date(user.lastUpdated).toLocaleString() : 
                         '-'}
                     </TableCell>
                     <TableCell>
