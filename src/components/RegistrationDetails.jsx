@@ -3,7 +3,8 @@ import './RegistrationDetails.css'; // We'll create this CSS file next
 import AddFacilityOwnershipDialog from './AddFacilityOwnershipDialog';
 import EditFacilityOwnershipDialog from './EditFacilityOwnershipDialog';
 import AddEmployeeRegistrationDialog from './AddEmployeeRegistrationDialog';
-import { styled, Box, Typography, Divider, useTheme } from '@mui/material';
+import TrackerEventDetails from './TrackerEventDetails';
+import { styled, Box, Typography, Divider, useTheme, Tooltip } from '@mui/material';
 // import { useTheme } from '@mui/material/styles';
 
 // Inside your component:
@@ -11,7 +12,7 @@ import { styled, Box, Typography, Divider, useTheme } from '@mui/material';
 
 const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
   const theme = useTheme();
-  const [activeTab, setActiveTab] = useState('facilityOwnership');
+  const [activeTab, setActiveTab] = useState('completeApplication');
   const [events, setEvents] = useState([]);
   const [employeeEvents, setEmployeeEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,6 +21,7 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [openEmployeeDialog, setOpenEmployeeDialog] = useState(false);
+  const [completeApplicationStatus, setCompleteApplicationStatus] = useState(false);
 
   const StepContainer = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -27,10 +29,11 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
     marginBottom: theme.spacing(3),
   }));
   
-  const Step = styled(Box)(({ theme, active, hasdata }) => ({
+  const Step = styled(Box)(({ theme, active, hasdata, disabled }) => ({
     display: 'flex',
     alignItems: 'center',
-    cursor: 'pointer',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.6 : 1,
     '& .step-number': {
       display: 'flex',
       alignItems: 'center',
@@ -53,7 +56,7 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
         ? hasdata 
           ? theme.palette.success.main 
           : theme.palette.error.main
-        : theme.palette.text.primary,
+        : disabled ? theme.palette.text.disabled : theme.palette.text.primary,
       fontWeight: active ? 'bold' : 'normal',
       marginRight: theme.spacing(1),
       whiteSpace: 'nowrap',
@@ -65,16 +68,45 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
     },
   }));
   
-  const StyledDivider = styled(Divider)(({ theme }) => ({
+  const StyledDivider = styled(Divider)(({ theme, disabled }) => ({
     width: '120px', // Adjust this to match your design
     borderBottomWidth: 2,
-    borderColor: theme.palette.divider,
+    borderColor: disabled ? theme.palette.grey[300] : theme.palette.divider,
     margin: '0 8px',
     alignSelf: 'center',
+    opacity: disabled ? 0.6 : 1,
   }));
+  
+  // Check localStorage for completeApplicationStatus on component mount and when tab changes
+  useEffect(() => {
+    const checkCompleteApplicationStatus = () => {
+      try {
+        const status = localStorage.getItem('completeApplicationFormStatus');
+        if (status) {
+          setCompleteApplicationStatus(JSON.parse(status));
+        }
+      } catch (error) {
+        console.error("Error reading form status from localStorage:", error);
+      }
+    };
+    
+    checkCompleteApplicationStatus();
+    
+    // Set up an interval to check for status changes
+    const intervalId = setInterval(checkCompleteApplicationStatus, 2000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+  
+  // Handle form status change from TrackerEventDetails component
+  const handleFormStatusChange = (isComplete) => {
+    setCompleteApplicationStatus(isComplete);
+  };
   
   const hasTabData = (tabKey) => {
     switch (tabKey) {
+      case 'completeApplication':
+        return completeApplicationStatus; // Use the state variable to determine if all fields are filled
       case 'facilityOwnership':
         return events.length > 0;
       case 'employeeRegistration':
@@ -90,9 +122,14 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
     }
   };
   
-  const getTabColor = (tabKey, isActive) => {
-    if (!isActive) return 'inherit';
-    return hasTabData(tabKey) ? 'success.main' : 'error.main';
+  // Handle tab click with validation
+  const handleTabClick = (tabKey) => {
+    // If Complete Application is not complete and trying to access another tab, don't allow it
+    if (!completeApplicationStatus && tabKey !== 'completeApplication') {
+      return; // Don't change tabs
+    }
+    
+    setActiveTab(tabKey);
   };
 
   const fetchFacilityOwnershipData = async () => {
@@ -143,6 +180,27 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
     }
   };
 
+  // Check localStorage for completeApplicationStatus on component mount and when tab changes
+  useEffect(() => {
+    const checkCompleteApplicationStatus = () => {
+      try {
+        const status = localStorage.getItem('completeApplicationFormStatus');
+        if (status) {
+          setCompleteApplicationStatus(JSON.parse(status));
+        }
+      } catch (error) {
+        console.error("Error reading form status from localStorage:", error);
+      }
+    };
+    
+    checkCompleteApplicationStatus();
+    
+    // Set up an interval to check for status changes
+    const intervalId = setInterval(checkCompleteApplicationStatus, 2000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+  
   useEffect(() => {
     if (trackedEntityInstanceId) {
       fetchFacilityOwnershipData();
@@ -221,6 +279,15 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'completeApplication':
+        return (
+          <div className="tab-content">
+            <div className="complete-application-details">
+              <h2>Complete Application Details</h2>
+              <TrackerEventDetails onFormStatusChange={handleFormStatusChange} />
+            </div>
+          </div>
+        );
       case 'facilityOwnership':
         return (
           <div className="tab-content">
@@ -467,66 +534,88 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
         
         <StepContainer>
           {[
-            { number: 1, title: 'Facility Ownership', key: 'facilityOwnership' },
-            { number: 2, title: 'Employee Registration', key: 'employeeRegistration' },
-            { number: 3, title: 'Services Offered', key: 'servicesOffered' },
-            { number: 4, title: 'Inspection Schedule', key: 'inspectionSchedule' }
-          ].map((step, index) => (
-            <React.Fragment key={step.number}>
-              <Step 
-                active={activeTab === step.key}
-                hasdata={hasTabData(step.key)}
-                onClick={() => setActiveTab(step.key)}
-              >
-                <span className="step-number">{step.number}</span>
-                <Typography variant="subtitle1" className="step-title">
-                  {step.title}
-                </Typography>
-                <span 
-                  className="completion-indicator" 
-                  style={{
-                    color: hasTabData(step.key) 
-                      ? theme.palette.success.main 
-                      : theme.palette.error.main
-                  }}
+            { number: 1, title: 'Complete Application', key: 'completeApplication' },
+            { number: 2, title: 'Facility Ownership', key: 'facilityOwnership' },
+            { number: 3, title: 'Employee Registration', key: 'employeeRegistration' },
+            { number: 4, title: 'Services Offered', key: 'servicesOffered' },
+            { number: 5, title: 'Inspection Schedule', key: 'inspectionSchedule' }
+          ].map((step, index) => {
+            // Determine if the tab should be disabled
+            const isDisabled = !completeApplicationStatus && step.key !== 'completeApplication';
+            
+            return (
+              <React.Fragment key={step.number}>
+                <Tooltip 
+                  title={isDisabled ? "Complete the Application details first" : ""}
+                  arrow
+                  placement="top"
                 >
-                  {hasTabData(step.key) ? '✓' : '✗'}
-                </span>
-              </Step>
-              {index < 3 && <StyledDivider />}
-            </React.Fragment>
-          ))}
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <Step 
+                      active={activeTab === step.key}
+                      hasdata={hasTabData(step.key)}
+                      disabled={isDisabled}
+                      onClick={() => handleTabClick(step.key)}
+                    >
+                      <span className="step-number">{step.number}</span>
+                      <Typography variant="subtitle1" className="step-title">
+                        {step.title}
+                      </Typography>
+                      <span 
+                        className="completion-indicator" 
+                        style={{
+                          color: hasTabData(step.key) 
+                            ? theme.palette.success.main 
+                            : theme.palette.error.main
+                        }}
+                      >
+                        {hasTabData(step.key) ? '✓' : '✗'}
+                      </span>
+                    </Step>
+                  </div>
+                </Tooltip>
+                {index < 4 && <StyledDivider disabled={isDisabled} />}
+              </React.Fragment>
+            );
+          })}
         </StepContainer>
 
         {renderTabContent()}
       </Box>
 
-      {/* Add New Facility Ownership Dialog */}
+      {/* Add Facility Ownership Dialog - only render when openAddDialog is true */}
       {openAddDialog && (
         <AddFacilityOwnershipDialog
+          open={openAddDialog}
           onClose={() => setOpenAddDialog(false)}
-          onAddSuccess={fetchFacilityOwnershipData}
+          onSuccess={() => {
+            setOpenAddDialog(false);
+            fetchFacilityOwnershipData();
+          }}
           trackedEntityInstanceId={trackedEntityInstanceId}
         />
       )}
 
-      {/* Edit Facility Ownership Dialog */}
+      {/* Edit Facility Ownership Dialog - only render when showEditDialog is true */}
       {showEditDialog && selectedEvent && (
         <EditFacilityOwnershipDialog
-          onClose={() => {
+          open={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          onSuccess={() => {
             setShowEditDialog(false);
-            setSelectedEvent(null);
+            fetchFacilityOwnershipData();
           }}
-          onUpdateSuccess={fetchFacilityOwnershipData}
           event={selectedEvent}
         />
       )}
 
-      {/* Add New Employee Registration Dialog */}
+      {/* Add Employee Dialog - only render when openEmployeeDialog is true */}
       {openEmployeeDialog && (
         <AddEmployeeRegistrationDialog
+          open={openEmployeeDialog}
           onClose={handleCloseEmployeeDialog}
-          onAddSuccess={handleEmployeeAddSuccess}
+          onSuccess={handleEmployeeAddSuccess}
+          trackedEntityInstanceId={trackedEntityInstanceId}
         />
       )}
     </div>
