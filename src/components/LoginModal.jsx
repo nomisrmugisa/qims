@@ -14,6 +14,10 @@ const LoginModal = ({ show, onClose, onLogin }) => {
     const [twoFactorError, setTwoFactorError] = useState('');
     const [isTwoFactorInitialized, setIsTwoFactorInitialized] = useState(false);
 
+    const isValidTwoFactorCode = (code) => {
+        return /^\d{6}$/.test(code);
+    };
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -415,7 +419,8 @@ const LoginModal = ({ show, onClose, onLogin }) => {
                         <button
                             type="submit"
                             className="login-btn-primary mb-4"
-                            disabled={useTwoFactor && (!twoFactorCode.trim() || twoFactorError.includes('failed'))}
+                            disabled={!useTwoFactor ||
+                                (!isValidTwoFactorCode(twoFactorCode) || twoFactorError.includes('failed'))}
                         >
                             Sign in
                         </button>
