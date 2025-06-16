@@ -124,6 +124,68 @@ const Dashboard = ({ activeSection, setActiveSection }) => {
                         </div>
                     </div>
                 );
+            case 'inspections':
+                return (
+                    <div className="dashboard-section">
+                        <h2>Facility Inspections</h2>
+                        <div className="inspections-container">
+                            <div className="inspections-actions">
+                                <button className="action-button">New Inspection</button>
+                                <button className="action-button">Schedule Inspection</button>
+                                <button className="action-button">Download Report</button>
+                            </div>
+                            <div className="inspections-table-container">
+                                <table className="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Inspection Date</th>
+                                            <th>Facility Name</th>
+                                            <th>Inspector</th>
+                                            <th>Status</th>
+                                            <th>Findings</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>2024-03-20</td>
+                                            <td>Central Clinic</td>
+                                            <td>John Doe</td>
+                                            <td><span className="status-badge completed">Completed</span></td>
+                                            <td>Minor non-compliance</td>
+                                            <td>
+                                                <button className="btn-view">View</button>
+                                                <button className="btn-edit">Edit</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>2024-03-22</td>
+                                            <td>City Hospital</td>
+                                            <td>Jane Smith</td>
+                                            <td><span className="status-badge pending">Pending</span></td>
+                                            <td>N/A</td>
+                                            <td>
+                                                <button className="btn-view">View</button>
+                                                <button className="btn-edit">Edit</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>2024-03-25</td>
+                                            <td>Rural Health Post</td>
+                                            <td>Peter Jones</td>
+                                            <td><span className="status-badge scheduled">Scheduled</span></td>
+                                            <td>Pending</td>
+                                            <td>
+                                                <button className="btn-view">View</button>
+                                                <button className="btn-cancel">Cancel</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                );
             default:
                 return null;
         }
@@ -135,6 +197,9 @@ const Dashboard = ({ activeSection, setActiveSection }) => {
             </div>
             <div className="dashboard-main">
                 <div className="dashboard-sidebar">
+                    <div className="dashboard-sidebar-header">
+                        Navigation
+                    </div>
                     <button
                         onClick={() => setActiveSection('overview')}
                         className={activeSection === 'overview' ? 'active' : ''}
@@ -145,8 +210,17 @@ const Dashboard = ({ activeSection, setActiveSection }) => {
                         onClick={() => setActiveSection('registration')}
                         className={activeSection === 'registration' ? 'active' : ''}
                     >
-                        Complete Application
+                        Complete Registration
                     </button>
+                    <button
+                        onClick={() => setActiveSection('inspections')}
+                        className={activeSection === 'inspections' ? 'active' : ''}
+                    >
+                        View Inspections
+                    </button>
+                    
+                    <div className="section-divider"></div>
+                    
                     <button
                         onClick={() => setActiveSection('reports')}
                         className={activeSection === 'reports' ? 'active' : ''}

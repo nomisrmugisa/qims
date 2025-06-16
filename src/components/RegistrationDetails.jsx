@@ -472,7 +472,7 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
         return (
           <div className="tab-content">
             <div className="inspection-schedule-details">
-              <h2>Inspection Schedule Details <span className="add-icon">+</span></h2>
+              <h2>Facility Inspections <span className="add-icon">+</span></h2>
               <div className="table-responsive">
                 <table className="table table-hover">
                   <thead>
@@ -538,7 +538,7 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
             { number: 2, title: 'Facility Ownership', key: 'facilityOwnership' },
             { number: 3, title: 'Employee Registration', key: 'employeeRegistration' },
             { number: 4, title: 'Services Offered', key: 'servicesOffered' },
-            { number: 5, title: 'Inspection Schedule', key: 'inspectionSchedule' }
+            { number: 5, title: 'Facility Inspections', key: 'inspectionSchedule' }
           ].map((step, index) => {
             // Determine if the tab should be disabled
             const isDisabled = !completeApplicationStatus && step.key !== 'completeApplication';

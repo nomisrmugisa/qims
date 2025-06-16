@@ -45,38 +45,48 @@
     display: flex;
     flex: 1;
     min-height: calc(100vh - 60px);
-    background-color: #f5f5f5;
+    background-color: #ffffff;
 }
 
 .dashboard-sidebar {
     width: 250px;
-    background-color: #ffffff;
+    background-color: #e8e8e8;
     padding: 20px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
     height: 100%;
+    border-right: 1px solid #d0d0d0;
+    position: relative;
+    z-index: 10;
 }
 
 .dashboard-sidebar button {
     width: 100%;
     padding: 12px 20px;
-    margin: 8px 0;
-    border: none;
-    background-color: transparent;
+    margin: 10px 0;
+    border: 1px solid #c0c0c0;
+    background-color: #dddddd;
     text-align: left;
     font-size: 16px;
-    color: #333;
+    color: #222;
+    font-weight: 500;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 6px;
     transition: all 0.3s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .dashboard-sidebar button:hover {
-    background-color: #f0f0f0;
+    background-color: #cccccc;
+    border-color: #aaaaaa;
+    transform: translateY(-1px);
 }
 
 .dashboard-sidebar button.active {
     background-color: #1977cc;
     color: white;
+    border-color: #1565b0;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
 }
 
 .dashboard-sidebar button.employee-registration-btn {
@@ -97,11 +107,28 @@
 }
 
 .dashboard-content {
+    flex: 1;
     padding: 20px;
-    flex-grow: 1;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow-y: auto;
+}
+
+/* Add a divider between sidebar sections if needed */
+.dashboard-sidebar .section-divider {
+    height: 1px;
+    background-color: #c0c0c0;
+    margin: 15px 0;
+    width: 100%;
+}
+
+/* Sidebar header styling */
+.dashboard-sidebar-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #1977cc;
+    font-weight: 600;
+    color: #333333;
+    font-size: 18px;
 }
 
 .dashboard-section {
@@ -180,4 +207,98 @@
 .dashboard-loading-container p {
     font-size: 1.2em;
     color: #555;
+}
+
+/* Facility Inspections Styles */
+.inspections-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+}
+
+.inspections-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.action-button {
+    background-color: #1977cc;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.action-button:hover {
+    background-color: #1565b0;
+}
+
+.inspections-table-container {
+    overflow-x: auto;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    min-width: 80px;
+}
+
+.status-badge.completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.scheduled {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.btn-view, .btn-edit, .btn-cancel {
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 5px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-view {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-edit {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-cancel {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-view:hover {
+    background-color: #5a6268;
+}
+
+.btn-edit:hover {
+    background-color: #218838;
+}
+
+.btn-cancel:hover {
+    background-color: #c82333;
 } 

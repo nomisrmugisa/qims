@@ -106,7 +106,8 @@ function RegistrationForm() {
         accountExpiry: null,
         userRoles: [{ id: "aOxLneGCVvO" }],
         organisationUnits: [{ id: "OVpBNoteQ2Y" }],
-        twitter: formData.dhisRegistrationCode
+        twitter: formData.dhisRegistrationCode,
+        phoneNumber: formData.cellNumber
       };
 
       const userResponse = await fetch(`${API_URL}/api/40/users`, {
