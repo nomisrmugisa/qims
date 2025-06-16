@@ -41,6 +41,7 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
   const [selectedOrgUnit, setSelectedOrgUnit] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFormComplete, setIsFormComplete] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,7 +56,7 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
           return;
         }
         
-        // Fetch user data to get the twitter value (DHIS2 Registration Code)
+        // Fetch user data to get the twitter value (DHIS2 Application Code)
         const meResponse = await fetch('/api/me', {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -71,12 +72,15 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
         const userData = await meResponse.json();
         console.log('User data:', userData);
         
-        // Get the DHIS2 Registration Code from twitter field
-        const registrationCode = userData.twitter;
+        // Store the user data for reference
+        setUserData(userData);
         
-        if (!registrationCode) {
-          console.log('No registration code found in user data');
-          // Fall back to dummy data if no registration code is found
+        // Get the DHIS2 Application Code from twitter field
+        const applicationCode = userData.twitter;
+        
+        if (!applicationCode) {
+          console.log('No application code found in user data');
+          // Fall back to dummy data if no application code is found
           setDummyData();
           return;
         }
@@ -84,7 +88,7 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
         // Try to fetch events using the direct endpoint with twitter value
         try {
           // Use the specified endpoint: /api/events/{twitter}
-          const eventsUrl = `/api/events/${registrationCode}`;
+          const eventsUrl = `/api/events/${applicationCode}`;
           
           const eventsResponse = await fetch(eventsUrl, {
             headers: {
@@ -121,11 +125,12 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
             checkFormCompletion(initialFormValues);
             
             setLoading(false);
+            setUserData(userData);
             return;
           }
           
           // If no event data found, fall back to dummy data
-          throw new Error('No event data found with the provided registration code');
+          throw new Error('No event data found with the provided application code');
           
         } catch (eventError) {
           console.error('Error fetching event data:', eventError);
@@ -427,7 +432,7 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
       <Box sx={{ mt: 2 }}>
         <Typography color="error">Error: {error}</Typography>
         <Typography variant="body2" mt={1}>
-          Please ensure you have completed the application process and have a valid DHIS2 Registration Code.
+          Please ensure you have completed the application process and have a valid DHIS2 Application Code.
         </Typography>
       </Box>
     );
@@ -489,7 +494,7 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <TextField
-                label="B.H.P.C Registration Number"
+                label="B.H.P.C License Number"
                 value={getDataValue('SVzSsDiZMN5')}
                 fullWidth
                 size="small"
@@ -505,6 +510,21 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
                 size="small"
                 margin="dense"
                 InputProps={{ readOnly: true }}
+              />
+            </Grid>
+            {/* Hidden DHIS2 Application Code field */}
+            <Grid item xs={12}>
+              <TextField
+                label="DHIS2 Application Code"
+                value={userData?.twitter || ''}
+                fullWidth
+                size="small"
+                margin="dense"
+                InputProps={{ readOnly: true }}
+                sx={{ 
+                  display: 'none', // Hidden by default
+                  '& .MuiInputBase-input': { fontFamily: 'monospace' } 
+                }}
               />
             </Grid>
           </Grid>
@@ -562,7 +582,7 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Name of Facility to be Registered"
+                label="Name of Facility for Application"
                 value={formValues['PdtizqOqE6Q'] || ''}
                 onChange={(e) => handleChange(e, 'PdtizqOqE6Q')}
                 fullWidth

@@ -87,6 +87,7 @@ const LoginModal = ({ show, onClose, onLogin }) => {
           localStorage.setItem("userOrgUnitId", data.organisationUnits[0].id);
           localStorage.setItem("userOrgUnitName", data.organisationUnits[0].displayName);
           localStorage.setItem("userCredentials", credentials);
+          localStorage.setItem("username", username); // Save username for display in header
           if (rememberMe) {
             localStorage.setItem("rememberMe", "true");
           } else {

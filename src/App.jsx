@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Main from './components/Main';
 import Footer from './components/Footer';
@@ -12,10 +12,27 @@ import './App.css'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading state
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [activeDashboardSection, setActiveDashboardSection] = useState('overview');
   const navigate = useNavigate();
+
+  // Check for existing credentials on app load
+  useEffect(() => {
+    const checkExistingLogin = () => {
+      const credentials = localStorage.getItem('userCredentials');
+      const rememberMe = localStorage.getItem('rememberMe');
+      
+      if (credentials && rememberMe) {
+        setIsLoggedIn(true);
+        navigate('/dashboards/facility-ownership');
+      }
+      
+      setIsLoading(false); // Finish initial loading regardless of login state
+    };
+    
+    checkExistingLogin();
+  }, [navigate]);
 
   const handleLogin = (status) => {
     setIsLoading(true);

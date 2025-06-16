@@ -1,8 +1,56 @@
 // components/Header.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './Header.css';
 
 const Header = ({ onLoginClick, isLoggedIn, onLogout, activeDashboardSection, setActiveDashboardSection }) => {
+  const [orgUnitName, setOrgUnitName] = useState('');
+
+  useEffect(() => {
+    // Get organization unit name when component mounts or isLoggedIn changes
+    if (isLoggedIn) {
+      const fetchOrgUnitName = async () => {
+        try {
+          const credentials = localStorage.getItem('userCredentials');
+          if (!credentials) {
+            console.error('No credentials found in localStorage');
+            return;
+          }
+
+          const response = await fetch('/api/me?fields=organisationUnits[displayName]', {
+            headers: {
+              Authorization: `Basic ${credentials}`
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.organisationUnits && data.organisationUnits.length > 0) {
+              setOrgUnitName(data.organisationUnits[0].displayName);
+              // Also store in localStorage for future use
+              localStorage.setItem('userOrgUnitName', data.organisationUnits[0].displayName);
+            }
+          } else {
+            console.error('Failed to fetch organization unit data');
+            // Fallback to stored value if API call fails
+            const storedOrgUnitName = localStorage.getItem('userOrgUnitName');
+            if (storedOrgUnitName) {
+              setOrgUnitName(storedOrgUnitName);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching organization unit data:', error);
+          // Fallback to stored value if API call fails
+          const storedOrgUnitName = localStorage.getItem('userOrgUnitName');
+          if (storedOrgUnitName) {
+            setOrgUnitName(storedOrgUnitName);
+          }
+        }
+      };
+
+      fetchOrgUnitName();
+    }
+  }, [isLoggedIn]);
+
   return (
     <header id="header" className="header sticky-top">
       <div className="topbar d-flex align-items-center">
@@ -15,11 +63,19 @@ const Header = ({ onLoginClick, isLoggedIn, onLogout, activeDashboardSection, se
               <span>+267 363 2500</span>
             </i>
           </div>
-          <div className="social-links d-none d-md-flex align-items-center">
-            <a href="#" className="twitter"><i className="bi bi-twitter-x"></i></a>
-            <a href="#" className="facebook"><i className="bi bi-facebook"></i></a>
-            <a href="#" className="instagram"><i className="bi bi-instagram"></i></a>
-            <a href="#" className="linkedin"><i className="bi bi-linkedin"></i></a>
+          <div className="d-flex align-items-center">
+            {isLoggedIn && (
+              <div className="logged-in-message me-3">
+                <i className="bi bi-building me-1"></i>
+                <span>Facility: {orgUnitName || 'Loading...'}</span>
+              </div>
+            )}
+            <div className="social-links d-none d-md-flex align-items-center">
+              <a href="#" className="twitter"><i className="bi bi-twitter-x"></i></a>
+              <a href="#" className="facebook"><i className="bi bi-facebook"></i></a>
+              <a href="#" className="instagram"><i className="bi bi-instagram"></i></a>
+              <a href="#" className="linkedin"><i className="bi bi-linkedin"></i></a>
+            </div>
           </div>
         </div>
       </div>
@@ -32,7 +88,7 @@ const Header = ({ onLoginClick, isLoggedIn, onLogout, activeDashboardSection, se
 
           <nav id="navmenu" className="navmenu">
             <ul>
-              <li><a href="#registration" className={activeDashboardSection === 'registration' ? 'active' : ''} onClick={() => setActiveDashboardSection('registration')}>Complete Registration</a></li>
+              <li><a href="#registration" className={activeDashboardSection === 'registration' ? 'active' : ''} onClick={() => setActiveDashboardSection('registration')}>Complete Application</a></li>
               <li><a href="#overview" className={activeDashboardSection === 'overview' ? 'active' : ''} onClick={() => setActiveDashboardSection('overview')}>Overview</a></li>
               <li><a href="#reports" className={activeDashboardSection === 'reports' ? 'active' : ''} onClick={() => setActiveDashboardSection('reports')}>Report</a></li>
               <li><a href="#tasks" className={activeDashboardSection === 'tasks' ? 'active' : ''} onClick={() => setActiveDashboardSection('tasks')}>Tasks</a></li>
@@ -70,7 +126,7 @@ const Header = ({ onLoginClick, isLoggedIn, onLogout, activeDashboardSection, se
             <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
           </nav>
 
-          <a className="cta-btn d-none d-sm-block" href="#Registration">Register</a>
+          <a className="cta-btn d-none d-sm-block" href="#Registration">Apply</a>
         </div>
       </div>
     </header>

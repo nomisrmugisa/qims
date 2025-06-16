@@ -138,13 +138,13 @@ const Main = () => {
         </div>
       </section>
 
-{/* Registration Section */}
+{/* Application Section */}
 <section id="Registration" className="Registration section">
 
 {/* Section Title */}
 <div className="container section-title" data-aos="fade-up">
-  <h2>Request To Register Your Facility</h2>
-  <p>Register your health facility to begin the licensing process</p>
+  <h2>Apply to Register your Facility</h2>
+  <p>Apply for your health facility to begin the licensing process</p>
 </div>{/* End Section Title */}
 
 <div className="container" data-aos="fade-up" data-aos-delay="100">
@@ -153,7 +153,7 @@ const Main = () => {
   </div>
 </div>
 
-</section>{/* /Registration Section */}
+</section>{/* /Application Section */}
 
       {/* About Section */}
       <section id="about" className="about section">

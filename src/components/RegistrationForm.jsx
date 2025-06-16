@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -7,146 +7,174 @@ import {
   Button,
   TextField,
   IconButton,
-  Grid,
   Box,
   Snackbar,
   Backdrop,
   CircularProgress,
   Typography,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  Autocomplete
+  Alert,
+  Stack,
+  Dialog as ErrorDialog,
+  DialogContent as ErrorDialogContent,
+  DialogTitle as ErrorDialogTitle,
+  DialogActions as ErrorDialogActions
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { API_URL } from '../config'; // Import API_URL
-
-// Debounce utility function
-const debounce = (func, delay) => {
-  let timeout;
-  return function(...args) {
-    const context = this;
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(context, args), delay);
-  };
-};
 
 function RegistrationForm() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
+  const [userCreatedMessage, setUserCreatedMessage] = useState(false);
+  const [registrationSubmittedMessage, setRegistrationSubmittedMessage] = useState(false);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const credentials = 'YWRtaW46NUFtNTM4MDgwNTNA';
-  const [organisationalUnits, setOrganisationalUnits] = useState([]);
-  const [isLoadingOrgUnits, setIsLoadingOrgUnits] = useState(true);
-  const [filteredOrgUnits, setFilteredOrgUnits] = useState([]);
 
   // Define a default password for new users
   const DEFAULT_PASSWORD = "selfRegistration@123$";
 
-  useEffect(() => {
-    // Credentials are now hardcoded as requested, no need to retrieve from localStorage
-    // const storedCredentials = localStorage.getItem('userCredentials');
-    // if (storedCredentials) {
-    //   setCredentials(storedCredentials);
-    // }
-
-    const fetchOrganisationalUnits = async () => {
-      try {
-        const response = await fetch(
-          `${API_URL}/api/organisationUnits.json?filter=level:eq:4&fields=id,displayName&paging=false`,
-          {
-            headers: {
-              Authorization: `Basic ${credentials}`,
-            },
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch organisational units");
-        }
-        const data = await response.json();
-        setOrganisationalUnits(data.organisationUnits);
-        setFilteredOrgUnits(data.organisationUnits);
-      } catch (error) {
-        console.error("Error fetching organisational units:", error);
-      } finally {
-        setIsLoadingOrgUnits(false);
-      }
-    };
-
-    fetchOrganisationalUnits();
-  }, [credentials]);
-
   const [formData, setFormData] = useState({
-    facility: "",
-    physicalAddress: "",
-    correspondenceAddress: "",
     BHPCRegistrationNumber: "",
-    privatePracticeNumber: "",
-    attachments: null,
-    email: "",
-    firstName: "",
-    surname: "",
     cellNumber: "",
-    locationInBotswana: "",
-    userName: ""
+    userName: "",
+    dhisRegistrationCode: ""
   });
 
+  // Function to generate a valid DHIS2 standard UID
+  const generateDhis2Uid = () => {
+    // DHIS2 UIDs are 11 characters
+    const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let uid = '';
+    
+    // First character should be a letter (DHIS2 convention)
+    uid += alphabet[Math.floor(Math.random() * 52)]; // Only letters for first char
+    
+    // Generate the remaining 10 characters (can be letters or numbers)
+    for (let i = 0; i < 10; i++) {
+      uid += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+    
+    return uid;
+  };
+
   const handleClickOpen = () => {
+    // Generate a new DHIS2 UID when the form is opened
+    setFormData(prev => ({
+      ...prev,
+      dhisRegistrationCode: generateDhis2Uid()
+    }));
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
+    // Reset all message states when closing the dialog
+    setSuccessOpen(false);
+    setUserCreatedMessage(false);
+    setRegistrationSubmittedMessage(false);
   };
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === "attachments" ? files[0] : value
+      [name]: value
     }));
   };
 
-  const debouncedSearch = useCallback(
-    debounce((query) => {
-      const filtered = organisationalUnits.filter((unit) =>
-        unit.displayName.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredOrgUnits(filtered);
-    }, 300),
-    [organisationalUnits]
-  );
+  // Handle closing individual snackbars
+  const handleUserCreatedClose = () => setUserCreatedMessage(false);
+  const handleRegistrationSubmittedClose = () => setRegistrationSubmittedMessage(false);
+  const handleSuccessClose = () => setSuccessOpen(false);
 
-  const handleSearchChange = (event, value) => {
-    debouncedSearch(value);
+  const closeErrorDialog = () => {
+    setErrorDialogOpen(false);
   };
 
   const handleSubmit = async () => {
     setLoading(true);
 
     try {
-      // 1. Submit Registration Data (Tracker Event)
+      // 1. Create User Profile (switched to be first)
+      const userPayload = {
+        username: formData.userName,
+        surname: "Place-Holder",
+        firstName: "Place-Holder",
+        password: "selfRegistration@123$",
+        accountExpiry: null,
+        userRoles: [{ id: "aOxLneGCVvO" }],
+        organisationUnits: [{ id: "OVpBNoteQ2Y" }],
+        twitter: formData.dhisRegistrationCode
+      };
+
+      const userResponse = await fetch(`${API_URL}/api/40/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${credentials}`,
+        },
+        body: JSON.stringify(userPayload),
+      });
+
+      if (!userResponse.ok) {
+        const errorText = await userResponse.text();
+        let errorData;
+        
+        try {
+          // Try to parse the error response as JSON
+          errorData = JSON.parse(errorText);
+          
+          // Check if it's a username already exists error
+          if (errorData.httpStatusCode === 409 && 
+              errorData.response && 
+              errorData.response.errorReports && 
+              errorData.response.errorReports.length > 0 &&
+              errorData.response.errorReports[0].errorCode === "E4054" &&
+              errorData.response.errorReports[0].errorProperty === "username") {
+            
+            // Extract the username from the error message
+            const usernameMatch = errorData.response.errorReports[0].errorProperties && 
+                                errorData.response.errorReports[0].errorProperties.length >= 2 ? 
+                                errorData.response.errorReports[0].errorProperties[1] : 
+                                formData.userName;
+            
+            setErrorMessage(`User with username "${usernameMatch}" already exists. Please choose a different username.`);
+            setErrorDialogOpen(true);
+            setLoading(false);
+            return; // Stop the submission process
+          }
+          
+          // For any other errors, throw the original error
+          throw new Error(`Failed to create user profile: ${errorText}`);
+        } catch (parseError) {
+          // If JSON parsing fails, throw the original error text
+          throw new Error(`Failed to create user profile: ${errorText}`);
+        }
+      }
+      const userData = await userResponse.json();
+      const userId = userData.response.uid;
+      console.log("User profile created successfully! User ID:", userId);
+      
+      // Show user created success message
+      setUserCreatedMessage(true);
+
+      // 2. Submit Registration Data (Tracker Event) (now second)
       const trackerPayload = {
         events: [
           {
+            event: formData.dhisRegistrationCode, // Use DHIS2 Registration Code as the eventID
             occurredAt: new Date().toISOString().split('T')[0],
             notes: [],
             program: "Y4W5qIKlOsh",
             programStage: "YzqtE5Uv8Qd",
-            orgUnit: formData.locationInBotswana, // Use selected org unit
+            orgUnit: "OVpBNoteQ2Y", // Match the org unit used in user creation
             dataValues: [
-              { dataElement: "ykwhsQQPVH0", value: formData.surname },
-              { dataElement: "p7y0vqpP0W2", value: formData.correspondenceAddress },
-              { dataElement: "HMk4LZ9ESOq", value: formData.firstName },
-              { dataElement: "VJzk8OdFJKA", value: formData.locationInBotswana },
-              { dataElement: "D707dj4Rpjz", value: formData.facility },
-              { dataElement: "dRkX5jmHEIM", value: formData.physicalAddress },
               { dataElement: "SReqZgQk0RY", value: formData.cellNumber },
-              { dataElement: "NVlLoMZbXIW", value: formData.email },
               { dataElement: "SVzSsDiZMN5", value: formData.BHPCRegistrationNumber },
-              { dataElement: "aMFg2iq9VIg", value: formData.privatePracticeNumber },
-              { dataElement: "g3J1CH26hSA", value: formData.userName }
+              { dataElement: "g3J1CH26hSA", value: formData.userName },
+              { dataElement: "EAi89g7IBjp", value: formData.dhisRegistrationCode }
             ]
           }
         ]
@@ -169,55 +197,14 @@ function RegistrationForm() {
         throw new Error(`Failed to submit registration: ${errorText}`);
       }
       console.log("Tracker event submitted successfully!");
+      
+      // Show registration submitted success message
+      setRegistrationSubmittedMessage(true);
 
-      // 2. Create User Profile
-      const accountExpiryDate = new Date();
-      accountExpiryDate.setFullYear(accountExpiryDate.getFullYear() + 1);
-
-      const userPayload = {
-        username: formData.userName,
-        disabled: false,
-        password: DEFAULT_PASSWORD,
-        accountExpiry: accountExpiryDate.toISOString().split('T')[0],
-        userRoles: [{ id: "aOxLneGCVvO" }], // Your DHIS2 user role ID
-        organisationUnits: [{ id: formData.locationInBotswana }], // Use selected org unit
-        email: formData.email,
-        firstName: formData.firstName,
-        surname: formData.surname,
-        phoneNumber: formData.cellNumber,
-        // Other optional fields as per your spec, if needed:
-        // whatsApp: "", 
-        // twitter: "",
-        // catDimensionConstraints: [],
-        // cogsDimensionConstraints: [],
-        // dataViewOrganisationUnits: [],
-        // teiSearchOrganisationUnits: [],
-        // dataViewMaxOrganisationUnitLevel: null,
-        // userGroups: [],
-        // attributeValues: []
-      };
-
-      const userResponse = await fetch(`${API_URL}/api/40/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${credentials}`,
-        },
-        body: JSON.stringify(userPayload),
-      });
-
-      if (!userResponse.ok) {
-        const errorText = await userResponse.text();
-        throw new Error(`Failed to create user profile: ${errorText}`);
-      }
-      const userData = await userResponse.json();
-      const userId = userData.response.uid;
-      console.log("User profile created successfully! User ID:", userId);
-
-      // 3. Send Welcome Email
+      // 3. Send Welcome Email (remains third)
       const emailPayload = {
         subject: "Welcome to the System",
-        text: `Hello ${formData.firstName},\n\nYour account has been created.\n\nUsername: ${formData.userName}\nPassword: ${DEFAULT_PASSWORD}\n\nPlease log in and change your password.`,
+        text: `Hello User,\n\nYour account has been created.\n\nUsername: ${formData.userName}\nPassword: ${DEFAULT_PASSWORD}\n\nPlease log in and change your password.`,
         users: [{ id: userId }],
         email: true
       };
@@ -237,18 +224,22 @@ function RegistrationForm() {
       }
       console.log("Welcome email sent successfully!");
 
+      // Show final success message and close dialog after delay
       setSuccessOpen(true);
       setTimeout(() => {
         handleClose();
       }, 4000);
     } catch (err) {
       console.error("Submission error:", err);
-      alert(`There was an error submitting your request: ${err.message}`);
+      // For errors not handled specifically above
+      if (!errorDialogOpen) {
+        alert(`There was an error submitting your request: ${err.message}`);
+      }
     } finally {
       setLoading(false);
     }
   };
-
+  
   return (
     <>
       <Button variant="contained" onClick={handleClickOpen}>
@@ -262,7 +253,7 @@ function RegistrationForm() {
         fullWidth
       >
         <DialogTitle sx={{ m: 0, p: 2, fontWeight: "bold", textAlign: "left" }}>
-          Registration Form
+          Application Form
           <IconButton
             aria-label="close"
             onClick={handleClose}
@@ -278,70 +269,6 @@ function RegistrationForm() {
         </DialogTitle>
 
         <DialogContent dividers sx={{ px: 4 }}>
-          {/* Facility Profile Section */}
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Facility Profile
-          </Typography>
-          <Box sx={{ mb: 3 }}>
-            <TextField
-              fullWidth
-              label="Facility Name"
-              name="facility"
-              value={formData.facility}
-              onChange={handleChange}
-              variant="outlined"
-              margin="dense"
-              required
-              InputLabelProps={{
-                sx: {
-                  "& .MuiFormLabel-asterisk": {
-                    color: "red",
-                  },
-                },
-              }}
-            />
-
-            <Autocomplete
-              fullWidth
-              options={filteredOrgUnits}
-              getOptionLabel={(option) => option.displayName}
-              value={organisationalUnits.find((ou) => ou.id === formData.locationInBotswana) || null}
-              onChange={(event, newValue) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  locationInBotswana: newValue ? newValue.id : ""
-                }));
-              }}
-              onInputChange={handleSearchChange}
-              loading={isLoadingOrgUnits}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Location in Botswana (Ward)"
-                  variant="outlined"
-                  margin="dense"
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {isLoadingOrgUnits ? <CircularProgress color="inherit" size={20} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                  required
-                  InputLabelProps={{
-                    sx: {
-                      "& .MuiFormLabel-asterisk": {
-                        color: "red",
-                      },
-                    },
-                  }}
-                />
-              )}
-            />
-          </Box>
-
           {/* User Profile Section */}
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mt: 4 }}>
             User Profile
@@ -365,98 +292,6 @@ function RegistrationForm() {
               }}
             />
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="First Name"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  variant="outlined"
-                  margin="dense"
-                  required
-                  InputLabelProps={{
-                    sx: {
-                      "& .MuiFormLabel-asterisk": {
-                        color: "red",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Surname"
-                  name="surname"
-                  value={formData.surname}
-                  onChange={handleChange}
-                  variant="outlined"
-                  margin="dense"
-                  required
-                  InputLabelProps={{
-                    sx: {
-                      "& .MuiFormLabel-asterisk": {
-                        color: "red",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-            </Grid>
-
-            <TextField
-              fullWidth
-              label="Physical Address"
-              name="physicalAddress"
-              value={formData.physicalAddress}
-              onChange={handleChange}
-              variant="outlined"
-              margin="dense"
-              required
-              InputLabelProps={{
-                sx: {
-                  "& .MuiFormLabel-asterisk": {
-                    color: "red",
-                  },
-                },
-              }}
-            />
-            <TextField
-              fullWidth
-              label="Correspondence Address (Town/Village)"
-              name="correspondenceAddress"
-              value={formData.correspondenceAddress}
-              onChange={handleChange}
-              variant="outlined"
-              margin="dense"
-              required
-              InputLabelProps={{
-                sx: {
-                  "& .MuiFormLabel-asterisk": {
-                    color: "red",
-                  },
-                },
-              }}
-            />
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              variant="outlined"
-              margin="dense"
-              required
-              InputLabelProps={{
-                sx: {
-                  "& .MuiFormLabel-asterisk": {
-                    color: "red",
-                  },
-                },
-              }}
-            />
             <TextField
               fullWidth
               label="Phone Number"
@@ -477,7 +312,7 @@ function RegistrationForm() {
 
             <TextField
               fullWidth
-              label="B H.P.C Registration Number"
+              label="B.H.P.C License Number"
               name="BHPCRegistrationNumber"
               value={formData.BHPCRegistrationNumber}
               onChange={handleChange}
@@ -492,11 +327,12 @@ function RegistrationForm() {
                 },
               }}
             />
+
             <TextField
               fullWidth
-              label="Private Practice Number"
-              name="privatePracticeNumber"
-              value={formData.privatePracticeNumber}
+              label="DHIS2-Registration CODE"
+              name="dhisRegistrationCode"
+              value={formData.dhisRegistrationCode}
               onChange={handleChange}
               variant="outlined"
               margin="dense"
@@ -510,26 +346,7 @@ function RegistrationForm() {
               }}
             />
 
-            {/* Attachments Field */}
-            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Button
-                variant="outlined"
-                component="label"
-                htmlFor="attachments-upload"
-              >
-                Choose File
-                <input
-                  id="attachments-upload"
-                  type="file"
-                  name="attachments"
-                  hidden
-                  onChange={handleChange}
-                />
-              </Button>
-              <Typography variant="body2" color="textSecondary">
-                {formData.attachments ? formData.attachments.name : 'No file chosen'}
-              </Typography>
-            </Box>
+            {/* File upload section removed */}
           </Box>
         </DialogContent>
 
@@ -550,17 +367,74 @@ function RegistrationForm() {
               },
             }}
           >
-            Register
+            Apply
           </Button>
         </DialogActions>
       </Dialog>
 
+      {/* Error dialog for user already exists */}
+      <ErrorDialog 
+        open={errorDialogOpen}
+        onClose={closeErrorDialog}
+        aria-labelledby="error-dialog-title"
+        aria-describedby="error-dialog-description"
+      >
+        <ErrorDialogTitle id="error-dialog-title">
+          User Already Exists
+        </ErrorDialogTitle>
+        <ErrorDialogContent>
+          <Typography variant="body1">
+            {errorMessage}
+          </Typography>
+        </ErrorDialogContent>
+        <ErrorDialogActions>
+          <Button onClick={closeErrorDialog} color="primary" autoFocus>
+            OK
+          </Button>
+        </ErrorDialogActions>
+      </ErrorDialog>
+
+      {/* Success messages */}
+      <Snackbar
+        open={userCreatedMessage}
+        autoHideDuration={4000}
+        onClose={handleUserCreatedClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          severity="success" 
+          sx={{ mt: 2 }}
+        >
+          User profile created successfully!
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={registrationSubmittedMessage}
+        autoHideDuration={4000}
+        onClose={handleRegistrationSubmittedClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          severity="success" 
+          sx={{ mt: 2 }}
+        >
+          Registration data submitted successfully!
+        </Alert>
+      </Snackbar>
+
       <Snackbar
         open={successOpen}
         autoHideDuration={8000}
-        onClose={() => setSuccessOpen(false)}
-        message="Registration successful. Please check your email for login details."
-      />
+        onClose={handleSuccessClose}
+      >
+        <Alert 
+          severity="success" 
+          sx={{ mt: 2 }}
+        >
+          Application successful. Please check your email for login details.
+        </Alert>
+      </Snackbar>
 
       <Backdrop open={loading} sx={{ zIndex: 9999, color: "#fff" }}>
         <CircularProgress color="inherit" />

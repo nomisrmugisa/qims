@@ -4,21 +4,22 @@
 }
 
 .topbar {
-    background: #fff;
+    background: #1977cc;
     border-bottom: 1px solid #eee;
     font-size: 14px;
     padding: 0;
+    color: white;
 }
 
 .topbar .contact-info i {
     font-style: normal;
-    color: #444444;
+    color: white;
 }
 
 .topbar .contact-info i a,
 .topbar .contact-info i span {
     padding-left: 5px;
-    color: #444444;
+    color: white;
 }
 
 .topbar .contact-info i a {
@@ -27,11 +28,11 @@
 }
 
 .topbar .contact-info i a:hover {
-    color: #1977cc;
+    color: #e0e0e0;
 }
 
 .topbar .social-links a {
-    color: #444444;
+    color: white;
     padding: 4px 12px;
     display: inline-block;
     line-height: 1px;
@@ -39,7 +40,29 @@
 }
 
 .topbar .social-links a:hover {
-    color: #1977cc;
+    color: #e0e0e0;
+}
+
+.logged-in-message {
+    color: white;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    max-width: 300px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.logged-in-message i {
+    margin-right: 5px;
+    font-size: 16px;
+}
+
+.logged-in-message span {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .branding {

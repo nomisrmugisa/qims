@@ -145,7 +145,7 @@ const Dashboard = ({ activeSection, setActiveSection }) => {
                         onClick={() => setActiveSection('registration')}
                         className={activeSection === 'registration' ? 'active' : ''}
                     >
-                        Complete Registration
+                        Complete Application
                     </button>
                     <button
                         onClick={() => setActiveSection('reports')}
