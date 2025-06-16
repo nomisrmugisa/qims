@@ -340,7 +340,7 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
   
         const data = await response.json();
         const orgUnit = data.organisationUnits.find(
-          unit => unit.displayName === formValues['VJzk8OdFJKA']
+          unit => unit.displayName.trim() === formValues['VJzk8OdFJKA'].trim() // Trim both values
         );
   
         if (orgUnit) {
@@ -372,13 +372,15 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
         ? formValues['PdtizqOqE6Q'].substring(0, 40)
         : formValues['PdtizqOqE6Q'];
 
+      console.log(`PARENT ID: ${parentOrgUnitId}`)
+
       const orgUnitPayload = {
         name: formValues['PdtizqOqE6Q'],
         id: orgUnitId,
         shortName: shortName,
         openingDate: new Date().toISOString(),
         parent: {
-          id: 'X3IhTM32mOn'
+          id: parentOrgUnitId
         }
       };
 
@@ -671,7 +673,7 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
             // { dataElement: 'p7y0vqpP0W2', value: formValues['p7y0vqpP0W2'] || '' }, // correspondenceAddress
             { dataElement: 'SVzSsDiZMN5', value: formValues['SVzSsDiZMN5']?.trim() || '' }, // bhpcNumber
             { dataElement: 'aMFg2iq9VIg', value: formValues['aMFg2iq9VIg']?.trim() || '' }, // privatePracticeNumber
-            { dataElement: 'VJzk8OdFJKA', value: 'X3IhTM32mOn' || '' }, // location
+            { dataElement: 'VJzk8OdFJKA', value: parentOrgUnitId || '' }, // location
             // { dataElement: "PdtizqOqE6Q", value: formValues['PdtizqOqE6Q'] || '' }, // tei
             { dataElement: "g3J1CH26hSA", value: formValues['g3J1CH26hSA']?.trim() || '' }, // employeeUsername
             { dataElement: "jV5Y8XOfkgb", value: "true" },
