@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, AppBar, Toolbar, Container, Button, IconButton
 } from '@mui/material';
+import { Link, useLocation } from 'react-router-dom';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import TwitterIcon from '@mui/icons-material/Twitter';
@@ -13,6 +14,20 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import mohBotsLogo from 'assets/logo/moh-bots-log.jpg';
 
 const MinistryHeader = () => {
+  const location = useLocation();
+  const pathname = location.pathname;
+  
+  // Determine which navigation item is active based on current path
+  const isActive = (path) => {
+    if (path === '/dashboard/default' && pathname === '/dashboard/default') {
+      return true;
+    }
+    if (path !== '/dashboard/default' && pathname.includes(path)) {
+      return true;
+    }
+    return false;
+  };
+
   return (
     <Box sx={{ flexGrow: 1, position: 'fixed', width: '100%', top: 0, zIndex: 1300 }}>
       <AppBar position="static" sx={{ backgroundColor: '#1976d2' }}>
@@ -59,11 +74,74 @@ const MinistryHeader = () => {
           </Box>
           
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, justifyContent: 'center' }}>
-            <Button sx={{ fontWeight: 'bold' }}>Complete Registration</Button>
-            <Button sx={{ fontWeight: 'bold', borderBottom: '2px solid #1976d2' }}>Overview</Button>
-            <Button sx={{ fontWeight: 'bold' }}>Report</Button>
-            <Button sx={{ fontWeight: 'bold' }}>Tasks</Button>
-            <Button endIcon={<KeyboardArrowDownIcon />} sx={{ fontWeight: 'bold' }}>
+            <Button 
+              component={Link} 
+              to="/dashboard/default"
+              sx={{ 
+                fontWeight: 'bold',
+                borderBottom: isActive('/dashboard/default') ? '2px solid #1976d2' : 'none',
+                borderRadius: 0,
+                px: 2
+              }}
+            >
+              Home
+            </Button>
+            <Button 
+              component={Link} 
+              to="/management/requests"
+              sx={{ 
+                fontWeight: 'bold',
+                borderBottom: isActive('/management/requests') ? '2px solid #1976d2' : 'none',
+                borderRadius: 0,
+                px: 2
+              }}
+            >
+              Requests
+            </Button>
+            <Button 
+              component={Link} 
+              to="/management/users/users"
+              sx={{ 
+                fontWeight: 'bold',
+                borderBottom: isActive('/management/users') ? '2px solid #1976d2' : 'none',
+                borderRadius: 0,
+                px: 2
+              }}
+            >
+              Users
+            </Button>
+            <Button 
+              component={Link} 
+              to="/management/inspections"
+              sx={{ 
+                fontWeight: 'bold',
+                borderBottom: isActive('/management/inspections') ? '2px solid #1976d2' : 'none',
+                borderRadius: 0,
+                px: 2
+              }}
+            >
+              Inspections
+            </Button>
+            <Button 
+              component={Link} 
+              to="/management/forms"
+              sx={{ 
+                fontWeight: 'bold',
+                borderBottom: isActive('/management/forms') ? '2px solid #1976d2' : 'none',
+                borderRadius: 0,
+                px: 2
+              }}
+            >
+              Form Management
+            </Button>
+            <Button 
+              endIcon={<KeyboardArrowDownIcon />} 
+              sx={{ 
+                fontWeight: 'bold',
+                borderRadius: 0,
+                px: 2
+              }}
+            >
               Documents Repository
             </Button>
           </Box>

@@ -66,6 +66,61 @@ const GoogleMapComponent = ({ facilities }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
+  
+  // Move addMarkers function outside the useEffect hook to fix the scoping issue
+  const addMarkers = (map, facilities) => {
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
+
+    facilities.forEach(facility => {
+      if (!facility.checked) return; // Only show checked facilities
+
+      const marker = new window.google.maps.Marker({
+        position: { lat: facility.lat, lng: facility.lng },
+        map: map,
+        title: facility.name,
+        icon: getMarkerIcon(facility.type)
+      });
+
+      // Add info window
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `
+          <div>
+            <h4>${facility.name}</h4>
+            <p>Type: ${facility.type.replace('-', ' ')}</p>
+            <p>Region: ${facility.region}</p>
+          </div>
+        `
+      });
+
+      marker.addListener('click', () => {
+        infoWindow.open(map, marker);
+      });
+
+      markersRef.current.push(marker);
+    });
+  };
+  
+  // Helper function to get marker icons
+  const getMarkerIcon = (type) => {
+    const colors = {
+      hospital: '#f44336', // red
+      clinic: '#2196f3',   // blue
+      'health-center': '#4caf50', // green
+      morgue: '#9c27b0'    // purple
+    };
+    
+    return {
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="${colors[type] || '#666'}" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+        </svg>
+      `)}`,
+      scaledSize: new window.google.maps.Size(30, 30),
+      anchor: new window.google.maps.Point(15, 30)
+    };
+  };
 
   useEffect(() => {
     // Load Google Maps API
@@ -97,73 +152,21 @@ const GoogleMapComponent = ({ facilities }) => {
       addMarkers(map, facilities);
     };
 
-    const addMarkers = (map, facilities) => {
-      // Clear existing markers
-      markersRef.current.forEach(marker => marker.setMap(null));
-      markersRef.current = [];
-
-      facilities.forEach(facility => {
-        if (!facility.checked) return; // Only show checked facilities
-
-        const marker = new window.google.maps.Marker({
-          position: { lat: facility.lat, lng: facility.lng },
-          map: map,
-          title: facility.name,
-          icon: getMarkerIcon(facility.type)
-        });
-
-        // Add info window
-        const infoWindow = new window.google.maps.InfoWindow({
-          content: `
-            <div>
-              <h4>${facility.name}</h4>
-              <p>Type: ${facility.type.replace('-', ' ')}</p>
-              <p>Region: ${facility.region}</p>
-            </div>
-          `
-        });
-
-        marker.addListener('click', () => {
-          infoWindow.open(map, marker);
-        });
-
-        markersRef.current.push(marker);
-      });
-    };
-
-    const getMarkerIcon = (type) => {
-      const colors = {
-        hospital: '#f44336', // red
-        clinic: '#2196f3',   // blue
-        'health-center': '#4caf50', // green
-        morgue: '#9c27b0'    // purple
-      };
-      
-      return {
-        url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="${colors[type] || '#666'}" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
-        `)}`,
-        scaledSize: new window.google.maps.Size(30, 30),
-        anchor: new window.google.maps.Point(15, 30)
-      };
-    };
-
     loadGoogleMaps();
 
     return () => {
       // Cleanup markers on unmount
       markersRef.current.forEach(marker => marker.setMap(null));
     };
-  }, []);
+  }, [facilities]); // Add facilities to the dependency array
 
+  // Remove the duplicate useEffect since we've added facilities to the dependency array above
   // Update markers when facilities change
-  useEffect(() => {
-    if (mapInstanceRef.current) {
-      addMarkers(mapInstanceRef.current, facilities);
-    }
-  }, [facilities]);
+  // useEffect(() => {
+  //   if (mapInstanceRef.current) {
+  //     addMarkers(mapInstanceRef.current, facilities);
+  //   }
+  // }, [facilities]);
 
   return (
     <Box 

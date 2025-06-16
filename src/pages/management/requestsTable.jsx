@@ -272,7 +272,9 @@ const RequestsTable = ({ onRowClick, onEditClick }) => {
                                         paddingLeft: '16px',
                                         width: 200
                                     }}>
-                                        {request.dataValues.find(dv => dv.dataElement === 'D707dj4Rpjz')?.value || 'N/A'}
+                                        {request.dataValues.find(dv => dv.dataElement === 'D707dj4Rpjz')?.value === 'Botswana' ? 
+                                        'Application Not Complete' : 
+                                        request.dataValues.find(dv => dv.dataElement === 'D707dj4Rpjz')?.value || 'N/A'}
                                     </TableCell>
 
                                     {/* Surname - ykwhsQQPVH0 */}

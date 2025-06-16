@@ -193,7 +193,9 @@ const Users = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      {user.organisationUnits?.map(ou => ou.displayName).join(', ') || '-'}
+                      {user.organisationUnits?.map(ou => 
+                        ou.displayName === 'Botswana' ? 'Application Not Complete' : ou.displayName
+                      ).join(', ') || '-'}
                     </TableCell>
                     <TableCell>
                       {user.userCredentials?.lastLogin ? 
