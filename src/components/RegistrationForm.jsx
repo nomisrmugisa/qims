@@ -43,7 +43,7 @@ function RegistrationForm() {
     // }
 
     const fetchOrganisationalUnits = async () => {
-      
+
       try {
         const response = await fetch(
           `${API_URL}/api/organisationUnits.json?filter=level:eq:4&fields=id,displayName&paging=false`,
@@ -73,7 +73,8 @@ function RegistrationForm() {
     BHPCRegistrationNumber: "",
     cellNumber: "",
     userName: "",
-    dhisRegistrationCode: ""
+    dhisRegistrationCode: "",
+    email: ""
   });
 
   // Function to generate a valid DHIS2 standard UID
@@ -81,15 +82,15 @@ function RegistrationForm() {
     // DHIS2 UIDs are 11 characters
     const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let uid = '';
-    
+
     // First character should be a letter (DHIS2 convention)
     uid += alphabet[Math.floor(Math.random() * 52)]; // Only letters for first char
-    
+
     // Generate the remaining 10 characters (can be letters or numbers)
     for (let i = 0; i < 10; i++) {
       uid += alphabet[Math.floor(Math.random() * alphabet.length)];
     }
-    
+
     return uid;
   };
 
@@ -141,7 +142,8 @@ function RegistrationForm() {
         userRoles: [{ id: "aOxLneGCVvO" }],
         organisationUnits: [{ id: "OVpBNoteQ2Y" }],
         twitter: formData.dhisRegistrationCode,
-        phoneNumber: formData.cellNumber
+        phoneNumber: formData.cellNumber,
+        email: formData.email
       };
 
       const userResponse = await fetch(`${API_URL}/api/40/users`, {
@@ -156,31 +158,31 @@ function RegistrationForm() {
       if (!userResponse.ok) {
         const errorText = await userResponse.text();
         let errorData;
-        
+
         try {
           // Try to parse the error response as JSON
           errorData = JSON.parse(errorText);
-          
+
           // Check if it's a username already exists error
-          if (errorData.httpStatusCode === 409 && 
-              errorData.response && 
-              errorData.response.errorReports && 
-              errorData.response.errorReports.length > 0 &&
-              errorData.response.errorReports[0].errorCode === "E4054" &&
-              errorData.response.errorReports[0].errorProperty === "username") {
-            
+          if (errorData.httpStatusCode === 409 &&
+            errorData.response &&
+            errorData.response.errorReports &&
+            errorData.response.errorReports.length > 0 &&
+            errorData.response.errorReports[0].errorCode === "E4054" &&
+            errorData.response.errorReports[0].errorProperty === "username") {
+
             // Extract the username from the error message
-            const usernameMatch = errorData.response.errorReports[0].errorProperties && 
-                                errorData.response.errorReports[0].errorProperties.length >= 2 ? 
-                                errorData.response.errorReports[0].errorProperties[1] : 
-                                formData.userName;
-            
+            const usernameMatch = errorData.response.errorReports[0].errorProperties &&
+              errorData.response.errorReports[0].errorProperties.length >= 2 ?
+              errorData.response.errorReports[0].errorProperties[1] :
+              formData.userName;
+
             setErrorMessage(`User with username "${usernameMatch}" already exists. Please choose a different username.`);
             setErrorDialogOpen(true);
             setLoading(false);
             return; // Stop the submission process
           }
-          
+
           // For any other errors, throw the original error
           throw new Error(`Failed to create user profile: ${errorText}`);
         } catch (parseError) {
@@ -191,7 +193,7 @@ function RegistrationForm() {
       const userData = await userResponse.json();
       const userId = userData.response.uid;
       console.log("User profile created successfully! User ID:", userId);
-      
+
       // Show user created success message
       setUserCreatedMessage(true);
 
@@ -209,7 +211,8 @@ function RegistrationForm() {
               { dataElement: "SReqZgQk0RY", value: formData.cellNumber },
               { dataElement: "SVzSsDiZMN5", value: formData.BHPCRegistrationNumber },
               { dataElement: "g3J1CH26hSA", value: formData.userName },
-              { dataElement: "EAi89g7IBjp", value: formData.dhisRegistrationCode }
+              { dataElement: "EAi89g7IBjp", value: formData.dhisRegistrationCode },
+              { dataElement: "NVlLoMZbXIW", value: formData.email }
             ]
           }
         ]
@@ -232,32 +235,35 @@ function RegistrationForm() {
         throw new Error(`Failed to submit registration: ${errorText}`);
       }
       console.log("Tracker event submitted successfully!");
-      
+
       // Show registration submitted success message
       setRegistrationSubmittedMessage(true);
 
       // 3. Send Welcome Email (remains third)
-      const emailPayload = {
-        subject: "Welcome to the System",
-        text: `Hello User,\n\nYour account has been created.\n\nUsername: ${formData.userName}\nPassword: ${DEFAULT_PASSWORD}\n\nPlease log in and change your password.`,
-        users: [{ id: userId }],
-        email: true
-      };
+      try {
+        const emailResponse = await fetch('http://localhost:5002/api/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            username: formData.userName,
+            password: DEFAULT_PASSWORD
+          })
+        });
 
-      const emailResponse = await fetch(`${API_URL}/api/messageConversations`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${credentials}`,
-        },
-        body: JSON.stringify(emailPayload),
-      });
-
-      if (!emailResponse.ok) {
-        const errorText = await emailResponse.text();
-        throw new Error(`Failed to send welcome email: ${errorText}`);
+        if (!emailResponse.ok) {
+          const errorText = await emailResponse.text();
+          console.error("Email sending failed:", errorText);
+          // Don't throw error here - just log it since user is already created
+        } else {
+          console.log("Email sent successfully through proxy");
+        }
+      } catch (emailError) {
+        console.error("Error sending email:", emailError);
+        // Continue even if email fails
       }
-      console.log("Welcome email sent successfully!");
 
       // Show final success message and close dialog after delay
       setSuccessOpen(true);
@@ -274,17 +280,17 @@ function RegistrationForm() {
       setLoading(false);
     }
   };
-  
+
   return (
     <>
       <Button variant="contained" onClick={handleClickOpen}>
         Register
       </Button>
 
-      <Dialog 
-        open={open} 
-        onClose={handleClose} 
-        maxWidth="md" 
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle sx={{ m: 0, p: 2, fontWeight: "bold", textAlign: "left" }}>
@@ -332,6 +338,24 @@ function RegistrationForm() {
               label="Phone Number"
               name="cellNumber"
               value={formData.cellNumber}
+              onChange={handleChange}
+              variant="outlined"
+              margin="dense"
+              required
+              InputLabelProps={{
+                sx: {
+                  "& .MuiFormLabel-asterisk": {
+                    color: "red",
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Email Address"
+              name="email"
+              value={formData.email}
               onChange={handleChange}
               variant="outlined"
               margin="dense"
@@ -408,7 +432,7 @@ function RegistrationForm() {
       </Dialog>
 
       {/* Error dialog for user already exists */}
-      <ErrorDialog 
+      <ErrorDialog
         open={errorDialogOpen}
         onClose={closeErrorDialog}
         aria-labelledby="error-dialog-title"
@@ -436,8 +460,8 @@ function RegistrationForm() {
         onClose={handleUserCreatedClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert 
-          severity="success" 
+        <Alert
+          severity="success"
           sx={{ mt: 2 }}
         >
           User profile created successfully!
@@ -450,8 +474,8 @@ function RegistrationForm() {
         onClose={handleRegistrationSubmittedClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert 
-          severity="success" 
+        <Alert
+          severity="success"
           sx={{ mt: 2 }}
         >
           Registration data submitted successfully!
@@ -463,8 +487,8 @@ function RegistrationForm() {
         autoHideDuration={8000}
         onClose={handleSuccessClose}
       >
-        <Alert 
-          severity="success" 
+        <Alert
+          severity="success"
           sx={{ mt: 2 }}
         >
           Application successful. Please check your email for login details.
