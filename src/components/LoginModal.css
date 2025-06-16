@@ -134,4 +134,19 @@
     margin-top: 0;
 }
 
-/* Add more styles as needed */
+/* 2FA */
+@keyframes blink {
+    0% { border-color: #ff69b4; }
+    50% { border-color: transparent; }
+    100% { border-color: #ff69b4; }
+  }
+  
+  .two-factor-required {
+    animation: blink 1.5s infinite;
+    border: 1px solid #ff69b4;
+  }
+  
+  .login-btn-primary:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }

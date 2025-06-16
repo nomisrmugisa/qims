@@ -304,7 +304,7 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
                   <table className="table table-hover">
                     <thead>
                       <tr>
-                        <th>Report Date</th>
+                        <th>Date</th>
                         <th>Organization Unit</th>
                         <th>First Name</th>
                         <th>Surname</th>

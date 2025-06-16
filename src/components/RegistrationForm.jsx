@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -34,6 +34,40 @@ function RegistrationForm() {
 
   // Define a default password for new users
   const DEFAULT_PASSWORD = "selfRegistration@123$";
+
+  useEffect(() => {
+    // Credentials are now hardcoded as requested, no need to retrieve from localStorage
+    // const storedCredentials = localStorage.getItem('userCredentials');
+    // if (storedCredentials) {
+    //   setCredentials(storedCredentials);
+    // }
+
+    const fetchOrganisationalUnits = async () => {
+      
+      try {
+        const response = await fetch(
+          `${API_URL}/api/organisationUnits.json?filter=level:eq:4&fields=id,displayName&paging=false`,
+          {
+            headers: {
+              Authorization: `Basic ${credentials}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch organisational units");
+        }
+        const data = await response.json();
+        setOrganisationalUnits(data.organisationUnits);
+        setFilteredOrgUnits(data.organisationUnits);
+      } catch (error) {
+        console.error("Error fetching organisational units:", error);
+      } finally {
+        setIsLoadingOrgUnits(false);
+      }
+    };
+
+    fetchOrganisationalUnits();
+  }, [credentials]);
 
   const [formData, setFormData] = useState({
     BHPCRegistrationNumber: "",
