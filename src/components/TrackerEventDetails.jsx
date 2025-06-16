@@ -358,13 +358,15 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
   }, [formValues['VJzk8OdFJKA'], credentials]);
 
   const generate_orgUnitID = () => {
+    const alphabets = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 11; i++) {
+    let result = alphabets.charAt(Math.floor(Math.random() * alphabets.length)); // First character is always an alphabet
+    for (let i = 1; i < 11; i++) {
       result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return result;
   };
+  
 
   const createOrgUnit = async (orgUnitId) => {
     try {
