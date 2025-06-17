@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Button, TextField, Select, MenuItem, InputLabel, FormControl,
   Table, TableBody, TableCell, TableHead, TableRow, Paper, TableContainer,
-  Checkbox, FormControlLabel, CircularProgress, TablePagination, Chip, Tooltip
+  Checkbox, FormControlLabel, CircularProgress, TablePagination, Chip, Tooltip,
+  Modal, Dialog, DialogTitle, DialogContent, DialogActions, Stack
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -17,7 +18,25 @@ const Users = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(50);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [openModal, setOpenModal] = useState(false);
+  const [userRoles, setUserRoles] = useState([]);
 
+  const [newUser, setNewUser] = useState({
+    username: '',
+    email: '',
+    firstName: '',
+    surname: '',
+    password: '',
+    repeatPassword: '',
+    facility: '',
+    userRoles: [], // Changed to array for multiple selection
+    disabled: false
+  });
+
+  const [orgUnits, setOrgUnits] = useState([]);
+  const [passwordError, setPasswordError] = useState('');
+
+  // Fetch users
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -29,7 +48,7 @@ const Users = () => {
       url.searchParams.append('page', page + 1);
       url.searchParams.append('pageSize', rowsPerPage);
       url.searchParams.append('selfRegistered', showSelfRegistrations);
-      
+
       if (searchTerm) {
         url.searchParams.append('query', searchTerm);
       }
@@ -44,7 +63,7 @@ const Users = () => {
       });
 
       if (!response.ok) throw new Error('Failed to fetch users');
-      
+
       const data = await response.json();
       setUsers(data.users || []);
       setTotalUsers(data.pager?.total || 0);
@@ -55,8 +74,46 @@ const Users = () => {
     }
   };
 
+  // Fetch user roles for dropdown
+  const fetchUserRoles = async () => {
+    try {
+      const response = await fetch('http://localhost:5002/api/40/userRoles', {
+        headers: {
+          'Authorization': 'Basic ' + btoa('admin:district')
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch user roles');
+      const data = await response.json();
+      setUserRoles(data.userRoles || []);
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchUserRoles();
+  }, [page, rowsPerPage, searchTerm, showSelfRegistrations, orgUnitFilter]);
+
+  const fetchOrgUnits = async () => {
+    try {
+      const response = await fetch('http://localhost:5002/api/40/organisationUnits?fields=id,displayName,path&paging=false', {
+        headers: {
+          'Authorization': 'Basic ' + btoa('admin:district')
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch org units');
+      const data = await response.json();
+      setOrgUnits(data.organisationUnits || []);
+    } catch (error) {
+      console.error('Error fetching org units:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+    fetchUserRoles();
+    fetchOrgUnits(); // Add this line
   }, [page, rowsPerPage, searchTerm, showSelfRegistrations, orgUnitFilter]);
 
   const handleSearchChange = (e) => {
@@ -72,8 +129,203 @@ const Users = () => {
     setPage(0);
   };
 
+  const handleOpenModal = () => {
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewUser(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async () => {
+    // Validate passwords match
+    if (newUser.password !== newUser.repeatPassword) {
+      setPasswordError('Passwords do not match');
+      return;
+    }
+
+    try {
+      const payload = {
+        username: newUser.username,
+        password: newUser.password,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        surname: newUser.surname,
+        userRoles: newUser.userRoles.map(roleId => ({ id: roleId })),
+        organisationUnits: newUser.facility ? [{ id: newUser.facility }] : [],
+        disabled: newUser.disabled
+      };
+
+      const response = await fetch('http://localhost:5002/api/40/users', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + btoa('admin:district'),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error('Failed to create user');
+
+      handleCloseModal();
+      fetchUsers();
+      setNewUser({
+        username: '',
+        email: '',
+        firstName: '',
+        surname: '',
+        password: '',
+        repeatPassword: '',
+        facility: '',
+        userRoles: [],
+        disabled: false
+      });
+      setPasswordError('');
+    } catch (error) {
+      console.error('Error creating user:', error);
+    }
+  };
+
   return (
     <Box sx={{ p: 0 }}>
+      {/* New User Modal */}
+      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>
+        <DialogTitle>Create New User</DialogTitle>
+        <DialogContent>
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            <TextField
+              label="Username"
+              name="username"
+              value={newUser.username}
+              onChange={handleInputChange}
+              fullWidth
+              required
+            />
+
+            <TextField
+              label="Email"
+              name="email"
+              type="email"
+              value={newUser.email}
+              onChange={handleInputChange}
+              fullWidth
+              required
+            />
+
+            <Box display="flex" gap={2}>
+              <TextField
+                label="First Name"
+                name="firstName"
+                value={newUser.firstName}
+                onChange={handleInputChange}
+                fullWidth
+                required
+              />
+              <TextField
+                label="Last Name"
+                name="surname"
+                value={newUser.surname}
+                onChange={handleInputChange}
+                fullWidth
+                required
+              />
+            </Box>
+
+            <Box display="flex" gap={2}>
+              <TextField
+                label="Password"
+                name="password"
+                type="password"
+                value={newUser.password}
+                onChange={handleInputChange}
+                fullWidth
+                required
+                error={!!passwordError}
+              />
+              <TextField
+                label="Repeat Password"
+                name="repeatPassword"
+                type="password"
+                value={newUser.repeatPassword}
+                onChange={handleInputChange}
+                fullWidth
+                required
+                error={!!passwordError}
+                helperText={passwordError}
+              />
+            </Box>
+
+            <FormControl fullWidth>
+              <InputLabel>Facility</InputLabel>
+              <Select
+                name="facility"
+                value={newUser.facility}
+                onChange={handleInputChange}
+                label="Facility"
+                required
+              >
+                {orgUnits.map(unit => (
+                  <MenuItem key={unit.id} value={unit.id}>
+                    {unit.displayName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Roles & Groups</InputLabel>
+              <Select
+                name="userRoles"
+                multiple
+                value={newUser.userRoles}
+                onChange={(e) => setNewUser({ ...newUser, userRoles: e.target.value })}
+                label="Roles & Groups"
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((roleId) => {
+                      const role = userRoles.find(r => r.id === roleId);
+                      return <Chip key={roleId} label={role?.displayName || roleId} />;
+                    })}
+                  </Box>
+                )}
+              >
+                {userRoles.map(role => (
+                  <MenuItem key={role.id} value={role.id}>
+                    <Checkbox checked={newUser.userRoles.indexOf(role.id) > -1} />
+                    {role.displayName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={newUser.disabled}
+                  onChange={(e) => setNewUser({ ...newUser, disabled: e.target.checked })}
+                />
+              }
+              label="Disabled"
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseModal}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">
+            Create User
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Search and Filter Section */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         <TextField
           label="Search by name"
@@ -118,7 +370,6 @@ const Users = () => {
             value={invitationFilter}
             onChange={(e) => setInvitationFilter(e.target.value)}
             label="Invitation"
-            // style={{ height: '40px' }}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="pending">Pending</MenuItem>
@@ -140,6 +391,7 @@ const Users = () => {
           variant="contained"
           startIcon={<AddIcon />}
           sx={{ ml: 'auto' }}
+          onClick={handleOpenModal}
         >
           New
         </Button>
@@ -154,14 +406,15 @@ const Users = () => {
           <TableContainer>
             <Table>
               <TableHead>
-                <TableRow sx={{ backgroundColor: (theme) => theme.palette.grey[300], 
-                        '& th': {
-                            backgroundColor: (theme) => theme.palette.grey[300]
-                        } }}>
+                <TableRow sx={{
+                  backgroundColor: (theme) => theme.palette.grey[300],
+                  '& th': {
+                    backgroundColor: (theme) => theme.palette.grey[300]
+                  }
+                }}>
                   <TableCell sx={{ fontWeight: 'bold' }}>Display name</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Username</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>User Role</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>User Roles</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Facility</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Last login</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Last Modified</TableCell>
@@ -180,37 +433,24 @@ const Users = () => {
                         : '-'}
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {user.userCredentials?.userRoles?.map(role => (
-                          <Tooltip key={role.id} title={role.displayName}>
-                            <Chip
-                              label={role.displayName}
-                              size="small"
-                              sx={{ maxWidth: 120 }}
-                            />
-                          </Tooltip>
-                        )) || '-'}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      {user.organisationUnits?.map(ou => 
+                      {user.organisationUnits?.map(ou =>
                         ou.displayName === 'Botswana' ? 'Application Not Complete' : ou.displayName
                       ).join(', ') || '-'}
                     </TableCell>
                     <TableCell>
-                      {user.userCredentials?.lastLogin ? 
-                        new Date(user.userCredentials.lastLogin).toLocaleString() : 
+                      {user.userCredentials?.lastLogin ?
+                        new Date(user.userCredentials.lastLogin).toLocaleString() :
                         '-'}
                     </TableCell>
                     <TableCell>
-                      {user.lastUpdated ? 
-                        new Date(user.lastUpdated).toLocaleString() : 
+                      {user.lastUpdated ?
+                        new Date(user.lastUpdated).toLocaleString() :
                         '-'}
                     </TableCell>
                     <TableCell>
-                      <Box 
-                        component="span" 
-                        sx={{ 
+                      <Box
+                        component="span"
+                        sx={{
                           color: user.userCredentials?.disabled ? 'error.main' : 'success.main',
                           fontWeight: 'bold'
                         }}
@@ -219,11 +459,11 @@ const Users = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Button 
-                        variant="outlined" 
+                      <Button
+                        variant="outlined"
                         size="small"
-                        sx={{ 
-                          color: user.userCredentials?.disabled ? 'success.main' : 'error.main', 
+                        sx={{
+                          color: user.userCredentials?.disabled ? 'success.main' : 'error.main',
                           borderColor: user.userCredentials?.disabled ? 'success.main' : 'error.main',
                           '&:hover': {
                             borderColor: user.userCredentials?.disabled ? 'success.dark' : 'error.dark'
