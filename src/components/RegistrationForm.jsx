@@ -30,6 +30,8 @@ function RegistrationForm() {
   const [registrationSubmittedMessage, setRegistrationSubmittedMessage] = useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [emailSentMessage, setEmailSentMessage] = useState(false);
+
   const credentials = 'YWRtaW46NUFtNTM4MDgwNTNA';
 
   // Define a default password for new users
@@ -259,6 +261,7 @@ function RegistrationForm() {
           // Don't throw error here - just log it since user is already created
         } else {
           console.log("Email sent successfully through proxy");
+          setEmailSentMessage(true);
         }
       } catch (emailError) {
         console.error("Error sending email:", emailError);
@@ -479,6 +482,20 @@ function RegistrationForm() {
           sx={{ mt: 2 }}
         >
           Registration data submitted successfully!
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={emailSentMessage}
+        autoHideDuration={6000}
+        onClose={() => setEmailSentMessage(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity="success"
+          sx={{ mt: 2 }}
+        >
+          Login credentials have been sent to your email address. Please check your inbox.
         </Alert>
       </Snackbar>
 
