@@ -22,6 +22,8 @@ const Users = () => {
   const [userRoles, setUserRoles] = useState([]);
   const [userGroups, setUserGroups] = useState([]);
 
+
+
   const [newUser, setNewUser] = useState({
     username: '',
     email: '',
@@ -37,6 +39,10 @@ const Users = () => {
 
   const [orgUnits, setOrgUnits] = useState([]);
   const [passwordError, setPasswordError] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState({
+    valid: false,
+    message: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character'
+  });
 
   // Fetch users
   const fetchUsers = async () => {
@@ -135,6 +141,60 @@ const Users = () => {
     fetchOrgUnits(); // Add this line
   }, [page, rowsPerPage, searchTerm, showSelfRegistrations, orgUnitFilter]);
 
+  // manage password
+  useEffect(() => {
+    if (newUser.password && newUser.repeatPassword) {
+      setPasswordError(
+        newUser.password !== newUser.repeatPassword ? 'Passwords do not match' : ''
+      );
+    } else {
+      setPasswordError('');
+    }
+  }, [newUser.password, newUser.repeatPassword]);
+
+  const validatePassword = (password) => {
+    const requirements = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      specialChar: /[^A-Za-z0-9]/.test(password)
+    };
+
+    const valid = Object.values(requirements).every(Boolean);
+
+    let message = '';
+    if (!requirements.length) message = 'At least 8 characters';
+    else if (!requirements.uppercase) message = 'At least one uppercase letter';
+    else if (!requirements.lowercase) message = 'At least one lowercase letter';
+    else if (!requirements.number) message = 'At least one number';
+    else if (!requirements.specialChar) message = 'At least one special character';
+    else message = 'Strong password';
+
+    return {
+      valid,
+      message,
+      requirements
+    };
+  };
+
+  useEffect(() => {
+    if (newUser.password) {
+      const strength = validatePassword(newUser.password);
+      setPasswordStrength(strength);
+    }
+
+    if (newUser.password && newUser.repeatPassword) {
+      setPasswordError(
+        newUser.password !== newUser.repeatPassword ? 'Passwords do not match' : ''
+      );
+    } else {
+      setPasswordError('');
+    }
+  }, [newUser.password, newUser.repeatPassword]);
+
+  // ------ end pwd manager ----------
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -165,6 +225,7 @@ const Users = () => {
   };
 
   const handleSubmit = async () => {
+
     // Validate passwords match
     if (newUser.password !== newUser.repeatPassword) {
       setPasswordError('Passwords do not match');
@@ -261,16 +322,41 @@ const Users = () => {
             </Box>
 
             <Box display="flex" gap={2}>
-              <TextField
-                label="Password"
-                name="password"
-                type="password"
-                value={newUser.password}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                error={!!passwordError}
-              />
+              <FormControl fullWidth>
+                <TextField
+                  label="Password"
+                  name="password"
+                  type="password"
+                  value={newUser.password}
+                  onChange={handleInputChange}
+                  required
+                  error={!!passwordError || (newUser.password && !passwordStrength.valid)}
+                  helperText={
+                    newUser.password ? passwordStrength.message : 'Enter a password'
+                  }
+                />
+                {newUser.password && (
+                  <Box sx={{ mt: 1 }}>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
+                      {['length', 'uppercase', 'lowercase', 'number', 'specialChar'].map(
+                        (req) => (
+                          <Chip
+                            key={req}
+                            label={req}
+                            size="small"
+                            color={
+                              passwordStrength.requirements?.[req]
+                                ? 'success'
+                                : 'default'
+                            }
+                            variant="outlined"
+                          />
+                        )
+                      )}
+                    </Box>
+                  </Box>
+                )}
+              </FormControl>
               <TextField
                 label="Repeat Password"
                 name="repeatPassword"
@@ -302,7 +388,7 @@ const Users = () => {
             </FormControl>
 
             <FormControl fullWidth>
-              <InputLabel>Roles </InputLabel>
+              <InputLabel>Assign Role</InputLabel>
               <Select
                 name="userRoles"
                 multiple
@@ -328,7 +414,7 @@ const Users = () => {
             </FormControl>
 
             <FormControl fullWidth>
-              <InputLabel>Groups</InputLabel>
+              <InputLabel>Assign Group</InputLabel>
               <Select
                 name="userGroups"
                 multiple
