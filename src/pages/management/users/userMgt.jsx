@@ -20,6 +20,7 @@ const Users = () => {
   const [totalUsers, setTotalUsers] = useState(0);
   const [openModal, setOpenModal] = useState(false);
   const [userRoles, setUserRoles] = useState([]);
+  const [userGroups, setUserGroups] = useState([]);
 
   const [newUser, setNewUser] = useState({
     username: '',
@@ -30,6 +31,7 @@ const Users = () => {
     repeatPassword: '',
     facility: '',
     userRoles: [], // Changed to array for multiple selection
+    userGroups: [],
     disabled: false
   });
 
@@ -90,6 +92,22 @@ const Users = () => {
     }
   };
 
+  // Fetch user groups for dropdown
+  const fetchUserGroups = async () => {
+    try {
+      const response = await fetch('http://localhost:5002/api/40/userGroups?fields=id,displayName&paging=false', {
+        headers: {
+          'Authorization': 'Basic ' + btoa('admin:district')
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch user groups');
+      const data = await response.json();
+      setUserGroups(data.userGroups || []);
+    } catch (error) {
+      console.error('Error fetching user groups:', error);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchUserRoles();
@@ -113,6 +131,7 @@ const Users = () => {
   useEffect(() => {
     fetchUsers();
     fetchUserRoles();
+    fetchUserGroups();
     fetchOrgUnits(); // Add this line
   }, [page, rowsPerPage, searchTerm, showSelfRegistrations, orgUnitFilter]);
 
@@ -160,6 +179,7 @@ const Users = () => {
         firstName: newUser.firstName,
         surname: newUser.surname,
         userRoles: newUser.userRoles.map(roleId => ({ id: roleId })),
+        userGroups: newUser.userGroups.map(groupId => ({ id: groupId })),
         organisationUnits: newUser.facility ? [{ id: newUser.facility }] : [],
         disabled: newUser.disabled
       };
@@ -186,6 +206,7 @@ const Users = () => {
         repeatPassword: '',
         facility: '',
         userRoles: [],
+        userGroups: [],
         disabled: false
       });
       setPasswordError('');
@@ -281,13 +302,13 @@ const Users = () => {
             </FormControl>
 
             <FormControl fullWidth>
-              <InputLabel>Roles & Groups</InputLabel>
+              <InputLabel>Roles </InputLabel>
               <Select
                 name="userRoles"
                 multiple
                 value={newUser.userRoles}
                 onChange={(e) => setNewUser({ ...newUser, userRoles: e.target.value })}
-                label="Roles & Groups"
+                label="Roles "
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {selected.map((roleId) => {
@@ -301,6 +322,32 @@ const Users = () => {
                   <MenuItem key={role.id} value={role.id}>
                     <Checkbox checked={newUser.userRoles.indexOf(role.id) > -1} />
                     {role.displayName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Groups</InputLabel>
+              <Select
+                name="userGroups"
+                multiple
+                value={newUser.userGroups}
+                onChange={(e) => setNewUser({ ...newUser, userGroups: e.target.value })}
+                label="Groups"
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((groupId) => {
+                      const group = userGroups.find(g => g.id === groupId);
+                      return <Chip key={groupId} label={group?.displayName || groupId} />;
+                    })}
+                  </Box>
+                )}
+              >
+                {userGroups.map(group => (
+                  <MenuItem key={group.id} value={group.id}>
+                    <Checkbox checked={newUser.userGroups.indexOf(group.id) > -1} />
+                    {group.displayName}
                   </MenuItem>
                 ))}
               </Select>
