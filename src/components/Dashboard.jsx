@@ -6,6 +6,7 @@ const Dashboard = ({ activeSection, setActiveSection }) => {
     const [dashboardLoading, setDashboardLoading] = useState(true);
     const [trackedEntityInstanceId, setTrackedEntityInstanceId] = useState(null);
     const [showFacilityReviewDialog, setShowFacilityReviewDialog] = useState(false);
+    const [situationalAnalysisComplete, setSituationalAnalysisComplete] = useState(false);
 
     const fetchTrackedEntityInstance = async () => {
         const credentials = localStorage.getItem('userCredentials');
@@ -52,6 +53,23 @@ const Dashboard = ({ activeSection, setActiveSection }) => {
             setDashboardLoading(false);
         }
     };
+
+    // Monitor localStorage for changes to situationalAnalysisComplete
+    useEffect(() => {
+        const checkSituationalAnalysisStatus = () => {
+            const status = localStorage.getItem('situationalAnalysisComplete') === 'true';
+            console.log("Dashboard - Situational Analysis Status:", status);
+            setSituationalAnalysisComplete(status);
+        };
+        
+        // Check immediately
+        checkSituationalAnalysisStatus();
+        
+        // Set up interval to check periodically
+        const intervalId = setInterval(checkSituationalAnalysisStatus, 1000);
+        
+        return () => clearInterval(intervalId);
+    }, []);
 
     useEffect(() => {
         fetchTrackedEntityInstance();
@@ -201,8 +219,16 @@ const Dashboard = ({ activeSection, setActiveSection }) => {
                         Navigation
                     </div>
                     <button
-                        onClick={() => setActiveSection('overview')}
-                        className={activeSection === 'overview' ? 'active' : ''}
+                        onClick={(e) => {
+                            if (!situationalAnalysisComplete && activeSection !== 'registration') {
+                                e.preventDefault();
+                                console.log("Sidebar navigation to Overview prevented");
+                                return;
+                            }
+                            setActiveSection('overview');
+                        }}
+                        className={`${activeSection === 'overview' ? 'active' : ''} ${!situationalAnalysisComplete ? 'disabled-button' : ''}`}
+                        disabled={!situationalAnalysisComplete}
                     >
                         Overview
                     </button>
@@ -213,8 +239,16 @@ const Dashboard = ({ activeSection, setActiveSection }) => {
                         Complete Registration
                     </button>
                     <button
-                        onClick={() => setActiveSection('inspections')}
-                        className={activeSection === 'inspections' ? 'active' : ''}
+                        onClick={(e) => {
+                            if (!situationalAnalysisComplete) {
+                                e.preventDefault();
+                                console.log("Sidebar navigation to Inspections prevented");
+                                return;
+                            }
+                            setActiveSection('inspections');
+                        }}
+                        className={`${activeSection === 'inspections' ? 'active' : ''} ${!situationalAnalysisComplete ? 'disabled-button' : ''}`}
+                        disabled={!situationalAnalysisComplete}
                     >
                         View Inspections
                     </button>
@@ -222,14 +256,30 @@ const Dashboard = ({ activeSection, setActiveSection }) => {
                     <div className="section-divider"></div>
                     
                     <button
-                        onClick={() => setActiveSection('reports')}
-                        className={activeSection === 'reports' ? 'active' : ''}
+                        onClick={(e) => {
+                            if (!situationalAnalysisComplete) {
+                                e.preventDefault();
+                                console.log("Sidebar navigation to Reports prevented");
+                                return;
+                            }
+                            setActiveSection('reports');
+                        }}
+                        className={`${activeSection === 'reports' ? 'active' : ''} ${!situationalAnalysisComplete ? 'disabled-button' : ''}`}
+                        disabled={!situationalAnalysisComplete}
                     >
                         Reports
                     </button>
                     <button
-                        onClick={() => setActiveSection('tasks')}
-                        className={activeSection === 'tasks' ? 'active' : ''}
+                        onClick={(e) => {
+                            if (!situationalAnalysisComplete) {
+                                e.preventDefault();
+                                console.log("Sidebar navigation to Tasks prevented");
+                                return;
+                            }
+                            setActiveSection('tasks');
+                        }}
+                        className={`${activeSection === 'tasks' ? 'active' : ''} ${!situationalAnalysisComplete ? 'disabled-button' : ''}`}
+                        disabled={!situationalAnalysisComplete}
                     >
                         Tasks
                     </button>

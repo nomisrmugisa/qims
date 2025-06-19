@@ -89,6 +89,17 @@
     transform: translateY(-1px);
 }
 
+.dashboard-sidebar button.disabled-button,
+.dashboard-sidebar button.disabled-button:hover {
+    background-color: #e0e0e0;
+    color: #999999;
+    border-color: #c0c0c0;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+    pointer-events: none;
+}
+
 .dashboard-sidebar button.employee-registration-btn {
     background-color: #28a745;
     color: white;

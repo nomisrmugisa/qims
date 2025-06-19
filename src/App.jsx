@@ -14,7 +14,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Start with loading state
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [activeDashboardSection, setActiveDashboardSection] = useState('overview');
+  const [activeDashboardSection, setActiveDashboardSection] = useState('registration');
   const navigate = useNavigate();
 
   // Check for existing credentials on app load

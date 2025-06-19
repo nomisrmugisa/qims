@@ -9,6 +9,8 @@ const LoginModal = ({ show, onClose, onLogin }) => {
     const [rememberMe, setRememberMe] = useState(true);
     const [useTwoFactor, setUseTwoFactor] = useState(false);
     const [twoFactorCode, setTwoFactorCode] = useState('');
+    const [twoFactorToken, setTwoFactorToken] = useState('');
+    const [codeId, setCodeId] = useState('');
     const [twoFactorError, setTwoFactorError] = useState('');
     const [isTwoFactorInitialized, setIsTwoFactorInitialized] = useState(false);
 
@@ -32,81 +34,187 @@ const LoginModal = ({ show, onClose, onLogin }) => {
         };
     }, [show, onClose]);
 
+    // Handle when user checks/unchecks the 2FA checkbox
+    // Replace your useEffect with this simplified version
     useEffect(() => {
         if (useTwoFactor && username && password) {
             const initialize2FA = async () => {
                 try {
                     setTwoFactorError('Initializing 2FA...');
-                    
-                    // Generate random 6-digit code
-                    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-                    
-                    // Call our proxy server to send SMS
-                    const response = await fetch("https://restapi.smscountry.com/v0.1/Accounts/gCogwZBQKWm6M0G1lUVL/SMSes/", {
+
+                    // Step 1: Acquire Token
+                    const username = 'nomisrmugisa@gmail.com';
+                    const password = 'Nomisr123$';
+                    const credentials = btoa(`${username}:${password}`);
+                    const tokenResponse = await fetch("http://localhost:5002/api/Token/", {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Basic Z0NvZ3daQlFLV202TTBHMWxVVkw6czg3d3F0YkIxYUd4aW9PeHNtSllZWGhLSXQwdHIxRFNSaU8xU0pLMg=='
+                            'Authorization': `Basic ${credentials}`,
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            Text: generatedCode,
-                            Number: "256778512260",
-                            SenderId: "Info",
-                            DRNotifyUrl: "https://www.domainname.com/notifyurl",
-                            DRNotifyHttpMethod: "POST",
-                            Tool: "API"
+                            token: "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXbzJIajRrbERZTXlyOEZrR0NPcXcwOGtRZ2ZpZk9DVUE1RHo3cUlFLU5JIn0.eyJleHAiOjE3NDk5NzIzNTAsImlhdCI6MTc0OTg4NTk1MCwianRpIjoiNGEyNjYzYWEtOWMwYi00MWU1LTgzOTQtMTZmMDA3OTM0NGRjIiwiaXNzIjoiaHR0cHM6Ly9zZWN1cmUucGx5ZG90LmNvbS9hdXRoL3JlYWxtcy9hdXRob3JpemUiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiYzYwZGI0NjQtZDg2Zi00ZWZlLWE4YTctNjQ4MzdmYWQ3ZDgxIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiZmx5dGUiLCJzZXNzaW9uX3N0YXRlIjoiMjViOTUyZDYtMWI0OC00ZjJhLThjOWItZTUzMTY0YTFmMDU5IiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWZseXRlIGNvbW11bmljYXRpb25zIiwib2ZmbGluZV9hY2Nlc3MiLCJhZG1pbiIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiZmx5dGUiOnsicm9sZXMiOlsiYWRtaW4iXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsInNpZCI6IjI1Yjk1MmQ2LTFiNDgtNGYyYS04YzliLWU1MzE2NGExZjA1OSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJ1c2VyX3JlYWxtX3JvbGUiOlsiZGVmYXVsdC1yb2xlcy1mbHl0ZSBjb21tdW5pY2F0aW9ucyIsIm9mZmxpbmVfYWNjZXNzIiwiYWRtaW4iLCJ1bWFfYXV0aG9yaXphdGlvbiJdLCJuYW1lIjoiV2lsc29uIFdoaXBwZXQiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJ3aGlwcGV0QHBseWRvdC5jb20iLCJnaXZlbl9uYW1lIjoiV2lsc29uIiwiZmFtaWx5X25hbWUiOiJXaGlwcGV0IiwiZW1haWwiOiJ3aGlwcGV0QHBseWRvdC5jb20ifQ.CgqG8ijEgr1Yvlvro5Q37doWX4JkZ4my1ndAexB4xBSuxBmj860JxOdgxrztMV1GZNXjjqcKraC4497zS7LvmlnYvze0KCZTOJ_87buuOySsSWwk5Is27zH3Iv9riCazhuwAP_AY18divJRfY0DYBVdtMimXNze09nmSLv3r9lyOwxx0pOS6O1HGEJ7umUOB7HofAjN0GUHfUm1J-zAtzIklFIKXNFmPmxt3VQOq5q6dmxlSTnjigfA4Tcka_vSpjxd5kFIqrEfSyD0quNZRTZPbOfHV5mjS7MwbJ1KP4cR7eBnDOJ6YNt1Ru6X-RsUOdo6vluga7II73--F0Bi1iw", // your token here
+                            expiration: "86400"
+                        }),
+                        credentials: 'include'
+                    });
+
+                    if (!tokenResponse.ok) {
+                        throw new Error(`Token request failed with status ${tokenResponse.status}`);
+                    }
+
+                    const tokenData = await tokenResponse.json();
+                    const extractedToken = tokenData.token;
+                    setTwoFactorToken(extractedToken);
+
+                    // Step 2: Initialize 2FA - send OTP
+                    const initResponse = await fetch("http://localhost:5002/api/SMS2FA/init/", {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${extractedToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            authorityEmail: username,
+                            recipient: "256778512260",
+                            sender: "Plydot"
                         })
                     });
 
-                    if (!response.ok) {
-                        throw new Error(`Failed to send 2FA code: ${response.statusText}`);
+                    if (!initResponse.ok) {
+                        throw new Error(`Init request failed with status ${initResponse.status}`);
                     }
 
-                    // Store the generated code for verification
-                    setTwoFactorCode(generatedCode);
+                    const initData = await initResponse.json();
+                    setCodeId(initData.codeId);
                     setIsTwoFactorInitialized(true);
                     setTwoFactorError('OTP sent to your phone. Please enter the code.');
                 } catch (error) {
                     console.error('2FA initialization error:', error);
                     setTwoFactorError(`2FA setup failed: ${error.message}`);
+                    // Keep the checkbox checked so user can try again
                 }
             };
 
             initialize2FA();
         }
-    }, [useTwoFactor]);
+    }, [useTwoFactor]); // Only depend on useTwoFactor
+
+    const initializeTwoFactor = async () => {
+        try {
+            setTwoFactorError('Initializing 2FA...');
+
+            // Step 1: Acquire Token
+            const credentials = btoa(`${username}:${password}`);
+            const tokenResponse = await fetch("http://localhost:5002/api/Token/", {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Basic ${credentials}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    token: "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXbzJIajRrbERZTXlyOEZrR0NPcXcwOGtRZ2ZpZk9DVUE1RHo3cUlFLU5JIn0.eyJleHAiOjE3NDk5NzIzNTAsImlhdCI6MTc0OTg4NTk1MCwianRpIjoiNGEyNjYzYWEtOWMwYi00MWU1LTgzOTQtMTZmMDA3OTM0NGRjIiwiaXNzIjoiaHR0cHM6Ly9zZWN1cmUucGx5ZG90LmNvbS9hdXRoL3JlYWxtcy9hdXRob3JpemUiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiYzYwZGI0NjQtZDg2Zi00ZWZlLWE4YTctNjQ4MzdmYWQ3ZDgxIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiZmx5dGUiLCJzZXNzaW9uX3N0YXRlIjoiMjViOTUyZDYtMWI0OC00ZjJhLThjOWItZTUzMTY0YTFmMDU5IiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWZseXRlIGNvbW11bmljYXRpb25zIiwib2ZmbGluZV9hY2Nlc3MiLCJhZG1pbiIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiZmx5dGUiOnsicm9sZXMiOlsiYWRtaW4iXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsInNpZCI6IjI1Yjk1MmQ2LTFiNDgtNGYyYS04YzliLWU1MzE2NGExZjA1OSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJ1c2VyX3JlYWxtX3JvbGUiOlsiZGVmYXVsdC1yb2xlcy1mbHl0ZSBjb21tdW5pY2F0aW9ucyIsIm9mZmxpbmVfYWNjZXNzIiwiYWRtaW4iLCJ1bWFfYXV0aG9yaXphdGlvbiJdLCJuYW1lIjoiV2lsc29uIFdoaXBwZXQiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJ3aGlwcGV0QHBseWRvdC5jb20iLCJnaXZlbl9uYW1lIjoiV2lsc29uIiwiZmFtaWx5X25hbWUiOiJXaGlwcGV0IiwiZW1haWwiOiJ3aGlwcGV0QHBseWRvdC5jb20ifQ.CgqG8ijEgr1Yvlvro5Q37doWX4JkZ4my1ndAexB4xBSuxBmj860JxOdgxrztMV1GZNXjjqcKraC4497zS7LvmlnYvze0KCZTOJ_87buuOySsSWwk5Is27zH3Iv9riCazhuwAP_AY18divJRfY0DYBVdtMimXNze09nmSLv3r9lyOwxx0pOS6O1HGEJ7umUOB7HofAjN0GUHfUm1J-zAtzIklFIKXNFmPmxt3VQOq5q6dmxlSTnjigfA4Tcka_vSpjxd5kFIqrEfSyD0quNZRTZPbOfHV5mjS7MwbJ1KP4cR7eBnDOJ6YNt1Ru6X-RsUOdo6vluga7II73--F0Bi1iw",
+                    expiration: "86400"
+                })
+            });
+
+            if (!tokenResponse.ok) {
+                throw new Error('Failed to acquire 2FA token');
+            }
+
+            const tokenData = await tokenResponse.json();
+            const extractedToken = tokenData.token;
+            setTwoFactorToken(extractedToken);
+
+            // Step 2: Initialize 2FA - send OTP
+            const initResponse = await fetch("http://localhost:5002/api/SMS2FA/init/", {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${extractedToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    authorityEmail: username,
+                    recipient: "256778512260", // This should ideally come from user profile or input
+                    sender: "Plydot"
+                })
+            });
+
+            if (!initResponse.ok) {
+                throw new Error('Failed to initialize 2FA');
+            }
+
+            const initData = await initResponse.json();
+            if (initData.status === 'otp_sent') {
+                setCodeId(initData.codeId);
+                setIsTwoFactorInitialized(true);
+                setTwoFactorError('OTP sent to your phone. Please enter the code.');
+            } else {
+                throw new Error('Failed to send OTP');
+            }
+        } catch (error) {
+            console.error('2FA initialization error:', error);
+            setTwoFactorError(`2FA setup failed: ${error.message}`);
+            setUseTwoFactor(false);
+        }
+    };
 
     const verifyTwoFactorCode = async () => {
-        if (!twoFactorCode) {
-            setTwoFactorError('Please enter the 2FA code');
+        try {
+            if (!twoFactorCode || !codeId) {
+                setTwoFactorError('Please enter the 2FA code');
+                return false;
+            }
+
+            // Step 3: Verify OTP code
+            const username = 'nomisrmugisa@gmail.com';
+            const verifyResponse = await fetch("http://localhost:5002/api/SMS2FA/verify/", {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${twoFactorToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    authorityEmail: username,
+                    code: twoFactorCode,
+                    codeId: codeId
+                })
+            });
+
+            // if (!verifyResponse.ok) {
+            //     throw new Error('Verification failed');
+            // }
+
+            // const verificationResult = await verifyResponse.text();
+            if (verifyResponse.ok) {
+                setTwoFactorError('');
+                return true;
+            } else {
+                throw new Error('Invalid verification code');
+            }
+        } catch (error) {
+            console.error('2FA verification error:', error);
+            setTwoFactorError(`2FA verification failed: ${error.message}`);
             return false;
         }
-
-        if (!isValidTwoFactorCode(twoFactorCode)) {
-            setTwoFactorError('Please enter a valid 6-digit code');
-            return false;
-        }
-
-        // In this simplified flow, we just verify the code matches what was sent
-        // In a real implementation, you would verify against what was stored server-side
-        return true;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setErrorMessage('');
+        setErrorMessage(''); // Clear previous errors
 
-        if (useTwoFactor) {
-            if (!twoFactorCode.trim()) {
-                setTwoFactorError('2FA code is required');
-                return;
-            }
+        // TEMPORARILY DISABLED 2FA FOR DEVELOPMENT
+        // if (useTwoFactor) {
+        //     if (!twoFactorCode.trim()) {
+        //         setTwoFactorError('2FA code is required');
+        //         return;
+        //     }
 
-            const isVerified = await verifyTwoFactorCode();
-            if (!isVerified) {
-                return;
-            }
-        }
+        //     const isVerified = await verifyTwoFactorCode();
+        //     if (!isVerified) {
+        //         return;
+        //     }
+        // }
 
         try {
             const credentials = btoa(`${username}:${password}`);
@@ -115,11 +223,13 @@ const LoginModal = ({ show, onClose, onLogin }) => {
             const response = await fetch("/api/me", {
                 headers: {
                     Authorization: `Basic ${credentials}`,
-                    ...(useTwoFactor && twoFactorCode && { 'X-2FA-Code': twoFactorCode }),
+                    // TEMPORARILY DISABLED 2FA FOR DEVELOPMENT
+                    // ...(useTwoFactor && twoFactorCode && { 'X-2FA-Code': twoFactorCode }),
                 },
             });
 
             if (!response.ok) {
+                // Handle authentication errors based on status code
                 switch (response.status) {
                     case 401:
                         setErrorMessage('Invalid credentials. Please check your email and password.');
@@ -142,8 +252,8 @@ const LoginModal = ({ show, onClose, onLogin }) => {
                     default:
                         setErrorMessage(`Authentication failed: ${response.statusText}`);
                 }
-                onLogin(false);
-                return;
+                onLogin(false); // Indicate login failure to App.jsx
+                return; // Stop further execution
             }
 
             // If authentication successful, fetch organization units
@@ -159,29 +269,32 @@ const LoginModal = ({ show, onClose, onLogin }) => {
             if (orgUnitsResponse.ok) {
                 const data = await orgUnitsResponse.json();
                 if (data.organisationUnits && data.organisationUnits.length > 0) {
+                    // Store session data in localStorage
                     localStorage.setItem("userOrgUnitId", data.organisationUnits[0].id);
+                    console.log("orgUnitIdStored:", data.organisationUnits[0].id);
                     localStorage.setItem("userOrgUnitName", data.organisationUnits[0].displayName);
                     localStorage.setItem("userCredentials", credentials);
+                    console.log("credSetStorage");
                     if (rememberMe) {
                         localStorage.setItem("rememberMe", "true");
                     } else {
                         localStorage.removeItem("rememberMe");
                     }
                     console.log("User Data and Organization Units:", data);
-                    onLogin(true);
-                    onClose();
+                    onLogin(true); // Login successful
+                    onClose(); // Close modal on successful login
                 } else {
                     setErrorMessage('No organization units found for this user.');
-                    onLogin(false);
+                    onLogin(false); // Login failed
                 }
             } else {
                 setErrorMessage(`Failed to fetch organization units: ${orgUnitsResponse.statusText}`);
-                onLogin(false);
+                onLogin(false); // Login failed
             }
         } catch (error) {
             console.error("Login error:", error);
             setErrorMessage('Network error or unexpected issue. Please try again.');
-            onLogin(false);
+            onLogin(false); // Login failed due to network or other error
         }
     };
 
@@ -194,6 +307,7 @@ const LoginModal = ({ show, onClose, onLogin }) => {
             <div className="login-modal-content" ref={modalRef}>
                 <div className="login-modal-header">
                     <h5 className="login-modal-title">Login</h5>
+                    <div style={{ color: 'green', fontSize: '12px', fontWeight: 'bold' }}>DEV MODE: 2FA DISABLED</div>
                     <button type="button" className="login-modal-close" onClick={onClose}>
                         &times;
                     </button>
@@ -229,7 +343,7 @@ const LoginModal = ({ show, onClose, onLogin }) => {
                             <label className="login-form-label" htmlFor="form2Example2">Password</label>
                         </div>
 
-                        {/* 2FA Checkbox */}
+                        {/* 2FA Checkbox - appears above the input field */}
                         <div className="mb-3">
                             <div className="form-check">
                                 <input
@@ -285,6 +399,7 @@ const LoginModal = ({ show, onClose, onLogin }) => {
                         {/* Remember me and Forgot password row */}
                         <div className="row mb-4">
                             <div className="col d-flex justify-content-center">
+                                {/* Remember me checkbox */}
                                 <div className="form-check">
                                     <input
                                         className="form-check-input"
@@ -300,6 +415,7 @@ const LoginModal = ({ show, onClose, onLogin }) => {
                             </div>
 
                             <div className="col">
+                                {/* Forgot password link */}
                                 <a href="#!">Forgot password?</a>
                             </div>
                         </div>
@@ -308,7 +424,9 @@ const LoginModal = ({ show, onClose, onLogin }) => {
                         <button
                             type="submit"
                             className="login-btn-primary mb-4"
-                            disabled={useTwoFactor && (!isValidTwoFactorCode(twoFactorCode) || twoFactorError.includes('failed'))}
+                            // TEMPORARILY ENABLED FOR DEVELOPMENT
+                            // disabled={!useTwoFactor ||
+                            //     (!isValidTwoFactorCode(twoFactorCode) || twoFactorError.includes('failed'))}
                         >
                             Sign in
                         </button>

@@ -27,13 +27,18 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
     display: 'flex',
     alignItems: 'center',
     marginBottom: theme.spacing(3),
+    flexWrap: 'nowrap', // Prevent wrapping of steps to new line
+    justifyContent: 'space-between', // Distribute space evenly
+    width: '100%', // Use full width
+    overflow: 'hidden', // Hide overflow
   }));
   
   const Step = styled(Box)(({ theme, active, hasdata, disabled }) => ({
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start', // Changed from center to align with first line when wrapped
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.6 : 1,
+    maxWidth: '150px', // Constrain overall width of each step
     '& .step-number': {
       display: 'flex',
       alignItems: 'center',
@@ -50,6 +55,8 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
       marginRight: theme.spacing(1),
       fontSize: '0.75rem',
       fontWeight: 'bold',
+      flexShrink: 0, // Prevent number from shrinking
+      marginTop: '2px', // Align with first line of wrapped text
     },
     '& .step-title': {
       color: active 
@@ -59,22 +66,28 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
         : disabled ? theme.palette.text.disabled : theme.palette.text.primary,
       fontWeight: active ? 'bold' : 'normal',
       marginRight: theme.spacing(1),
-      whiteSpace: 'nowrap',
+      whiteSpace: 'normal', // Allow text to wrap
+      wordBreak: 'break-word', // Break words if needed
+      fontSize: '0.9rem', // Slightly smaller font
+      lineHeight: 1.2, // Tighter line height for wrapped text
+      textAlign: 'left', // Ensure text is left-aligned
     },
     '& .completion-indicator': {
       marginLeft: theme.spacing(1),
       fontSize: '0.9rem',
       fontWeight: 'bold',
+      flexShrink: 0, // Prevent indicator from shrinking
     },
   }));
   
   const StyledDivider = styled(Divider)(({ theme, disabled }) => ({
-    width: '120px', // Adjust this to match your design
+    width: '60px', // Reduced width to save horizontal space
     borderBottomWidth: 2,
     borderColor: disabled ? theme.palette.grey[300] : theme.palette.divider,
-    margin: '0 8px',
+    margin: '0 4px', // Reduced margin to save space
     alignSelf: 'center',
     opacity: disabled ? 0.6 : 1,
+    flexShrink: 1, // Allow divider to shrink if needed
   }));
   
   // Check localStorage for completeApplicationStatus on component mount and when tab changes
@@ -115,8 +128,11 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
         // For services offered and inspection schedule, we'll assume they have data for now
         // since they appear to be static in your screenshots
         return true;
-      case 'inspectionSchedule':
-        return true;
+      case 'inspectionSchedule': {
+        // Check localStorage for completion status
+        const situationalAnalysisStatus = localStorage.getItem('situationalAnalysisComplete');
+        return situationalAnalysisStatus === 'true';
+      }
       default:
         return false;
     }
@@ -150,6 +166,14 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
     try {
       setIsLoading(true);
       const url = `/api/trackedEntityInstances/${trackedEntityInstanceId}?ou=${userOrgUnitId}&ouMode=SELECTED&program=EE8yeLVo6cN&fields=enrollments[events]!programStage=MuJubgTzJrY&paging=false`;
+      
+      // Log the endpoint and parameters for debugging
+      console.log("Facility Ownership API Request:");
+      console.log("- Full URL:", url);
+      console.log("- trackedEntityInstanceId:", trackedEntityInstanceId);
+      console.log("- organizationUnitId:", userOrgUnitId);
+      console.log("- programId: EE8yeLVo6cN");
+      console.log("- programStage: MuJubgTzJrY");
 
       const response = await fetch(url, {
         headers: {
@@ -162,13 +186,39 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
       }
 
       const data = await response.json();
+      
+      // Log response structure for debugging
+      console.log("Facility Ownership API Response:");
+      console.log("- Response data:", data);
+      console.log("- Has enrollments:", Boolean(data.enrollments));
+      console.log("- Number of enrollments:", data.enrollments?.length || 0);
+      
       let fetchedEvents = [];
 
       if (data.enrollments && data.enrollments.length > 0) {
-        data.enrollments.forEach((enrollment) => {
-          fetchedEvents = fetchedEvents.concat(enrollment.events);
+        console.log("- Processing enrollments...");
+        let targetStageEvents = 0;
+        
+        data.enrollments.forEach((enrollment, index) => {
+          console.log(`  - Enrollment #${index+1} ID:`, enrollment.enrollment);
+          console.log(`  - Events in enrollment #${index+1}:`, enrollment.events?.length || 0);
+          
+          if (enrollment.events && enrollment.events.length > 0) {
+            console.log(`  - First event programStage:`, enrollment.events[0].programStage);
+            
+            // Count events with programStage MuJubgTzJrY
+            const stageEvents = enrollment.events.filter(event => event.programStage === "MuJubgTzJrY");
+            console.log(`  - Events with programStage MuJubgTzJrY in this enrollment:`, stageEvents.length);
+            targetStageEvents += stageEvents.length;
+          }
+          
+          fetchedEvents = fetchedEvents.concat(enrollment.events || []);
         });
+        
+        console.log("- Total events with programStage MuJubgTzJrY:", targetStageEvents);
       }
+      
+      console.log("- Total events extracted:", fetchedEvents.length);
 
       setEvents(fetchedEvents);
       setIsLoading(false);
@@ -248,6 +298,14 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
     try {
       setIsLoadingEmployees(true);
       const url = `/api/trackedEntityInstances/${trackedEntityInstanceId}?ou=${userOrgUnitId}&ouMode=SELECTED&program=EE8yeLVo6cN&fields=enrollments[events]!programStage=xjhA4eEHyhw&paging=false`;
+      
+      // Log the endpoint and parameters for debugging
+      console.log("Employee Registration API Request:");
+      console.log("- Full URL:", url);
+      console.log("- trackedEntityInstanceId:", trackedEntityInstanceId);
+      console.log("- organizationUnitId:", userOrgUnitId);
+      console.log("- programId: EE8yeLVo6cN");
+      console.log("- programStage: xjhA4eEHyhw");
 
       const response = await fetch(url, {
         headers: {
@@ -260,13 +318,28 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
       }
 
       const data = await response.json();
+      
+      // Log response structure for debugging
+      console.log("Employee Registration API Response:");
+      console.log("- Response data:", data);
+      console.log("- Has enrollments:", Boolean(data.enrollments));
+      console.log("- Number of enrollments:", data.enrollments?.length || 0);
+      
       let fetchedEvents = [];
 
       if (data.enrollments && data.enrollments.length > 0) {
-        data.enrollments.forEach((enrollment) => {
-          fetchedEvents = fetchedEvents.concat(enrollment.events);
+        console.log("- Processing employee enrollments...");
+        data.enrollments.forEach((enrollment, index) => {
+          console.log(`  - Employee Enrollment #${index+1} ID:`, enrollment.enrollment);
+          console.log(`  - Events in employee enrollment #${index+1}:`, enrollment.events?.length || 0);
+          if (enrollment.events && enrollment.events.length > 0) {
+            console.log(`  - First employee event programStage:`, enrollment.events[0].programStage);
+          }
+          fetchedEvents = fetchedEvents.concat(enrollment.events || []);
         });
       }
+      
+      console.log("- Total employee events extracted:", fetchedEvents.length);
 
       setEmployeeEvents(fetchedEvents);
       setIsLoadingEmployees(false);
@@ -472,7 +545,7 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
         return (
           <div className="tab-content">
             <div className="inspection-schedule-details">
-              <h2>Facility Inspections <span className="add-icon">+</span></h2>
+              <h2>Situational Analysis <span className="add-icon">+</span></h2>
               <div className="table-responsive">
                 <table className="table table-hover">
                   <thead>
@@ -517,6 +590,32 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
                   </tbody>
                 </table>
               </div>
+              
+              <div style={{ marginTop: '20px', textAlign: 'right' }}>
+                {localStorage.getItem('situationalAnalysisComplete') === 'true' ? (
+                  <button 
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      localStorage.removeItem('situationalAnalysisComplete');
+                      // Force a re-render to update the tab status
+                      setActiveTab(activeTab);
+                    }}
+                  >
+                    Reset Situational Analysis Status (Testing Only)
+                  </button>
+                ) : (
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      localStorage.setItem('situationalAnalysisComplete', 'true');
+                      // Force a re-render to update the tab status
+                      setActiveTab(activeTab);
+                    }}
+                  >
+                    Mark Situational Analysis as Complete
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         );
@@ -538,7 +637,7 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
             { number: 2, title: 'Facility Ownership', key: 'facilityOwnership' },
             { number: 3, title: 'Employee Registration', key: 'employeeRegistration' },
             { number: 4, title: 'Services Offered', key: 'servicesOffered' },
-            { number: 5, title: 'Facility Inspections', key: 'inspectionSchedule' }
+            { number: 5, title: 'Situational Analysis', key: 'inspectionSchedule' }
           ].map((step, index) => {
             // Determine if the tab should be disabled
             const isDisabled = !completeApplicationStatus && step.key !== 'completeApplication';

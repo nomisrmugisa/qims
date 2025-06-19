@@ -306,8 +306,10 @@ const LoginModal = ({ show, onClose, onLogin }) => {
       const data = await response.json();
       if (data.organisationUnits?.length > 0) {
         localStorage.setItem("userOrgUnitId", data.organisationUnits[0].id);
+        console.log("orgUnitIdStored:", data.organisationUnits[0].id);
         localStorage.setItem("userOrgUnitName", data.organisationUnits[0].displayName);
         localStorage.setItem("userCredentials", credentials);
+        console.log("credSetStorage");
         if (rememberMe) localStorage.setItem("rememberMe", "true");
         
         onLogin(true);

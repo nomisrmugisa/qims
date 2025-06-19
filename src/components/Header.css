@@ -223,3 +223,21 @@
         max-height: 120px !important;
     }
 }
+
+/* Styles for disabled navigation links */
+.navmenu a.disabled-link,
+.navmenu a.disabled-link:hover,
+.navmenu a.disabled-link:focus {
+  pointer-events: none !important;
+  color: gray !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  text-decoration: none !important;
+}
+
+.navmenu .disabled-dropdown,
+.navmenu .disabled-dropdown > a {
+  pointer-events: none !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}

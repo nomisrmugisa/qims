@@ -4,6 +4,29 @@ import './Header.css';
 
 const Header = ({ onLoginClick, isLoggedIn, onLogout, activeDashboardSection, setActiveDashboardSection }) => {
   const [orgUnitName, setOrgUnitName] = useState('');
+  const [situationalAnalysisComplete, setSituationalAnalysisComplete] = useState(false);
+  
+  // Function to check if Situational Analysis is green (completed)
+  const isSituationalAnalysisGreen = () => {
+    return situationalAnalysisComplete;
+  };
+  
+  // Monitor localStorage for changes to situationalAnalysisComplete
+  useEffect(() => {
+    const checkSituationalAnalysisStatus = () => {
+      const status = localStorage.getItem('situationalAnalysisComplete') === 'true';
+      console.log("Situational Analysis Status:", status);
+      setSituationalAnalysisComplete(status);
+    };
+    
+    // Check immediately
+    checkSituationalAnalysisStatus();
+    
+    // Set up interval to check periodically
+    const intervalId = setInterval(checkSituationalAnalysisStatus, 1000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     // Get organization unit name when component mounts or isLoggedIn changes
@@ -89,11 +112,68 @@ const Header = ({ onLoginClick, isLoggedIn, onLogout, activeDashboardSection, se
           <nav id="navmenu" className="navmenu">
             <ul>
               <li><a href="#registration" className={activeDashboardSection === 'registration' ? 'active' : ''} onClick={() => setActiveDashboardSection('registration')}>Complete Application</a></li>
-              <li><a href="#overview" className={activeDashboardSection === 'overview' ? 'active' : ''} onClick={() => setActiveDashboardSection('overview')}>Overview</a></li>
-              <li><a href="#reports" className={activeDashboardSection === 'reports' ? 'active' : ''} onClick={() => setActiveDashboardSection('reports')}>Report</a></li>
-              <li><a href="#tasks" className={activeDashboardSection === 'tasks' ? 'active' : ''} onClick={() => setActiveDashboardSection('tasks')}>Tasks</a></li>
-              <li className="dropdown">
-                <a href="#"><span>Documents Repository</span> <i className="bi bi-chevron-down toggle-dropdown"></i></a>
+              <li>
+                <a 
+                  href="#overview" 
+                  className={`${activeDashboardSection === 'overview' ? 'active' : ''} ${(!isLoggedIn || !isSituationalAnalysisGreen()) ? 'disabled-link' : ''}`} 
+                  onClick={(e) => {
+                    console.log("Overview clicked, isLoggedIn:", isLoggedIn, "SA Green:", isSituationalAnalysisGreen());
+                    if (isLoggedIn && isSituationalAnalysisGreen()) {
+                      setActiveDashboardSection('overview');
+                    } else {
+                      e.preventDefault();
+                      console.log("Navigation prevented");
+                    }
+                  }}
+                >
+                  Overview
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#reports" 
+                  className={`${activeDashboardSection === 'reports' ? 'active' : ''} ${(!isLoggedIn || !isSituationalAnalysisGreen()) ? 'disabled-link' : ''}`} 
+                  onClick={(e) => {
+                    if (isLoggedIn && isSituationalAnalysisGreen()) {
+                      setActiveDashboardSection('reports');
+                    } else {
+                      e.preventDefault();
+                      console.log("Reports navigation prevented");
+                    }
+                  }}
+                >
+                  Report
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#tasks" 
+                  className={`${activeDashboardSection === 'tasks' ? 'active' : ''} ${(!isLoggedIn || !isSituationalAnalysisGreen()) ? 'disabled-link' : ''}`} 
+                  onClick={(e) => {
+                    if (isLoggedIn && isSituationalAnalysisGreen()) {
+                      setActiveDashboardSection('tasks');
+                    } else {
+                      e.preventDefault();
+                      console.log("Tasks navigation prevented");
+                    }
+                  }}
+                >
+                  Tasks
+                </a>
+              </li>
+              <li className={`dropdown ${(!isLoggedIn || !isSituationalAnalysisGreen()) ? 'disabled-dropdown' : ''}`}>
+                <a 
+                  href="#"
+                  onClick={(e) => {
+                    if (!isLoggedIn || !isSituationalAnalysisGreen()) {
+                      e.preventDefault();
+                      console.log("Documents navigation prevented");
+                    }
+                  }}
+                >
+                  <span>Documents Repository</span> 
+                  <i className="bi bi-chevron-down toggle-dropdown"></i>
+                </a>
                 <ul>
                   <li><a href="#">Dropdown 1</a></li>
                   <li className="dropdown">
@@ -126,7 +206,9 @@ const Header = ({ onLoginClick, isLoggedIn, onLogout, activeDashboardSection, se
             <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
           </nav>
 
-          <a className="cta-btn d-none d-sm-block" href="#Registration">Apply</a>
+          {!isLoggedIn && (
+            <a className="cta-btn d-none d-sm-block" href="#Registration">Apply</a>
+          )}
         </div>
       </div>
     </header>

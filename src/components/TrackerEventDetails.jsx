@@ -52,6 +52,34 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
   const [locationName, setLocationName] = useState('');
   const credentials = localStorage.getItem('userCredentials');
 
+  // Function to set dummy data for development/testing
+  const setDummyData = () => {
+    console.log('Setting dummy data');
+    // Set minimal dummy data
+    const dummyData = {
+      dataValues: [
+        { dataElement: 'HMk4LZ9ESOq', value: 'John' },
+        { dataElement: 'ykwhsQQPVH0', value: 'Doe' },
+        { dataElement: 'PdtizqOqE6Q', value: 'Test Facility' },
+        { dataElement: 'VJzk8OdFJKA', value: 'DUMMY_LOCATION_ID' }
+      ]
+    };
+    
+    setEventData(dummyData);
+    
+    const dummyFormValues = {};
+    dummyData.dataValues.forEach(dv => {
+      dummyFormValues[dv.dataElement] = dv.value;
+    });
+    
+    setFormValues(dummyFormValues);
+    setLocationName('Test Location');
+    setLoading(false);
+    
+    // Check form completion with dummy values
+    checkFormCompletion(dummyFormValues);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -115,22 +143,31 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
             // Initialize form values
             const initialFormValues = {};
             if (eventData.dataValues) {
+              console.log("Processing event data values...");
               eventData.dataValues.forEach(dv => {
                 initialFormValues[dv.dataElement] = dv.value;
+                console.log(`Data element ${dv.dataElement}: ${dv.value}`);
               });
             }
+            console.log("Initial form values:", initialFormValues);
             setFormValues(initialFormValues);
 
             // If there's a location value, set the selected org unit
             const locationValue = initialFormValues['VJzk8OdFJKA'];
+            console.log("Location value (VJzk8OdFJKA):", locationValue);
+            
             if (locationValue) {
+              console.log("Setting selected org unit with displayName:", locationValue);
               setSelectedOrgUnit({ displayName: locationValue });
+            } else {
+              console.log("No location value found in initial data");
             }
 
             // Check if all required fields are filled
             checkFormCompletion(initialFormValues);
 
             setLoading(false);
+            console.log("Data loading completed");
             return;
           }
 
@@ -180,6 +217,11 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
     }
   }, [isEditing]);
 
+  // Monitor parentOrgUnitId changes
+  useEffect(() => {
+    // Removed debug logs for cleaner console
+  }, [parentOrgUnitId]);
+
   // Update filtered org units when organizational units change or search query changes
   useEffect(() => {
     if (searchQuery) {
@@ -194,6 +236,46 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
     checkFormCompletion(formValues);
   }, [formValues]);
 
+  // Fetch organization unit name when parentOrgUnitId is available
+  useEffect(() => {
+    const fetchOrgUnitName = async () => {
+      if (!parentOrgUnitId || !credentials) {
+        return;
+      }
+      
+      try {
+        const apiUrl = `/api/organisationUnits/${parentOrgUnitId}?fields=name`;
+        
+        const response = await fetch(
+          apiUrl,
+          {
+            headers: {
+              Authorization: `Basic ${credentials}`,
+            },
+          }
+        );
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch organisation unit name");
+        }
+
+        const data = await response.json();
+        
+        if (data && data.name) {
+          setLocationName(data.name);
+          
+          // We don't need to update formValues with the name anymore
+          // as we're now keeping the ID in formValues
+          // and storing the displayName separately in locationName
+        }
+      } catch (error) {
+        console.error("Error fetching organization unit name:", error);
+      }
+    };
+
+    fetchOrgUnitName();
+  }, [parentOrgUnitId, credentials]);
+
   const fetchOrganisationalUnits = async () => {
     setIsLoadingOrgUnits(true);
     try {
@@ -201,7 +283,7 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
       if (!credentials) {
         console.error("No credentials found");
         setIsLoadingOrgUnits(false);
-        return;
+        return [];
       }
 
       const response = await fetch(
@@ -218,8 +300,10 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
       const data = await response.json();
       setOrganisationalUnits(data.organisationUnits);
       setFilteredOrgUnits(data.organisationUnits);
+      return data.organisationUnits;
     } catch (error) {
       console.error("Error fetching organisational units:", error);
+      return [];
     } finally {
       setIsLoadingOrgUnits(false);
     }
@@ -278,16 +362,21 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
     const newFormValues = { ...formValues };
 
     if (newValue) {
-      newFormValues['VJzk8OdFJKA'] = newValue.displayName.trim();
+      // Store the organization unit ID in VJzk8OdFJKA field
+      newFormValues['VJzk8OdFJKA'] = newValue.id;
+      
+      // Also update locationName with the display name for rendering
+      setLocationName(newValue.displayName);
     } else {
       newFormValues['VJzk8OdFJKA'] = '';
+      setLocationName('');
     }
 
     setFormValues(newFormValues);
   };
 
   // Toggle edit mode
-  const handleToggleEdit = () => {
+  const handleToggleEdit = async () => {
     if (isEditing) {
       // Reset form values to original data when canceling
       const originalValues = {};
@@ -298,13 +387,8 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
       }
       setFormValues(originalValues);
 
-      // Reset selected org unit
-      const locationValue = originalValues['VJzk8OdFJKA'];
-      if (locationValue) {
-        setSelectedOrgUnit({ displayName: locationValue });
-      } else {
-        setSelectedOrgUnit(null);
-      }
+      // Reset selected org unit 
+      setSelectedOrgUnit(null); 
 
       // Reset search
       setSearchQuery('');
@@ -312,50 +396,67 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
 
       // Check form completion with original values
       checkFormCompletion(originalValues);
+    } else {
+      // Always fetch fresh org units when entering edit mode
+      const fetchedOrgUnits = await fetchOrganisationalUnits();
+      
+      // After fetching organizational units, try to match the current ID
+      if (formValues['VJzk8OdFJKA']) {
+        const matchingOrgUnit = fetchedOrgUnits.find(unit => unit.id === formValues['VJzk8OdFJKA']);
+        if (matchingOrgUnit) {
+          // If found in our list, use it
+          setSelectedOrgUnit(matchingOrgUnit);
+        } else {
+          // If we can't find it in the list but we have a name, create a synthetic option
+          setSelectedOrgUnit({ 
+            id: formValues['VJzk8OdFJKA'],
+            displayName: locationName || formValues['VJzk8OdFJKA']
+          });
+          
+          // If locationName is empty but we have an ID, try to fetch the name directly
+          if (!locationName && formValues['VJzk8OdFJKA']) {
+            const credentials = localStorage.getItem('userCredentials');
+            try {
+              const response = await fetch(
+                `/api/organisationUnits/${formValues['VJzk8OdFJKA']}?fields=name`,
+                {
+                  headers: {
+                    Authorization: `Basic ${credentials}`,
+                  },
+                }
+              );
+              
+              if (response.ok) {
+                const data = await response.json();
+                if (data && data.name) {
+                  setLocationName(data.name);
+                  setSelectedOrgUnit(prev => ({
+                    ...prev,
+                    displayName: data.name
+                  }));
+                }
+              }
+            } catch (err) {
+              console.error("Error fetching org unit name:", err);
+            }
+          }
+        }
+      }
     }
     setIsEditing(!isEditing);
   };
 
-  // ------------------ cascade starts------------------------------
+    // Set parent org unit ID when location value changes
   useEffect(() => {
-    const fetchParentOrgUnitId = async () => {
-      if (!formValues['VJzk8OdFJKA']) {
-        setParentOrgUnitId(null);
-        return;
-      }
-  
-      try {
-        const response = await fetch(
-          "/api/organisationUnits?paging=false",
-          {
-            headers: {
-              Authorization: `Basic ${credentials}`,
-            },
-          }
-        );
-  
-        if (!response.ok) {
-          throw new Error("Failed to fetch organisational units");
-        }
-  
-        const data = await response.json();
-        const orgUnit = data.organisationUnits.find(
-          unit => unit.displayName.trim() === formValues['VJzk8OdFJKA'].trim() // Trim both values
-        );
-  
-        if (orgUnit) {
-          setParentOrgUnitId(orgUnit.id);
-        } else {
-          setParentOrgUnitId(null);
-        }
-      } catch (error) {
-        console.error("Error fetching parent org unit ID:", error);
-        setParentOrgUnitId(null);
-      }
-    };
-  
-    fetchParentOrgUnitId();
-  }, [formValues['VJzk8OdFJKA'], credentials]);
+    // The Location in Botswana field contains the actual orgUnitId
+    if (!formValues['VJzk8OdFJKA']) {
+      setParentOrgUnitId(null);
+      return;
+    }
+    
+    // Use the value directly as the parent org unit ID
+    setParentOrgUnitId(formValues['VJzk8OdFJKA']);
+  }, [formValues['VJzk8OdFJKA']]);
 
   const generate_orgUnitID = () => {
     const alphabets = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -797,12 +898,8 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
         setOpenSnackbar(true);
       }
 
-      // Call the onSave callback with the updated data
-      onSave({
-        ...formData,
-        checklist,
-        comments
-      });
+      // Successfully completed all operations
+      console.log('All operations completed successfully');
 
       setCurrentStep('Request accepted successfully!');
       setTimeout(() => {
@@ -1094,7 +1191,7 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
                 >
                   {formValues['VJzk8OdFJKA'] ? (
                     <Chip
-                      label={formValues['VJzk8OdFJKA']}
+                      label={locationName || formValues['VJzk8OdFJKA']}
                       color="primary"
                       variant="outlined"
                       size="small"
