@@ -46,7 +46,7 @@ export default function InspectionsPage() {
   const [activeTab, setActiveTab] = useState(0);
 
   const steps = [
-    { number: 1, title: 'Inspector Assignments', component: <InspectorAssignment /> },
+    { number: 1, title: 'Inspection Requests & Assignments', component: <InspectorAssignment /> },
     { number: 2, title: 'Inspection Reports', component: <InspectionReports /> },
   ];
 
