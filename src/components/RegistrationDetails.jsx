@@ -350,6 +350,32 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
     }
   };
 
+  // Add useEffect to check for and handle the automatic tab switching flag
+  useEffect(() => {
+    const checkSwitchToFacilityOwnership = () => {
+      try {
+        const switchFlag = localStorage.getItem('switchToFacilityOwnership');
+        if (switchFlag === 'true' && completeApplicationStatus) {
+          // Clear the flag first to avoid repeated triggering
+          localStorage.removeItem('switchToFacilityOwnership');
+          
+          // Switch to the Facility Ownership tab
+          setActiveTab('facilityOwnership');
+        }
+      } catch (error) {
+        console.error("Error checking for tab switch flag:", error);
+      }
+    };
+    
+    // Check on component load and whenever completeApplicationStatus changes
+    checkSwitchToFacilityOwnership();
+    
+    // Set up an interval to check for status changes
+    const intervalId = setInterval(checkSwitchToFacilityOwnership, 1000);
+    
+    return () => clearInterval(intervalId);
+  }, [completeApplicationStatus]);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'completeApplication':

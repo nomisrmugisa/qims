@@ -901,6 +901,9 @@ const TrackerEventDetails = ({ onFormStatusChange }) => {
       // Successfully completed all operations
       console.log('All operations completed successfully');
 
+      // Set flag to automatically switch to Facility Ownership tab
+      localStorage.setItem('switchToFacilityOwnership', 'true');
+
       setCurrentStep('Request accepted successfully!');
       setTimeout(() => {
         setLoading(false);
