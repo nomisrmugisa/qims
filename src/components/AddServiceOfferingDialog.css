@@ -1,24 +1,3 @@
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10000;
-  padding: 0;
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-  inset: 0;
-  pointer-events: auto;
-}
-
 .modal-content {
   background-color: white;
   padding: 0;
@@ -104,41 +83,41 @@
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-.file-input-wrapper {
-  position: relative;
+/* Checkbox styling */
+.service-category {
+  font-weight: bold;
+  margin-top: 30px;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+  color: #007bff;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.checkbox-group {
   display: flex;
   align-items: center;
   gap: 10px;
-  grid-column: 2 / 3;
 }
 
-.form-control-file {
-  position: absolute;
-  left: -9999px;
-}
-
-.custom-file-upload {
-  display: inline-block;
-  padding: 12px 25px;
-  background-color: #007bff;
-  color: white;
-  border-radius: 8px;
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
   cursor: pointer;
-  transition: all 0.3s ease;
 }
 
-.custom-file-upload:hover {
-  background-color: #0056b3;
-  transform: translateY(-1px);
-}
-
-.file-name {
-  color: #666;
-  font-size: 14px;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.checkbox-group label {
+  font-weight: normal;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  text-align: left;
 }
 
 .button-container {
@@ -208,18 +187,4 @@
   background-color: #f8d7da;
   border: 1px solid #f5c6cb;
   color: #721c24;
-}
-
-/* Make sure the Cancel button is on the left and Add Employee button is on the right */
-.employee-registration-form .button-container {
-  display: flex;
-  justify-content: space-between;
-}
-
-.employee-registration-form .button-container .btn-secondary {
-  order: 1;
-}
-
-.employee-registration-form .button-container .btn-primary {
-  order: 2;
 } 

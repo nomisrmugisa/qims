@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AddEmployeeRegistrationDialog.css';
+import ModalPortal from './ModalPortal';
 
-const AddEmployeeRegistrationDialog = ({ onClose, onAddSuccess }) => {
+const AddEmployeeRegistrationDialog = ({ open, onClose, onAddSuccess }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -15,6 +16,19 @@ const AddEmployeeRegistrationDialog = ({ onClose, onAddSuccess }) => {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Prevent scrolling on the main body when the modal is open
+  useEffect(() => {
+    if (open) {
+      // Disable scrolling on the body when modal is open
+      document.body.style.overflow = 'hidden';
+      
+      // Re-enable scrolling when component is unmounted or closed
+      return () => {
+        document.body.style.overflow = 'auto';
+      };
+    }
+  }, [open]);
 
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -50,9 +64,19 @@ const AddEmployeeRegistrationDialog = ({ onClose, onAddSuccess }) => {
     }
   };
 
+  const isFormValid = 
+    formData.firstName &&
+    formData.lastName &&
+    formData.bhpcNmcNumber &&
+    formData.position &&
+    formData.contractType &&
+    formData.qualifications &&
+    formData.professionalLicense &&
+    formData.cv;
+
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
+    <ModalPortal open={open} onClose={onClose}>
+      <div className="modal-content" style={{ padding: '0', maxWidth: '1200px' }}>
         <div className="modal-header">
           <h5 className="modal-title">Add New Employee Registration</h5>
           <button 
@@ -66,7 +90,7 @@ const AddEmployeeRegistrationDialog = ({ onClose, onAddSuccess }) => {
         </div>
         <div className="modal-body">
           {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="employee-registration-form">
             <div className="form-group">
               <label>First Name:</label>
               <input
@@ -115,7 +139,7 @@ const AddEmployeeRegistrationDialog = ({ onClose, onAddSuccess }) => {
               >
                 <option value="">Select Position</option>
                 <option value="Head of Medical Services">Head of Medical Services</option>
-                <option value="MEDICAL/DENTAL PERSONNEL: Dentist">MEDICAL/DENTAL PERSONNEL: Dentist</option>
+                <option value="Medical/Dental Personnel: Dentist">Medical/Dental Personnel: Dentist</option>
                 <option value="Facility Manager">Facility Manager</option>
                 <option value="Nurse">Nurse</option>
                 <option value="Pharmacist">Pharmacist</option>
@@ -198,10 +222,10 @@ const AddEmployeeRegistrationDialog = ({ onClose, onAddSuccess }) => {
                 </span>
               </div>
             </div>
-            <div className="modal-footer">
+            <div className="button-container">
               <button 
                 type="button" 
-                className="btn btn-secondary" 
+                className="btn-secondary" 
                 onClick={handleCancel}
                 disabled={isSubmitting}
               >
@@ -209,16 +233,16 @@ const AddEmployeeRegistrationDialog = ({ onClose, onAddSuccess }) => {
               </button>
               <button 
                 type="submit" 
-                className="btn btn-primary"
-                disabled={isSubmitting}
+                className="btn-primary"
+                disabled={isSubmitting || !isFormValid}
               >
-                {isSubmitting ? 'Adding...' : 'Add Employee'}
+                {isSubmitting ? "Adding..." : "Add Employee"}
               </button>
             </div>
           </form>
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 };
 

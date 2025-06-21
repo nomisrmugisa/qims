@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import './AddFacilityOwnershipDialog.css'; // Reuse the same styles
+import './EditFacilityOwnershipDialog.css'; // Use the correct CSS file
+import ModalPortal from './ModalPortal';
 
-const EditFacilityOwnershipDialog = ({ onClose, onUpdateSuccess, event }) => {
+const EditFacilityOwnershipDialog = ({ open, onClose, onUpdateSuccess, event }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     surname: "",
@@ -18,6 +19,19 @@ const EditFacilityOwnershipDialog = ({ onClose, onUpdateSuccess, event }) => {
   });
 
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Prevent scrolling on the main body when the modal is open
+  useEffect(() => {
+    if (open) {
+      // Disable scrolling on the body when modal is open
+      document.body.style.overflow = 'hidden';
+      
+      // Re-enable scrolling when component is unmounted or closed
+      return () => {
+        document.body.style.overflow = 'auto';
+      };
+    }
+  }, [open]);
 
   useEffect(() => {
     if (event) {
@@ -43,6 +57,11 @@ const EditFacilityOwnershipDialog = ({ onClose, onUpdateSuccess, event }) => {
       });
     }
   }, [event]);
+
+  // If dialog is not open, don't render anything
+  if (!open) {
+    return null;
+  }
 
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -186,7 +205,7 @@ const EditFacilityOwnershipDialog = ({ onClose, onUpdateSuccess, event }) => {
   );
 
   return (
-    <div className="modal-overlay">
+    <ModalPortal open={open} onClose={onClose}>
       <div className="modal-content">
         <div className="modal-header">
           <h5 className="modal-title">Edit Facility Ownership</h5>
@@ -283,7 +302,7 @@ const EditFacilityOwnershipDialog = ({ onClose, onUpdateSuccess, event }) => {
           </form>
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 };
 

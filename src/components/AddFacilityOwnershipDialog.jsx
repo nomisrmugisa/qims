@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AddFacilityOwnershipDialog.css'; // We'll create this CSS file next
+import ModalPortal from './ModalPortal';
 
-const AddFacilityOwnershipDialog = ({ onClose, onAddSuccess, trackedEntityInstanceId }) => {
+const AddFacilityOwnershipDialog = ({ open, onClose, onAddSuccess, trackedEntityInstanceId }) => {
   const [newFormData, setNewFormData] = useState({
     firstName: "",
     surname: "",
@@ -18,6 +19,19 @@ const AddFacilityOwnershipDialog = ({ onClose, onAddSuccess, trackedEntityInstan
   });
 
   const [errorMessage, setErrorMessage] = useState("");
+  
+  // Prevent scrolling on the main body when the modal is open
+  useEffect(() => {
+    if (open) {
+      // Disable scrolling on the body when modal is open
+      document.body.style.overflow = 'hidden';
+      
+      // Re-enable scrolling when component is unmounted or closed
+      return () => {
+        document.body.style.overflow = 'auto';
+      };
+    }
+  }, [open]);
 
   // Function to generate a unique event ID (simplified for now)
   const generateEventId = () => {
@@ -161,8 +175,8 @@ const AddFacilityOwnershipDialog = ({ onClose, onAddSuccess, trackedEntityInstan
   );
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
+    <ModalPortal open={open} onClose={onClose}>
+      <div className="modal-content" style={{ padding: '0', maxWidth: '1200px' }}>
         <div className="modal-header">
           <h5 className="modal-title">Add New Facility Ownership</h5>
           <button type="button" className="close-btn" onClick={onClose}>
@@ -171,7 +185,7 @@ const AddFacilityOwnershipDialog = ({ onClose, onAddSuccess, trackedEntityInstan
         </div>
         <div className="modal-body">
           {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
-          <form onSubmit={handleAddSubmit}>
+          <form onSubmit={handleAddSubmit} className="facility-ownership-form">
             <div className="form-group">
               <label>First Name:</label>
               <input type="text" name="firstName" value={newFormData.firstName} onChange={handleInputChange} className="form-control" required />
@@ -258,7 +272,7 @@ const AddFacilityOwnershipDialog = ({ onClose, onAddSuccess, trackedEntityInstan
           </form>
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 };
 

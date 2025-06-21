@@ -3,6 +3,7 @@ import './RegistrationDetails.css'; // We'll create this CSS file next
 import AddFacilityOwnershipDialog from './AddFacilityOwnershipDialog';
 import EditFacilityOwnershipDialog from './EditFacilityOwnershipDialog';
 import AddEmployeeRegistrationDialog from './AddEmployeeRegistrationDialog';
+import AddServiceOfferingDialog from './AddServiceOfferingDialog';
 import TrackerEventDetails from './TrackerEventDetails';
 import { styled, Box, Typography, Divider, useTheme, Tooltip } from '@mui/material';
 // import { useTheme } from '@mui/material/styles';
@@ -15,9 +16,12 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
   const [activeTab, setActiveTab] = useState('completeApplication');
   const [events, setEvents] = useState([]);
   const [employeeEvents, setEmployeeEvents] = useState([]);
+  const [serviceEvents, setServiceEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(true);
+  const [isLoadingServices, setIsLoadingServices] = useState(true);
   const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [openServiceDialog, setOpenServiceDialog] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [openEmployeeDialog, setOpenEmployeeDialog] = useState(false);
@@ -258,6 +262,79 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
     }
   }, [trackedEntityInstanceId]);
 
+  // Add a new effect for fetching service data
+  useEffect(() => {
+    fetchServiceData();
+  }, [trackedEntityInstanceId]);
+
+  const fetchServiceData = async () => {
+    if (!trackedEntityInstanceId) {
+      setIsLoadingServices(false);
+      return;
+    }
+
+    const credentials = localStorage.getItem('userCredentials');
+    const userOrgUnitId = localStorage.getItem('userOrgUnitId');
+
+    if (!credentials || !userOrgUnitId) {
+      setIsLoadingServices(false);
+      return;
+    }
+
+    try {
+      setIsLoadingServices(true);
+      // Use a unique program stage ID for services - the mTuN7RTnmaB value is a placeholder
+      const url = `/api/trackedEntityInstances/${trackedEntityInstanceId}?ou=${userOrgUnitId}&ouMode=SELECTED&program=EE8yeLVo6cN&fields=enrollments[events]!programStage=mTuN7RTnmaB&paging=false`;
+      
+      console.log("Services Offered API Request:");
+      console.log("- Full URL:", url);
+      console.log("- trackedEntityInstanceId:", trackedEntityInstanceId);
+      console.log("- organizationUnitId:", userOrgUnitId);
+      console.log("- programId: EE8yeLVo6cN");
+      console.log("- programStage: mTuN7RTnmaB");
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Basic ${credentials}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      console.log("Services Offered API Response:");
+      console.log("- Response data:", data);
+      console.log("- Has enrollments:", Boolean(data.enrollments));
+      console.log("- Number of enrollments:", data.enrollments?.length || 0);
+      
+      let fetchedEvents = [];
+
+      if (data.enrollments && data.enrollments.length > 0) {
+        console.log("- Processing service enrollments...");
+        data.enrollments.forEach((enrollment, index) => {
+          console.log(`  - Service Enrollment #${index+1} ID:`, enrollment.enrollment);
+          console.log(`  - Events in service enrollment #${index+1}:`, enrollment.events?.length || 0);
+          if (enrollment.events && enrollment.events.length > 0) {
+            console.log(`  - First service event programStage:`, enrollment.events[0].programStage);
+          }
+          fetchedEvents = fetchedEvents.concat(enrollment.events || []);
+        });
+      }
+      
+      console.log("- Total service events extracted:", fetchedEvents.length);
+
+      setServiceEvents(fetchedEvents);
+      setIsLoadingServices(false);
+
+    } catch (error) {
+      console.error("Error fetching service data:", error);
+      setIsLoadingServices(false);
+    }
+  };
+
   const handleRowClick = (event) => {
     setSelectedEvent(event);
     setShowEditDialog(true);
@@ -350,6 +427,12 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
     }
   };
 
+  // Add fetch function for service offerings
+    // Add useEffect to fetch service data
+  useEffect(() => {
+    fetchServiceData();
+  }, [trackedEntityInstanceId]);
+  
   // Add useEffect to check for and handle the automatic tab switching flag
   useEffect(() => {
     const checkSwitchToFacilityOwnership = () => {
@@ -375,6 +458,19 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
     
     return () => clearInterval(intervalId);
   }, [completeApplicationStatus]);
+
+  const handleAddService = () => {
+    setOpenServiceDialog(true);
+  };
+
+  const handleCloseServiceDialog = () => {
+    setOpenServiceDialog(false);
+  };
+
+  const handleServiceAddSuccess = () => {
+    setOpenServiceDialog(false);
+    fetchServiceData();
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -515,55 +611,101 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
         return (
           <div className="tab-content">
             <div className="services-offered-details">
-              <h2>Services Offered Details <span className="add-icon">+</span></h2>
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>Core Emergency</th>
-                      <th>Core General Practice</th>
-                      <th>Core Treatment & Care</th>
-                      <th>Core Urgent Care</th>
-                      <th>Additional Health Education</th>
-                      <th>Specialised Maternity & Reprod. Health</th>
-                      <th>Specialised Mental Health & Subst. Abuse</th>
-                      <th>Specialised Radiology</th>
-                      <th>Specialised Rehabilitation</th>
-                      <th>Support Dialysis Centers</th>
-                      <th>Support Hospices</th>
-                      <th>Support Lab Services</th>
-                      <th>Support Nursing Homes</th>
-                      <th>Support Outpatient Department</th>
-                      <th>Support Patient Transportation</th>
-                      <th>Support Pharmacy</th>
-                      <th>Additional Counseling</th>
-                      <th>Additional Community-Based</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Yes</td>
-                      <td>Yes</td>
-                      <td>No</td>
-                      <td>Yes</td>
-                      <td>No</td>
-                      <td>No</td>
-                      <td>No</td>
-                      <td>No</td>
-                      <td>No</td>
-                      <td>No</td>
-                      <td>No</td>
-                      <td>No</td>
-                      <td>No</td>
-                      <td>No</td>
-                      <td>No</td>
-                      <td>Yes</td>
-                      <td>No</td>
-                      <td>No</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <h2>
+                Services Offered Details 
+                <button 
+                  className="add-icon" 
+                  onClick={handleAddService}
+                  style={{ 
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '28px',
+                    color: '#28a745',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    padding: '0 5px'
+                  }}
+                >
+                  +
+                </button>
+              </h2>
+              {isLoadingServices ? (
+                <p>Loading services data...</p>
+              ) : serviceEvents.length === 0 ? (
+                <p>No service offering records found.</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Core Services</th>
+                        <th>Specialised Services</th>
+                        <th>Support Services</th>
+                        <th>Additional Services</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {serviceEvents.map((event, index) => {
+                        const dataValues = event.dataValues || [];
+                        const getFormattedValue = (dataElementId) => {
+                          const dataValue = dataValues.find(dv => dv.dataElement === dataElementId);
+                          return dataValue ? dataValue.value : '';
+                        };
+
+                        // Helper function to check if service type is offered
+                        const isServiceOffered = (dataElementId) => {
+                          return getFormattedValue(dataElementId) === 'true';
+                        };
+
+                        // Aggregate services by category
+                        const coreServices = [
+                          isServiceOffered("j57HXXX4Ijz") ? "Emergency" : "",
+                          isServiceOffered("ECjGkIq0Deq") ? "General Practice" : "",
+                          isServiceOffered("aM41KiGDJAs") ? "Treatment & Care" : "",
+                          isServiceOffered("flzyZUlf30v") ? "Urgent Care" : "",
+                        ].filter(Boolean).join(", ");
+                        
+                        const specialisedServices = [
+                          isServiceOffered("y9QSgKRoc6L") ? "Maternity & Reproductive" : "",
+                          isServiceOffered("yZhlCTgamq0") ? "Mental Health" : "",
+                          isServiceOffered("RCvjFJQUaPV") ? "Radiology" : "",
+                          isServiceOffered("uxcdCPnaqWL") ? "Rehabilitation" : "",
+                        ].filter(Boolean).join(", ");
+                        
+                        const supportServices = [
+                          isServiceOffered("r76ODkNZv43") ? "Ambulatory Care" : "",
+                          isServiceOffered("E7OMKr09N0R") ? "Dialysis" : "",
+                          isServiceOffered("GyQNkXpNraW") ? "Hospices" : "",
+                          isServiceOffered("OgpVvPxkLwf") ? "Lab Services" : "",
+                          isServiceOffered("rLC2CE79p7Q") ? "Nursing Homes" : "",
+                          isServiceOffered("w86r0XZCLCr") ? "Outpatient" : "",
+                          isServiceOffered("m8Kl585eWSK") ? "Transportation" : "",
+                          isServiceOffered("yecnkdC7HtM") ? "Pharmacy" : "",
+                        ].filter(Boolean).join(", ");
+                        
+                        const additionalServices = [
+                          isServiceOffered("SMvKa2EWeBO") ? "Health Education" : "",
+                          isServiceOffered("i0QXYWMOUjy") ? "Counseling" : "",
+                          isServiceOffered("e48W7983nBs") ? "Community-Based" : "",
+                        ].filter(Boolean).join(", ");
+
+                        return (
+                          <tr key={event.event || index}>
+                            <td>{getFormattedValue("IR8eO63QKKe")}</td>
+                            <td>{getFormattedValue("pRPw37nqZQ3")}</td>
+                            <td>{coreServices || "None"}</td>
+                            <td>{specialisedServices || "None"}</td>
+                            <td>{supportServices || "None"}</td>
+                            <td>{additionalServices || "None"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -740,6 +882,16 @@ const RegistrationDetails = ({ trackedEntityInstanceId, showReviewDialog }) => {
           open={openEmployeeDialog}
           onClose={handleCloseEmployeeDialog}
           onSuccess={handleEmployeeAddSuccess}
+          trackedEntityInstanceId={trackedEntityInstanceId}
+        />
+      )}
+
+      {/* Add Service Offering Dialog - only render when openServiceDialog is true */}
+      {openServiceDialog && (
+        <AddServiceOfferingDialog
+          open={openServiceDialog}
+          onClose={handleCloseServiceDialog}
+          onAddSuccess={handleServiceAddSuccess}
           trackedEntityInstanceId={trackedEntityInstanceId}
         />
       )}
